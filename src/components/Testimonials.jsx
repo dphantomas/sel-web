@@ -1,0 +1,93 @@
+'use client'
+
+import { useState } from 'react'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
+import testimonialsData from '../../content/testimonios.json'
+
+export default function Testimonials({ lang = 'es' }) {
+  const testimonials = lang === 'en' ? testimonialsData.en : testimonialsData.es
+
+  return (
+    <section id="testimonios" className="bg-[#fcfbfe] pb-24">
+      {/* Section header */}
+      <div
+        className="section-header-bg flex items-end justify-center"
+        style={{ minHeight: '220px', paddingBottom: '40px', paddingTop: '80px' }}
+      >
+        <h2
+          style={{
+            fontFamily: "'Lato', Helvetica, Arial, Lucida, sans-serif",
+            fontSize: '28px',
+            letterSpacing: '2px',
+            color: '#ffffff',
+            margin: 0,
+            fontWeight: 400,
+          }}
+        >  
+          {lang === 'en' ? 'Testimonials' : 'Testimonios'}
+        </h2>
+      </div>
+
+      {/* Arrow ornament */}
+      <div className="text-center mt-8 mb-16">
+        <img
+          src="/assets/flecha.png"
+          alt=""
+          style={{ width: '50px', height: 'auto', margin: '0 auto' }}
+        />
+      </div>
+
+      <div className="max-w-6xl mx-auto px-4 md:px-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {testimonials.map((t, idx) => (
+            <div
+              key={idx}
+              className="bg-white p-8 rounded-2xl shadow-sm hover:shadow-md transition-shadow relative border border-[#e3e1e8]"
+            >
+              {/* Quote mark background */}
+              <div
+                className="absolute top-4 left-4 w-10 h-10 rounded-full flex items-center justify-center"
+                style={{ backgroundColor: '#f9f7fc' }}
+                aria-hidden="true"
+              >
+                <span style={{ color: '#9187ba', fontSize: '22px', fontFamily: 'Georgia, serif', lineHeight: 1 }}>"</span>
+              </div>
+
+              {/* Text */}
+              <p
+                style={{
+                  fontFamily: "'Lato', Helvetica, Arial, Lucida, sans-serif",
+                  fontStyle: 'italic',
+                  fontSize: '16px',
+                  color: '#555',
+                  lineHeight: '1.7em',
+                  marginBottom: '24px',
+                  marginTop: '16px',
+                  padding: '0 10px',
+                }}
+              >
+                {t.text}
+              </p>
+
+              {/* Author */}
+              <p
+                style={{
+                  fontFamily: "'Lato', Helvetica, Arial, Lucida, sans-serif",
+                  fontWeight: 'bold',
+                  fontSize: '15px',
+                  color: '#b085b3',
+                  textAlign: 'right',
+                  margin: 0,
+                  textTransform: 'uppercase',
+                  letterSpacing: '1px'
+                }}
+              >
+                — {t.author}
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
