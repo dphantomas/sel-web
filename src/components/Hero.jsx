@@ -1,3 +1,5 @@
+import Link from 'next/link'
+
 export default function Hero() {
   return (
     <section
@@ -33,6 +35,16 @@ export default function Hero() {
         >
           &ldquo;Nada de lo que has hecho hasta ahora define quién Eres&rdquo;
         </p>
+
+        {/* Botón de Ingreso Principal */}
+        <div className="mt-2">
+          <Link
+            href="/login"
+            className="inline-block border-2 border-white text-white hover:bg-white hover:text-[#33275f] font-bold py-3 px-8 rounded-full text-lg transition-all duration-300 shadow-lg"
+          >
+            Ingresar a mi cuenta
+          </Link>
+        </div>
       </div>
     </section>
   )

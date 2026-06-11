@@ -2,6 +2,7 @@ import './globals.css'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import WhatsAppFloat from '@/components/WhatsAppFloat'
+import AuthProvider from '@/components/AuthProvider'
 
 export const metadata = {
   title: 'Sanación en Luz | Nada de lo que has hecho hasta ahora define quién Eres',
@@ -36,11 +37,14 @@ export default function RootLayout({ children }) {
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </head>
       <body className="relative min-h-screen overflow-x-hidden bg-white">
-        <Navbar />
-        <main>{children}</main>
-        <Footer />
-        <WhatsAppFloat />
+        <AuthProvider>
+          <Navbar />
+          <main>{children}</main>
+          <Footer />
+          <WhatsAppFloat />
+        </AuthProvider>
       </body>
     </html>
   )
 }
+

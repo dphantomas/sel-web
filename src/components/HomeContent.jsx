@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import BlogGrid from '@/components/BlogGrid'
 import { ChevronLeft, ChevronRight, Play } from 'lucide-react'
@@ -9,6 +10,7 @@ import { getChannelVideos } from '@/lib/youtube'
 const BASE = '/assets'
 
 export default function HomeContent({ lang = 'es', enPosts = null }) {
+  const { data: session } = useSession()
   const isEn = lang === 'en';
   const [activeTestimonial, setActiveTestimonial] = useState(0)
   const [latestVideo, setLatestVideo] = useState(null)
@@ -113,9 +115,17 @@ export default function HomeContent({ lang = 'es', enPosts = null }) {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            {!session && (
+              <Link
+                href="/login"
+                className="bg-transparent border-2 border-white hover:bg-white text-white hover:text-[#33275f] px-8 py-3 rounded-full font-bold tracking-wide transition-all duration-300 shadow-lg"
+              >
+                {isEn ? 'Log In' : 'Ingresar a mi cuenta'}
+              </Link>
+            )}
             <Link
               href={t.process.link}
-              className="bg-white/10 hover:bg-white/20 backdrop-blur-sm border-2 border-white text-white px-8 py-3 rounded-full font-bold tracking-wide transition-all duration-300"
+              className="bg-white/10 hover:bg-white/20 backdrop-blur-sm border-2 border-transparent text-white px-8 py-3 rounded-full font-bold tracking-wide transition-all duration-300"
             >
               {isEn ? 'The Process' : 'El Proceso'}
             </Link>

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { Menu, X } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useSession } from 'next-auth/react'
 
 const NAV_ES = [
   { href: '/',               label: 'Inicio' },
@@ -86,6 +87,7 @@ export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
   const pathname = usePathname()
+  const { data: session, status } = useSession()
 
   // Auto-detect language from URL
   const lang = pathname.startsWith('/en') ? 'en' : 'es'
@@ -155,6 +157,36 @@ export default function Navbar() {
             </Link>
           ))}
 
+          {/* Enlaces de Autenticación (Desktop) */}
+          {status === 'authenticated' && (
+            <Link
+              href="/dashboard"
+              className="text-[15px] xl:text-[16px] transition-all duration-300 whitespace-nowrap font-bold hover:opacity-80"
+              style={{
+                color: textColor,
+                textDecoration: 'none',
+                textShadow: !isScrolled ? '0px 2px 4px rgba(0,0,0,0.6)' : 'none',
+              }}
+            >
+              Mi Panel
+            </Link>
+          )}
+
+          {/* Enlace Admin si corresponde */}
+          {(session?.user?.role === 'Admin' || session?.user?.role === 'Transmisor') && (
+            <Link
+              href="/admin"
+              className="text-[15px] xl:text-[16px] transition-all duration-300 whitespace-nowrap font-bold hover:opacity-80"
+              style={{
+                color: '#B681AE',
+                textDecoration: 'none',
+                textShadow: !isScrolled ? '0px 2px 4px rgba(0,0,0,0.6)' : 'none',
+              }}
+            >
+              Admin
+            </Link>
+          )}
+
           {/* Language toggle button — visually distinct */}
           <Link
             href={langToggle.href}
@@ -203,6 +235,38 @@ export default function Navbar() {
                 {item.label}
               </Link>
             ))}
+
+            {/* Enlaces de Autenticación (Mobile) */}
+            {status === 'authenticated' && (
+              <Link
+                href="/dashboard"
+                onClick={() => setIsOpen(false)}
+                className="text-left px-6 py-3 text-sm font-bold transition-colors hover:bg-purple-50"
+                style={{
+                  color: '#33275f',
+                  borderLeft: '3px solid transparent',
+                  textDecoration: 'none',
+                }}
+              >
+                Mi Panel
+              </Link>
+            )}
+
+            {/* Enlace Admin si corresponde (Mobile) */}
+            {(session?.user?.role === 'Admin' || session?.user?.role === 'Transmisor') && (
+              <Link
+                href="/admin"
+                onClick={() => setIsOpen(false)}
+                className="text-left px-6 py-3 text-sm font-bold transition-colors hover:bg-purple-50"
+                style={{
+                  color: '#B681AE',
+                  borderLeft: '3px solid transparent',
+                  textDecoration: 'none',
+                }}
+              >
+                Admin
+              </Link>
+            )}
 
             {/* Language toggle — mobile */}
             <div className="px-6 pt-3 pb-1">

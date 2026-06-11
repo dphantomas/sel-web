@@ -10,10 +10,17 @@
     "lint": "eslint ."
   },
   "dependencies": {
+    "@prisma/adapter-pg": "^7.8.0",
+    "@prisma/client": "^7.8.0",
     "@tailwindcss/postcss": "^4.3.0",
+    "bcryptjs": "^3.0.3",
     "gray-matter": "^4.0.3",
     "lucide-react": "^1.17.0",
     "next": "^16.2.7",
+    "next-auth": "^4.24.14",
+    "nodemailer": "^7.0.13",
+    "pg": "^8.21.0",
+    "prisma": "^7.8.0",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
     "remark": "^15.0.1",
@@ -22,6 +29,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@types/pg": "^8.20.0",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "autoprefixer": "^10.5.0",
@@ -31,5 +39,8 @@
     "globals": "^17.6.0",
     "postcss": "^8.5.15",
     "tailwindcss": "^4.3.0"
+  },
+  "prisma": {
+    "seed": "node prisma/seed.js"
   }
 }
