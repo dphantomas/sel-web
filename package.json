@@ -12,6 +12,7 @@
   "dependencies": {
     "@prisma/adapter-pg": "^7.8.0",
     "@prisma/client": "^7.8.0",
+    "@serwist/next": "^9.5.11",
     "@tailwindcss/postcss": "^4.3.0",
     "bcryptjs": "^3.0.3",
     "gray-matter": "^4.0.3",
@@ -25,6 +26,7 @@
     "react-dom": "^19.2.6",
     "remark": "^15.0.1",
     "remark-html": "^16.0.1",
+    "serwist": "^9.5.11",
     "turndown": "^7.2.4"
   },
   "devDependencies": {
@@ -38,7 +40,8 @@
     "eslint-plugin-react-refresh": "^0.5.2",
     "globals": "^17.6.0",
     "postcss": "^8.5.15",
-    "tailwindcss": "^4.3.0"
+    "tailwindcss": "^4.3.0",
+    "typescript": "6.0.3"
   },
   "prisma": {
     "seed": "node prisma/seed.js"

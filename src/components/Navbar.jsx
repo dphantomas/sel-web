@@ -208,16 +208,19 @@ export default function Navbar() {
         <button
           onClick={() => setIsOpen(!isOpen)}
           className="lg:hidden p-2 rounded-md transition-colors cursor-pointer"
-          style={{ color: textColor }}
+          style={{ 
+            color: textColor,
+            backgroundColor: !isScrolled ? 'rgba(0,0,0,0.15)' : 'transparent'
+          }}
           aria-label={lang === 'en' ? 'Open menu' : 'Abrir menú'}
         >
-          {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
         </button>
       </div>
 
       {/* Mobile Menu */}
       {isOpen && (
-        <div className="lg:hidden bg-white border-t shadow-xl">
+        <div className="lg:hidden bg-white border-t shadow-xl absolute top-full left-0 w-full">
           <div className="flex flex-col py-4">
             {navItems.map((item) => (
               <Link

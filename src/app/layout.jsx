@@ -21,12 +21,17 @@ export const metadata = {
   twitter: {
     card: 'summary_large_image',
   },
+  manifest: '/manifest.json',
   alternates: {
     languages: {
       'es': '/',
       'en': '/en/home/',
     },
   },
+}
+
+export const viewport = {
+  themeColor: '#33275f',
 }
 
 export default function RootLayout({ children }) {
