@@ -108,9 +108,9 @@ export default function Navbar() {
   }
 
 
-  // All pages have a dark section header at the top → white text when not scrolled
-  const textColor = !isScrolled ? '#ffffff' : '#33275f'
-  const borderColor = !isScrolled ? '#ffffff' : '#33275f'
+  // Only the home page has a dark hero image under the header
+  const textColor = (!isScrolled && isHome) ? '#ffffff' : '#33275f'
+  const borderColor = (!isScrolled && isHome) ? '#ffffff' : '#33275f'
 
   // Language toggle: links to the equivalent page in the other language
   const langToggle = lang === 'en'
