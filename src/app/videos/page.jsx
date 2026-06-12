@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { getChannelVideos } from '@/lib/youtube'
 import VideoGrid from '@/components/VideoGrid'
 import ShortsCarousel from '@/components/ShortsCarousel'
 
@@ -15,10 +14,13 @@ export default function VideosPage() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const data = await getChannelVideos()
+        const res = await fetch('/api/videos')
+        if (!res.ok) throw new Error('Failed to fetch')
+        const data = await res.json()
+        if (!data || !data.channel) throw new Error('Invalid data')
         setChannel(data.channel)
-        setVideos(data.videos)
-        setShorts(data.shorts)
+        setVideos(data.videos || [])
+        setShorts(data.shorts || [])
       } catch (e) {
         console.error('[Videos] Failed to load:', e)
         setError(true)
