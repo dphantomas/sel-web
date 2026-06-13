@@ -17,6 +17,7 @@ export default function RegistroPage() {
     confirmPassword: ''
   })
   const [error, setError] = useState('')
+  const [successMessage, setSuccessMessage] = useState('')
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
@@ -51,19 +52,8 @@ export default function RegistroPage() {
         throw new Error(data.error || 'Ocurrió un error al registrarse.')
       }
 
-      // Registro exitoso, hacer auto-login
-      const result = await signIn('credentials', {
-        redirect: false,
-        email: formData.email,
-        password: formData.password
-      })
-
-      if (result?.error) {
-        throw new Error('Cuenta creada, pero falló el inicio de sesión automático.')
-      }
-
-      router.push('/')
-      router.refresh()
+      // Mostrar mensaje de éxito y pedir que verifiquen el correo
+      setSuccessMessage(data.message || 'Registro exitoso. Revisa tu correo electrónico para activar tu cuenta.')
     } catch (err) {
       setError(err.message)
     } finally {
@@ -95,7 +85,19 @@ export default function RegistroPage() {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-5">
+        {successMessage ? (
+          <div className="mb-6 bg-green-50 border-l-4 border-green-500 text-green-700 p-6 rounded-r-lg text-center space-y-4">
+            <h3 className="font-bold text-lg">¡Casi listo!</h3>
+            <p>{successMessage}</p>
+            <p className="text-sm">Si no lo encuentras, revisa tu carpeta de Spam o Correo no deseado.</p>
+            <div className="pt-4">
+              <Link href="/login" className="inline-block bg-[#9187BA] text-white px-6 py-2 rounded-xl font-bold hover:bg-[#B681AE] transition">
+                Ir a Iniciar Sesión
+              </Link>
+            </div>
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-5">
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-semibold text-[#33275f] uppercase tracking-wider mb-2">
@@ -216,13 +218,16 @@ export default function RegistroPage() {
             {loading ? 'REGISTRANDO...' : 'REGISTRARSE'}
           </button>
         </form>
+        )}
 
-        <div className="mt-8 text-center text-sm text-[#666]">
-          ¿Ya tienes una cuenta?{' '}
-          <Link href="/login" className="text-[#33275f] font-bold hover:underline transition">
-            Inicia sesión aquí
-          </Link>
-        </div>
+        {!successMessage && (
+          <div className="mt-8 text-center text-sm text-[#666]">
+            ¿Ya tienes una cuenta?{' '}
+            <Link href="/login" className="text-[#33275f] font-bold hover:underline transition">
+              Inicia sesión aquí
+            </Link>
+          </div>
+        )}
       </div>
     </div>
   )

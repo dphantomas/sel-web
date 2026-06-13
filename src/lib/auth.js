@@ -28,6 +28,10 @@ export const authOptions = {
           throw new Error('El correo ingresado no está registrado.')
         }
 
+        if (!user.emailVerified) {
+          throw new Error('Debes verificar tu correo electrónico antes de iniciar sesión. Por favor, revisa tu bandeja de entrada.')
+        }
+
         const isValid = await bcrypt.compare(credentials.password, user.passwordHash)
 
         if (!isValid) {
@@ -58,6 +62,7 @@ export const authOptions = {
             dbUser = await prisma.user.create({
               data: {
                 email: emailLower,
+                emailVerified: new Date(), // Usuarios de Google se verifican automáticamente
                 firstName: profile?.given_name || user.name || 'Usuario',
                 lastName: profile?.family_name || '',
                 passwordHash: '', // Vacío para usuarios de Google
