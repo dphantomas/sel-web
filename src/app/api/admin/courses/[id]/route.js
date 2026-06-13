@@ -12,7 +12,7 @@ export async function PUT(req, { params }) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 403 })
     }
 
-    const { id } = params
+    const { id } = await params
     if (!id) {
       return NextResponse.json({ error: 'Falta el ID del curso' }, { status: 400 })
     }
