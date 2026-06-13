@@ -33,8 +33,8 @@ export async function POST(req) {
 
     // Generar contraseña base desde el prefijo del correo
     const emailPrefix = emailLower.split('@')[0]
-    // Asegurar que tenga mínimo 6 caracteres (rellenando con "123" si es corto)
-    const rawPassword = emailPrefix.padEnd(6, '123')
+    // Asegurar que siempre termine en "123"
+    const rawPassword = emailPrefix + '123'
     const passwordHash = await bcrypt.hash(rawPassword, 10)
 
     // Crear el usuario

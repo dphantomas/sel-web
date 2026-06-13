@@ -106,7 +106,7 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
       setUsers([...users, data.user])
       setIsCreatingUser(false)
       setNewUserData({ firstName: '', lastName: '', email: '', phone: '', role: 'Participante' })
-      alert(`Usuario creado con éxito. Su contraseña inicial es: ${newUserData.email.split('@')[0].padEnd(6, '123')}`)
+      alert(`Usuario creado con éxito. Su contraseña inicial es: ${newUserData.email.split('@')[0]}123`)
     } catch (error) {
       console.error(error)
       alert(error.message || 'Hubo un error al crear el usuario.')
