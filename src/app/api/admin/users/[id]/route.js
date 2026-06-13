@@ -50,3 +50,33 @@ export async function PUT(req, { params }) {
     return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 })
   }
 }
+
+export async function DELETE(req, { params }) {
+  try {
+    const session = await getServerSession(authOptions)
+
+    // Validar autorización
+    if (!session || (session.user.role !== 'Admin' && session.user.role !== 'Transmisor')) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 403 })
+    }
+
+    const { id } = params
+    if (!id) {
+      return NextResponse.json({ error: 'Falta el ID del usuario' }, { status: 400 })
+    }
+
+    // Prevenir que el admin se borre a sí mismo
+    if (session.user.id === id) {
+      return NextResponse.json({ error: 'No puedes eliminar tu propia cuenta' }, { status: 400 })
+    }
+
+    await prisma.user.delete({
+      where: { id }
+    })
+
+    return NextResponse.json({ message: 'Usuario eliminado correctamente' })
+  } catch (error) {
+    console.error('Error eliminando usuario:', error)
+    return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 })
+  }
+}

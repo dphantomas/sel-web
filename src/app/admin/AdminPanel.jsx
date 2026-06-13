@@ -13,6 +13,9 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
   
   // Estados para modales de edición/creación
   const [editingUser, setEditingUser] = useState(null)
+  const [isCreatingUser, setIsCreatingUser] = useState(false)
+  const [newUserData, setNewUserData] = useState({ firstName: '', lastName: '', email: '', phone: '', role: 'Participante' })
+  
   const [editingCourse, setEditingCourse] = useState(null)
   const [isCreatingCourse, setIsCreatingCourse] = useState(false)
   const [newCourseData, setNewCourseData] = useState({ title: '', slug: '', description: '', type: 'Inicio', published: false })
@@ -80,6 +83,58 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
       alert('Hubo un error al guardar los datos del usuario.')
     } finally {
       setIsSaving(false)
+    }
+  }
+
+  // =================== LOGICA CREACION USUARIO ===================
+  const handleCreateUserSubmit = async (e) => {
+    e.preventDefault()
+    setIsSaving(true)
+    try {
+      const res = await fetch(`/api/admin/users`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newUserData)
+      })
+
+      if (!res.ok) {
+        const errorData = await res.json()
+        throw new Error(errorData.error || 'Error al crear usuario')
+      }
+      
+      const data = await res.json()
+      setUsers([...users, data.user])
+      setIsCreatingUser(false)
+      setNewUserData({ firstName: '', lastName: '', email: '', phone: '', role: 'Participante' })
+      alert(`Usuario creado con éxito. Su contraseña inicial es: ${newUserData.email.split('@')[0].padEnd(6, '123')}`)
+    } catch (error) {
+      console.error(error)
+      alert(error.message || 'Hubo un error al crear el usuario.')
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  // =================== LOGICA ELIMINACION USUARIO ===================
+  const handleDeleteUser = async (userId, userName) => {
+    if (!window.confirm(`⚠️ ATENCIÓN ⚠️\n\n¿Estás seguro de que deseas ELIMINAR permanentemente a ${userName}?\n\nEsta acción borrará todo su progreso en cursos y no se puede deshacer.`)) {
+      return
+    }
+    
+    try {
+      const res = await fetch(`/api/admin/users/${userId}`, {
+        method: 'DELETE'
+      })
+
+      if (!res.ok) {
+        const errorData = await res.json()
+        throw new Error(errorData.error || 'Error al eliminar usuario')
+      }
+
+      setUsers(users.filter(u => u.id !== userId))
+    } catch (error) {
+      console.error(error)
+      alert(error.message || 'Hubo un error al eliminar el usuario.')
     }
   }
 
@@ -178,8 +233,8 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
       {/* VISTA PARTICIPANTES */}
       {activeTab === 'users' && (
         <>
-          <div className="p-6 border-b border-gray-100 bg-white">
-            <div className="relative max-w-md">
+          <div className="p-6 border-b border-gray-100 bg-white flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="relative w-full max-w-md">
               <input
                 type="text"
                 placeholder="Buscar por nombre, email o teléfono..."
@@ -193,6 +248,12 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
                 </svg>
               </div>
             </div>
+            <button
+              onClick={() => setIsCreatingUser(true)}
+              className="bg-[#33275f] text-white px-5 py-2.5 rounded-xl font-bold hover:bg-[#4c3c86] transition shadow-sm whitespace-nowrap"
+            >
+              + Crear Nuevo Participante
+            </button>
           </div>
 
           <div className="overflow-x-auto">
@@ -220,12 +281,20 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
                   filteredUsers.map((user) => (
                     <tr key={user.id} className="hover:bg-gray-50/50 transition">
                       <td className="py-4 px-6">
-                        <button
-                          onClick={() => setEditingUser(user)}
-                          className="text-[#9187BA] hover:text-[#33275f] font-bold text-xs underline"
-                        >
-                          Editar
-                        </button>
+                        <div className="flex flex-col gap-2">
+                          <button
+                            onClick={() => setEditingUser(user)}
+                            className="text-[#9187BA] hover:text-[#33275f] font-bold text-xs underline text-left"
+                          >
+                            Editar
+                          </button>
+                          <button
+                            onClick={() => handleDeleteUser(user.id, `${user.firstName} ${user.lastName}`)}
+                            className="text-red-400 hover:text-red-600 font-bold text-xs underline text-left"
+                          >
+                            Eliminar
+                          </button>
+                        </div>
                       </td>
                       <td className="py-4 px-6">
                         <div className="font-bold text-[#33275f]">
@@ -304,6 +373,51 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
                 </button>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* MODAL CREAR USUARIO */}
+      {isCreatingUser && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
+            <h2 className="text-xl font-bold text-[#33275f] mb-4">Crear Nuevo Participante</h2>
+            <form onSubmit={handleCreateUserSubmit}>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Email</label>
+                  <input type="email" required value={newUserData.email} onChange={(e) => setNewUserData({...newUserData, email: e.target.value})} className="w-full px-4 py-2 rounded-xl border focus:border-[#9187BA] focus:ring-1 focus:ring-[#9187BA] outline-none" placeholder="ejemplo@email.com" />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Nombre</label>
+                    <input type="text" required value={newUserData.firstName} onChange={(e) => setNewUserData({...newUserData, firstName: e.target.value})} className="w-full px-4 py-2 rounded-xl border focus:border-[#9187BA] focus:ring-1 focus:ring-[#9187BA] outline-none" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Apellido</label>
+                    <input type="text" required value={newUserData.lastName} onChange={(e) => setNewUserData({...newUserData, lastName: e.target.value})} className="w-full px-4 py-2 rounded-xl border focus:border-[#9187BA] focus:ring-1 focus:ring-[#9187BA] outline-none" />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Teléfono</label>
+                  <input type="text" value={newUserData.phone} onChange={(e) => setNewUserData({...newUserData, phone: e.target.value})} className="w-full px-4 py-2 rounded-xl border focus:border-[#9187BA] focus:ring-1 focus:ring-[#9187BA] outline-none" placeholder="+549112345678" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Rol</label>
+                  <select value={newUserData.role} onChange={(e) => setNewUserData({...newUserData, role: e.target.value})} className="w-full px-4 py-2 rounded-xl border focus:border-[#9187BA] focus:ring-1 focus:ring-[#9187BA] outline-none bg-white">
+                    <option value="Participante">Participante</option>
+                    <option value="Transmisor">Transmisor</option>
+                    <option value="Admin">Admin</option>
+                  </select>
+                </div>
+              </div>
+              <div className="mt-6 flex justify-end gap-3">
+                <button type="button" onClick={() => setIsCreatingUser(false)} className="px-4 py-2 rounded-xl text-gray-500 font-bold hover:bg-gray-100 transition">Cancelar</button>
+                <button type="submit" disabled={isSaving} className="px-6 py-2 rounded-xl bg-[#B681AE] text-white font-bold hover:bg-[#9187BA] transition disabled:opacity-50">
+                  {isSaving ? 'Creando...' : 'Crear Usuario'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
