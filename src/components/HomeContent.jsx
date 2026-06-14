@@ -146,13 +146,9 @@ export default function HomeContent({ lang = 'es', enPosts = null }) {
 
       {/* 2. THE PROCESS SECTION (Parallax) */}
       <section
-        className="relative py-16"
+        className="relative py-16 parallax-bg"
         style={{
           backgroundImage: `url(${BASE}/fondo-blog-1.jpg)`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundAttachment: 'fixed',
-          backgroundRepeat: 'no-repeat',
         }}
       >
         <div className="absolute inset-0 bg-white/80" />

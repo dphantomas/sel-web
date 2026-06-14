@@ -69,6 +69,23 @@ body {
   background-attachment: fixed;
 }
 
+/* Generic parallax background */
+.parallax-bg {
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+
+/* Fix for background-attachment: fixed on mobile/iOS */
+@media (max-width: 1024px) {
+  .hero-bg,
+  .parallax-bg,
+  .quienes-bg {
+    background-attachment: scroll !important;
+  }
+}
+
 /* Internal page section header background */
 .section-header-bg {
   background-image: url('/assets/cabezal2.jpg');
