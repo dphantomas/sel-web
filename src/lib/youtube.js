@@ -136,6 +136,7 @@ async function getVideoDetails(videoIds) {
  * Parse ISO 8601 duration (PT1M30S) to seconds
  */
 export function parseDuration(iso) {
+  if (!iso) return 0
   const match = iso.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/)
   if (!match) return 0
   const hours = parseInt(match[1] || '0', 10)

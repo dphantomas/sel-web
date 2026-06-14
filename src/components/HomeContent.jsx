@@ -5,7 +5,6 @@ import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import BlogGrid from '@/components/BlogGrid'
 import { ChevronLeft, ChevronRight, Play } from 'lucide-react'
-import { getChannelVideos } from '@/lib/youtube'
 
 const BASE = '/assets'
 
@@ -16,11 +15,14 @@ export default function HomeContent({ lang = 'es', enPosts = null }) {
   const [latestVideo, setLatestVideo] = useState(null)
 
   useEffect(() => {
-    getChannelVideos().then(data => {
-      if (data?.videos?.length > 0) {
-        setLatestVideo(data.videos[0])
-      }
-    }).catch(console.error)
+    fetch('/api/videos')
+      .then(res => res.json())
+      .then(data => {
+        if (data?.videos?.length > 0) {
+          setLatestVideo(data.videos[0])
+        }
+      })
+      .catch(console.error)
   }, [])
 
   const t = {
