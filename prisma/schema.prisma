@@ -1,5 +1,5 @@
 datasource db {
-  provider  = "postgresql"
+  provider = "postgresql"
 }
 
 generator client {
@@ -7,17 +7,23 @@ generator client {
 }
 
 model User {
-  id           String             @id @default(cuid())
-  firstName    String
-  lastName     String
-  email        String             @unique
+  id            String    @id @default(cuid())
+  firstName     String
+  lastName      String
+  email         String    @unique
   emailVerified DateTime?
-  passwordHash String
-  phone        String?
-  role         Role               @default(Guest)
-  createdAt    DateTime           @default(now())
-  updatedAt    DateTime           @updatedAt
-  
+  passwordHash  String
+  phone         String?
+  addressLine1  String?
+  addressLine2  String?
+  zipCode       String?
+  country       String?
+  sparkName     String?
+  image         String?
+  role          Role      @default(Guest)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
   unlockedCourses UserCourseAccess[]
   progress        Progress[]
 }
@@ -30,25 +36,62 @@ enum Role {
 }
 
 enum CourseType {
-  Inicio
-  Rocas
-  SieteTemplos
-  RetiroIniciaicion
-  RetiroNH
-  RetiroNuevoAmanecer
+  Curso
+  Taller
+  Iniciacion
+  Activacion
+  Retiro
+}
+
+enum Modality {
+  Presencial
+  Virtual
+}
+
+enum Synchronicity {
+  Sincronico
+  Asincronico
 }
 
 model Course {
-  id          String             @id @default(cuid())
-  title       String
-  slug        String             @unique
-  description String?
-  type        CourseType
-  published   Boolean            @default(false)
-  image       String?
-  
+  id               String        @id @default(cuid())
+  title            String
+  slug             String        @unique
+  shortDescription String?
+  description      String?
+  type             CourseType
+  durationDays     Int?
+  modality         Modality      @default(Virtual)
+  synchronicity    Synchronicity @default(Asincronico)
+  published        Boolean       @default(false)
+  image            String?
+
   modules         Module[]
+  instances       CourseInstance[]
   usersWithAccess UserCourseAccess[]
+  resources       Resource[] // Resources attached to the whole course
+
+  // Pre-requisitos a nivel de Curso
+  prerequisites   Course[] @relation("CoursePrerequisites")
+  prerequisiteFor Course[] @relation("CoursePrerequisites")
+
+  // Como pre-requisito para una instancia específica
+  prerequisiteForInstances CourseInstance[] @relation("InstancePrerequisiteCourses")
+}
+
+model CourseInstance {
+  id        String    @id @default(cuid())
+  courseId  String
+  startDate DateTime
+  endDate   DateTime?
+  price     Float?
+  location  String?
+
+  course    Course     @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  resources Resource[]
+
+  // Pre-requisitos específicos de esta instancia
+  prerequisites Course[] @relation("InstancePrerequisiteCourses")
 }
 
 model UserCourseAccess {
@@ -56,9 +99,9 @@ model UserCourseAccess {
   userId    String
   courseId  String
   grantedAt DateTime @default(now())
-  
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
 
   @@unique([userId, courseId])
 }
@@ -73,15 +116,37 @@ model Module {
 }
 
 model Lesson {
-  id       String     @id @default(cuid())
-  title    String
-  slug     String     @unique
-  content  String?    // Contenido markdown o html
-  videoUrl String?    // URL de video (Vimeo/YouTube)
-  order    Int        @default(0)
-  moduleId String
-  module   Module     @relation(fields: [moduleId], references: [id], onDelete: Cascade)
-  progress Progress[]
+  id        String     @id @default(cuid())
+  title     String
+  slug      String     @unique
+  content   String? // Contenido markdown o html
+  videoUrl  String? // URL de video (Vimeo/YouTube)
+  order     Int        @default(0)
+  moduleId  String
+  module    Module     @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  progress  Progress[]
+  resources Resource[] // Resources attached specifically to a lesson
+}
+
+model Resource {
+  id             String  @id @default(cuid())
+  name           String
+  type           String // AUDIO, PDF, etc.
+  cloudflareKey  String
+  isDownloadable Boolean @default(false)
+
+  lessonId String?
+  lesson   Lesson? @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  courseId String?
+  course   Course? @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  courseInstanceId String?
+  courseInstance   CourseInstance? @relation(fields: [courseInstanceId], references: [id], onDelete: Cascade)
+
+  overridesResourceId String?
+  overridesResource   Resource?  @relation("ResourceOverrides", fields: [overridesResourceId], references: [id], onDelete: SetNull)
+  overriddenBy        Resource[] @relation("ResourceOverrides")
 }
 
 model Progress {

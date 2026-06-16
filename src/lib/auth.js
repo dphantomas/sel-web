@@ -92,10 +92,16 @@ export const authOptions = {
       return token
     },
     async session({ session, token }) {
-      if (token) {
+      if (token && token.id) {
+        // Consultamos la DB en cada request de sesión para tener los permisos SIEMPRE en tiempo real
+        const dbUser = await prisma.user.findUnique({
+          where: { id: token.id },
+          select: { role: true, phone: true }
+        })
+
         session.user.id = token.id
-        session.user.role = token.role
-        session.user.phone = token.phone
+        session.user.role = dbUser ? dbUser.role : token.role
+        session.user.phone = dbUser ? dbUser.phone : token.phone
       }
       return session
     }

@@ -1,6 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
+import { UploadCloud, User as UserIcon, X, Check, Search } from 'lucide-react'
+import Link from 'next/link'
 
 export default function AdminPanel({ initialUsers, courses: initialCourses }) {
   const [activeTab, setActiveTab] = useState('users') // 'users' | 'courses'
@@ -13,12 +15,12 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
   
   // Estados para modales de edición/creación
   const [editingUser, setEditingUser] = useState(null)
-  const [isCreatingUser, setIsCreatingUser] = useState(false)
-  const [newUserData, setNewUserData] = useState({ firstName: '', lastName: '', email: '', phone: '', role: 'Participante' })
-  
-  const [editingCourse, setEditingCourse] = useState(null)
+  const [editImagePreview, setEditImagePreview] = useState(null)
+  const editFileInputRef = useRef(null)
+
   const [isCreatingCourse, setIsCreatingCourse] = useState(false)
-  const [newCourseData, setNewCourseData] = useState({ title: '', slug: '', description: '', type: 'Inicio', published: false })
+  const [editingCourse, setEditingCourse] = useState(null)
+  const [newCourseData, setNewCourseData] = useState({ title: '', slug: '', description: '', type: 'Curso', published: false })
   const [isSaving, setIsSaving] = useState(false)
 
   // =================== LOGICA DE ACCESOS ===================
@@ -58,19 +60,31 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
   }
 
   // =================== LOGICA EDICION USUARIO ===================
+  const openEditUser = (user) => {
+    setEditingUser(user)
+    setEditImagePreview(user.image || null)
+  }
+
+  const handleEditImageChange = (e) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      const reader = new FileReader()
+      reader.onloadend = () => setEditImagePreview(reader.result)
+      reader.readAsDataURL(file)
+    } else {
+      setEditImagePreview(editingUser?.image || null)
+    }
+  }
+
   const handleUserSubmit = async (e) => {
     e.preventDefault()
     setIsSaving(true)
     try {
+      const formData = new FormData(e.target)
+      
       const res = await fetch(`/api/admin/users/${editingUser.id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          firstName: editingUser.firstName,
-          lastName: editingUser.lastName,
-          phone: editingUser.phone,
-          role: editingUser.role
-        })
+        body: formData
       })
 
       if (!res.ok) throw new Error('Error al actualizar usuario')
@@ -81,35 +95,6 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
     } catch (error) {
       console.error(error)
       alert('Hubo un error al guardar los datos del usuario.')
-    } finally {
-      setIsSaving(false)
-    }
-  }
-
-  // =================== LOGICA CREACION USUARIO ===================
-  const handleCreateUserSubmit = async (e) => {
-    e.preventDefault()
-    setIsSaving(true)
-    try {
-      const res = await fetch(`/api/admin/users`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newUserData)
-      })
-
-      if (!res.ok) {
-        const errorData = await res.json()
-        throw new Error(errorData.error || 'Error al crear usuario')
-      }
-      
-      const data = await res.json()
-      setUsers([...users, data.user])
-      setIsCreatingUser(false)
-      setNewUserData({ firstName: '', lastName: '', email: '', phone: '', role: 'Participante' })
-      alert(`Usuario creado con éxito. Su contraseña inicial es: ${newUserData.email.split('@')[0]}123`)
-    } catch (error) {
-      console.error(error)
-      alert(error.message || 'Hubo un error al crear el usuario.')
     } finally {
       setIsSaving(false)
     }
@@ -132,6 +117,7 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
       }
 
       setUsers(users.filter(u => u.id !== userId))
+      if (editingUser?.id === userId) setEditingUser(null)
     } catch (error) {
       console.error(error)
       alert(error.message || 'Hubo un error al eliminar el usuario.')
@@ -187,7 +173,7 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
       const data = await res.json()
       setCourses([...courses, data.course])
       setIsCreatingCourse(false)
-      setNewCourseData({ title: '', slug: '', description: '', type: 'Inicio', published: false })
+      setNewCourseData({ title: '', slug: '', description: '', type: 'Curso', published: false })
     } catch (error) {
       console.error(error)
       alert(error.message || 'Hubo un error al crear el curso.')
@@ -203,7 +189,8 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
     return (
       `${user.firstName} ${user.lastName}`.toLowerCase().includes(term) ||
       user.email.toLowerCase().includes(term) ||
-      (user.phone || '').toLowerCase().includes(term)
+      (user.phone || '').toLowerCase().includes(term) ||
+      (user.sparkName || '').toLowerCase().includes(term)
     )
   })
 
@@ -237,105 +224,84 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
             <div className="relative w-full max-w-md">
               <input
                 type="text"
-                placeholder="Buscar por nombre, email o teléfono..."
+                placeholder="Buscar por nombre, email, teléfono o chispa..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#9187BA] text-gray-800"
+                className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#9187BA] text-gray-800 transition"
               />
               <div className="absolute left-3 top-3 text-gray-400">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                </svg>
+                <Search className="w-5 h-5" />
               </div>
             </div>
-            <button
-              onClick={() => setIsCreatingUser(true)}
-              className="bg-[#33275f] text-white px-5 py-2.5 rounded-xl font-bold hover:bg-[#4c3c86] transition shadow-sm whitespace-nowrap"
+            <Link
+              href="/admin/users/new"
+              className="bg-[#33275f] text-white px-5 py-2.5 rounded-xl font-bold hover:bg-[#4c3c86] transition shadow-sm whitespace-nowrap text-center"
             >
               + Crear Nuevo Participante
-            </button>
+            </Link>
           </div>
 
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-gray-50 text-gray-500 text-xs font-bold uppercase tracking-wider border-b border-gray-100">
-                  <th className="py-4 px-6">Acciones</th>
-                  <th className="py-4 px-6">Participante</th>
+                <tr className="bg-gray-50/50 text-gray-500 text-xs font-bold uppercase tracking-wider border-b border-gray-100">
+                  <th className="py-4 px-6 w-16">Perfil</th>
+                  <th className="py-4 px-6">Información</th>
                   <th className="py-4 px-6">Rol</th>
-                  {courses.map((course) => (
-                    <th key={course.id} className="py-4 px-6 text-center whitespace-nowrap">
-                      {course.title}
-                    </th>
-                  ))}
+                  <th className="py-4 px-6">Cursos</th>
+                  <th className="py-4 px-6 text-right">Acciones</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100 text-sm">
+              <tbody className="divide-y divide-gray-50 text-sm">
                 {filteredUsers.length === 0 ? (
                   <tr>
-                    <td colSpan={courses.length + 3} className="py-8 text-center text-gray-500">
-                      No se encontraron usuarios.
+                    <td colSpan={5} className="py-12 text-center text-gray-500">
+                      No se encontraron participantes.
                     </td>
                   </tr>
                 ) : (
                   filteredUsers.map((user) => (
-                    <tr key={user.id} className="hover:bg-gray-50/50 transition">
+                    <tr key={user.id} className="hover:bg-gray-50/30 transition group">
                       <td className="py-4 px-6">
-                        <div className="flex flex-col gap-2">
-                          <button
-                            onClick={() => setEditingUser(user)}
-                            className="text-[#9187BA] hover:text-[#33275f] font-bold text-xs underline text-left"
-                          >
-                            Editar
-                          </button>
-                          <button
-                            onClick={() => handleDeleteUser(user.id, `${user.firstName} ${user.lastName}`)}
-                            className="text-red-400 hover:text-red-600 font-bold text-xs underline text-left"
-                          >
-                            Eliminar
-                          </button>
+                        <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-100 border border-gray-200 flex items-center justify-center shrink-0">
+                          {user.image ? (
+                            <img src={user.image} alt={user.firstName} className="w-full h-full object-cover" />
+                          ) : (
+                            <UserIcon className="w-5 h-5 text-gray-400" />
+                          )}
                         </div>
                       </td>
                       <td className="py-4 px-6">
-                        <div className="font-bold text-[#33275f]">
+                        <div className="font-bold text-[#33275f] text-base">
                           {user.firstName} {user.lastName}
+                          {user.sparkName && <span className="text-[#9187BA] font-normal ml-2">✨ {user.sparkName}</span>}
                         </div>
-                        <div className="text-xs text-gray-500 mt-0.5">{user.email}</div>
-                        {user.phone ? (
-                          <div className="text-xs text-[#9187BA] mt-0.5">Wa: {user.phone}</div>
-                        ) : (
-                          <div className="text-xs text-gray-400 mt-0.5 italic">Sin teléfono</div>
-                        )}
+                        <div className="text-sm text-gray-500 mt-0.5">{user.email}</div>
+                        <div className="text-xs text-gray-400 mt-1 flex items-center gap-2">
+                          {user.phone && <span>Wa: {user.phone}</span>}
+                          {user.country && <span>📍 {user.country}</span>}
+                        </div>
                       </td>
                       <td className="py-4 px-6 whitespace-nowrap">
-                        <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-bold ${
+                        <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold ${
                           user.role === 'Admin' ? 'bg-red-50 text-red-600' : user.role === 'Transmisor' ? 'bg-blue-50 text-blue-600' : 'bg-gray-100 text-gray-600'
                         }`}>
                           {user.role}
                         </span>
                       </td>
-                      {courses.map((course) => {
-                        const isUnlocked = user.unlockedCourses.some((uc) => uc.courseId === course.id)
-                        const isLoading = updatingId === `${user.id}-${course.id}`
-                        return (
-                          <td key={course.id} className="py-4 px-6 text-center">
-                            <label className="inline-flex items-center justify-center cursor-pointer p-2 rounded-lg hover:bg-gray-100 transition relative">
-                              <input
-                                type="checkbox"
-                                checked={isUnlocked}
-                                disabled={isLoading}
-                                onChange={() => handleToggleAccess(user.id, course.id, isUnlocked)}
-                                className="w-5 h-5 rounded text-[#33275f] focus:ring-[#9187BA] border-gray-300 transition"
-                              />
-                              {isLoading && (
-                                <span className="absolute inset-0 flex items-center justify-center bg-white/70">
-                                  <span className="w-4 h-4 border-2 border-[#33275f] border-t-transparent rounded-full animate-spin"></span>
-                                </span>
-                              )}
-                            </label>
-                          </td>
-                        )
-                      })}
+                      <td className="py-4 px-6">
+                        <span className="text-xs font-bold text-[#B681AE] bg-[#B681AE]/10 px-3 py-1 rounded-full">
+                          {user.unlockedCourses?.length || 0} habilitados
+                        </span>
+                      </td>
+                      <td className="py-4 px-6 text-right">
+                        <button
+                          onClick={() => openEditUser(user)}
+                          className="text-[#9187BA] hover:text-[#33275f] font-bold text-sm bg-white border border-gray-200 hover:border-[#9187BA] px-4 py-2 rounded-lg transition shadow-sm"
+                        >
+                          Gestionar
+                        </button>
+                      </td>
                     </tr>
                   ))
                 )}
@@ -377,92 +343,204 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
         </div>
       )}
 
-      {/* MODAL CREAR USUARIO */}
-      {isCreatingUser && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
-            <h2 className="text-xl font-bold text-[#33275f] mb-4">Crear Nuevo Participante</h2>
-            <form onSubmit={handleCreateUserSubmit}>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Email</label>
-                  <input type="email" required value={newUserData.email} onChange={(e) => setNewUserData({...newUserData, email: e.target.value})} className="w-full px-4 py-2 rounded-xl border focus:border-[#9187BA] focus:ring-1 focus:ring-[#9187BA] outline-none" placeholder="ejemplo@email.com" />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Nombre</label>
-                    <input type="text" required value={newUserData.firstName} onChange={(e) => setNewUserData({...newUserData, firstName: e.target.value})} className="w-full px-4 py-2 rounded-xl border focus:border-[#9187BA] focus:ring-1 focus:ring-[#9187BA] outline-none" />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Apellido</label>
-                    <input type="text" required value={newUserData.lastName} onChange={(e) => setNewUserData({...newUserData, lastName: e.target.value})} className="w-full px-4 py-2 rounded-xl border focus:border-[#9187BA] focus:ring-1 focus:ring-[#9187BA] outline-none" />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Teléfono</label>
-                  <input type="text" value={newUserData.phone} onChange={(e) => setNewUserData({...newUserData, phone: e.target.value})} className="w-full px-4 py-2 rounded-xl border focus:border-[#9187BA] focus:ring-1 focus:ring-[#9187BA] outline-none" placeholder="+549112345678" />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Rol</label>
-                  <select value={newUserData.role} onChange={(e) => setNewUserData({...newUserData, role: e.target.value})} className="w-full px-4 py-2 rounded-xl border focus:border-[#9187BA] focus:ring-1 focus:ring-[#9187BA] outline-none bg-white">
-                    <option value="Participante">Participante</option>
-                    <option value="Transmisor">Transmisor</option>
-                    <option value="Admin">Admin</option>
-                  </select>
-                </div>
-              </div>
-              <div className="mt-6 flex justify-end gap-3">
-                <button type="button" onClick={() => setIsCreatingUser(false)} className="px-4 py-2 rounded-xl text-gray-500 font-bold hover:bg-gray-100 transition">Cancelar</button>
-                <button type="submit" disabled={isSaving} className="px-6 py-2 rounded-xl bg-[#B681AE] text-white font-bold hover:bg-[#9187BA] transition disabled:opacity-50">
-                  {isSaving ? 'Creando...' : 'Crear Usuario'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* MODAL EDITAR USUARIO */}
+      {/* MODAL EDITAR USUARIO COMPLETO */}
       {editingUser && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
-            <h2 className="text-xl font-bold text-[#33275f] mb-4">Editar Participante</h2>
-            <form onSubmit={handleUserSubmit}>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Email (Solo lectura)</label>
-                  <input type="text" value={editingUser.email} disabled className="w-full px-4 py-2 bg-gray-100 rounded-xl border text-gray-500" />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Nombre</label>
-                    <input type="text" required value={editingUser.firstName} onChange={(e) => setEditingUser({...editingUser, firstName: e.target.value})} className="w-full px-4 py-2 rounded-xl border focus:border-[#9187BA] focus:ring-1 focus:ring-[#9187BA] outline-none" />
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 md:p-6 overflow-y-auto">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl flex flex-col max-h-full">
+            
+            <div className="p-6 border-b border-gray-100 flex justify-between items-center shrink-0">
+              <div>
+                <h2 className="text-2xl font-bold text-[#33275f]">Gestionar Participante</h2>
+                <p className="text-sm text-gray-500">{editingUser.email}</p>
+              </div>
+              <button onClick={() => setEditingUser(null)} className="text-gray-400 hover:text-gray-700 bg-gray-100 hover:bg-gray-200 p-2 rounded-full transition">
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-6 grid grid-cols-1 lg:grid-cols-3 gap-8">
+              
+              {/* Columna Izquierda: Formulario de Datos */}
+              <div className="lg:col-span-2 space-y-8">
+                <form id="editUserForm" onSubmit={handleUserSubmit} className="space-y-8">
+                  
+                  {/* Foto de Perfil */}
+                  <div className="flex flex-col sm:flex-row items-center gap-6 p-6 bg-gray-50/50 rounded-2xl border border-gray-100">
+                    <div className="relative w-24 h-24 shrink-0 rounded-full border-4 border-[#B681AE]/20 bg-white overflow-hidden flex items-center justify-center group">
+                      {editImagePreview ? (
+                        <img src={editImagePreview} alt="Preview" className="w-full h-full object-cover" />
+                      ) : (
+                        <UserIcon className="w-10 h-10 text-gray-300" />
+                      )}
+                      
+                      <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                        <UploadCloud className="w-6 h-6 text-white" />
+                      </div>
+                      
+                      <input 
+                        ref={editFileInputRef}
+                        type="file" 
+                        name="image" 
+                        accept="image/*" 
+                        onChange={handleEditImageChange}
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" 
+                      />
+                    </div>
+                    <div className="text-center sm:text-left">
+                      <span className="text-lg font-bold text-[#33275f] block mb-1">Foto de Perfil</span>
+                      <p className="text-sm text-gray-500">Haz clic en la imagen para actualizarla.</p>
+                    </div>
                   </div>
+
+                  {/* Info Personal */}
                   <div>
-                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Apellido</label>
-                    <input type="text" required value={editingUser.lastName} onChange={(e) => setEditingUser({...editingUser, lastName: e.target.value})} className="w-full px-4 py-2 rounded-xl border focus:border-[#9187BA] focus:ring-1 focus:ring-[#9187BA] outline-none" />
+                    <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4 border-b pb-2">Información Personal</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-bold text-gray-700 mb-1">Nombre</label>
+                        <input type="text" name="firstName" required defaultValue={editingUser.firstName} className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#9187BA] outline-none" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-gray-700 mb-1">Apellido</label>
+                        <input type="text" name="lastName" required defaultValue={editingUser.lastName} className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#9187BA] outline-none" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-gray-700 mb-1">Nombre de Chispa</label>
+                        <input type="text" name="sparkName" defaultValue={editingUser.sparkName || ''} className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#9187BA] outline-none" placeholder="Opcional" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-gray-700 mb-1">Celular / WhatsApp</label>
+                        <input type="text" name="phone" defaultValue={editingUser.phone || ''} className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#9187BA] outline-none" />
+                      </div>
+                      <div className="sm:col-span-2">
+                        <label className="block text-xs font-bold text-gray-700 mb-1">Rol en la Plataforma</label>
+                        <select name="role" defaultValue={editingUser.role} className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#9187BA] outline-none bg-white">
+                          <option value="Participante">Participante</option>
+                          <option value="Transmisor">Transmisor</option>
+                          <option value="Admin">Admin</option>
+                        </select>
+                      </div>
+                    </div>
                   </div>
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Teléfono</label>
-                  <input type="text" value={editingUser.phone || ''} onChange={(e) => setEditingUser({...editingUser, phone: e.target.value})} className="w-full px-4 py-2 rounded-xl border focus:border-[#9187BA] focus:ring-1 focus:ring-[#9187BA] outline-none" />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Rol</label>
-                  <select value={editingUser.role} onChange={(e) => setEditingUser({...editingUser, role: e.target.value})} className="w-full px-4 py-2 rounded-xl border focus:border-[#9187BA] focus:ring-1 focus:ring-[#9187BA] outline-none bg-white">
-                    <option value="Participante">Participante</option>
-                    <option value="Transmisor">Transmisor</option>
-                    <option value="Admin">Admin</option>
-                  </select>
+
+                  {/* Residencia */}
+                  <div>
+                    <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4 border-b pb-2">Residencia</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="sm:col-span-2">
+                        <label className="block text-xs font-bold text-gray-700 mb-1">Dirección</label>
+                        <input type="text" name="addressLine1" defaultValue={editingUser.addressLine1 || ''} className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#9187BA] outline-none" />
+                      </div>
+                      <div className="sm:col-span-2">
+                        <label className="block text-xs font-bold text-gray-700 mb-1">Ciudad, Provincia</label>
+                        <input type="text" name="addressLine2" defaultValue={editingUser.addressLine2 || ''} className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#9187BA] outline-none" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-gray-700 mb-1">Código Postal</label>
+                        <input type="text" name="zipCode" defaultValue={editingUser.zipCode || ''} className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#9187BA] outline-none" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-gray-700 mb-1">País</label>
+                        <select name="country" defaultValue={editingUser.country || ''} className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#9187BA] outline-none bg-white">
+                          <option value="" disabled>Seleccionar...</option>
+                          <option value="Argentina">Argentina</option>
+                          <option value="Bolivia">Bolivia</option>
+                          <option value="Chile">Chile</option>
+                          <option value="Colombia">Colombia</option>
+                          <option value="Costa Rica">Costa Rica</option>
+                          <option value="Cuba">Cuba</option>
+                          <option value="Ecuador">Ecuador</option>
+                          <option value="El Salvador">El Salvador</option>
+                          <option value="España">España</option>
+                          <option value="Estados Unidos">Estados Unidos</option>
+                          <option value="Guatemala">Guatemala</option>
+                          <option value="Honduras">Honduras</option>
+                          <option value="México">México</option>
+                          <option value="Nicaragua">Nicaragua</option>
+                          <option value="Panamá">Panamá</option>
+                          <option value="Paraguay">Paraguay</option>
+                          <option value="Perú">Perú</option>
+                          <option value="Puerto Rico">Puerto Rico</option>
+                          <option value="República Dominicana">República Dominicana</option>
+                          <option value="Uruguay">Uruguay</option>
+                          <option value="Venezuela">Venezuela</option>
+                          <option value="Otro">Otro País</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                </form>
+              </div>
+
+              {/* Columna Derecha: Accesos a Cursos e Historial */}
+              <div className="bg-gray-50/50 rounded-2xl border border-gray-100 p-6 flex flex-col h-full">
+                <h3 className="text-[#33275f] font-bold text-lg mb-2">Historial de Cursos</h3>
+                <p className="text-sm text-gray-500 mb-6">Gestioná a qué talleres tiene acceso este usuario. Los cambios aquí se guardan instantáneamente.</p>
+                
+                <div className="space-y-3 flex-1 overflow-y-auto pr-2">
+                  {courses.map((course) => {
+                    const isUnlocked = editingUser.unlockedCourses.some((uc) => uc.courseId === course.id)
+                    const isLoading = updatingId === `${editingUser.id}-${course.id}`
+                    
+                    return (
+                      <div key={course.id} className={`p-4 rounded-xl border flex items-center justify-between transition-all ${isUnlocked ? 'bg-white border-[#B681AE] shadow-sm' : 'bg-transparent border-gray-200'}`}>
+                        <div className="flex-1 pr-4">
+                          <p className={`font-bold text-sm ${isUnlocked ? 'text-[#33275f]' : 'text-gray-600'}`}>{course.title}</p>
+                          <p className="text-xs text-gray-400 mt-0.5">{course.type}</p>
+                        </div>
+                        <label className="relative inline-flex items-center cursor-pointer shrink-0">
+                          <input 
+                            type="checkbox" 
+                            className="sr-only peer"
+                            checked={isUnlocked}
+                            disabled={isLoading}
+                            onChange={() => handleToggleAccess(editingUser.id, course.id, isUnlocked)}
+                          />
+                          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#B681AE]"></div>
+                          {isLoading && (
+                            <span className="absolute inset-0 flex items-center justify-center bg-white/50 rounded-full">
+                              <span className="w-4 h-4 border-2 border-[#33275f] border-t-transparent rounded-full animate-spin"></span>
+                            </span>
+                          )}
+                        </label>
+                      </div>
+                    )
+                  })}
                 </div>
               </div>
-              <div className="mt-6 flex justify-end gap-3">
-                <button type="button" onClick={() => setEditingUser(null)} className="px-4 py-2 rounded-xl text-gray-500 font-bold hover:bg-gray-100 transition">Cancelar</button>
-                <button type="submit" disabled={isSaving} className="px-6 py-2 rounded-xl bg-[#B681AE] text-white font-bold hover:bg-[#9187BA] transition disabled:opacity-50">
-                  {isSaving ? 'Guardando...' : 'Guardar Cambios'}
+
+            </div>
+
+            {/* Footer Modal */}
+            <div className="p-6 border-t border-gray-100 bg-gray-50 flex items-center justify-between shrink-0 rounded-b-2xl">
+              <button 
+                onClick={() => handleDeleteUser(editingUser.id, `${editingUser.firstName} ${editingUser.lastName}`)}
+                className="text-red-500 hover:text-red-700 font-bold text-sm underline px-2"
+              >
+                Eliminar Usuario
+              </button>
+              <div className="flex gap-3">
+                <button type="button" onClick={() => setEditingUser(null)} className="px-5 py-2.5 rounded-xl text-gray-600 font-bold hover:bg-gray-200 transition">
+                  Cancelar
+                </button>
+                <button 
+                  type="submit" 
+                  form="editUserForm"
+                  disabled={isSaving} 
+                  className="px-6 py-2.5 rounded-xl bg-[#33275f] text-white font-bold hover:bg-[#4c3c86] transition shadow-sm disabled:opacity-50 flex items-center gap-2"
+                >
+                  {isSaving ? (
+                    <>
+                      <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                      Guardando...
+                    </>
+                  ) : (
+                    'Guardar Cambios'
+                  )}
                 </button>
               </div>
-            </form>
+            </div>
+
           </div>
         </div>
       )}
@@ -520,12 +598,11 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Tipo de Curso</label>
                   <select value={newCourseData.type} onChange={(e) => setNewCourseData({...newCourseData, type: e.target.value})} className="w-full px-4 py-2 rounded-xl border focus:border-[#9187BA] focus:ring-1 focus:ring-[#9187BA] outline-none bg-white">
-                    <option value="Inicio">Inicio</option>
-                    <option value="Rocas">Rocas</option>
-                    <option value="SieteTemplos">SieteTemplos</option>
-                    <option value="RetiroIniciaicion">RetiroIniciaicion</option>
-                    <option value="RetiroNH">RetiroNH</option>
-                    <option value="RetiroNuevoAmanecer">RetiroNuevoAmanecer</option>
+                    <option value="Curso">Curso</option>
+                    <option value="Taller">Taller</option>
+                    <option value="Iniciacion">Iniciación</option>
+                    <option value="Activacion">Activación</option>
+                    <option value="Retiro">Retiro</option>
                   </select>
                 </div>
                 <div>
