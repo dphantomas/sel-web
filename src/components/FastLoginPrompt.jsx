@@ -66,13 +66,17 @@ export default function FastLoginPrompt() {
 
       const verification = await verificationResp.json()
 
+      if (!verificationResp.ok) {
+        throw new Error(verification.error || 'Error del servidor al validar el dispositivo.')
+      }
+
       if (verification.verified) {
         // Guardar bandera en este dispositivo para no volver a molestar
         localStorage.setItem('device_registered', 'true')
         setSuccess(true)
         setTimeout(() => setIsVisible(false), 3000) // Ocultar después de 3 segs
       } else {
-        throw new Error('No se pudo validar tu dispositivo en el servidor.')
+        throw new Error('La validación del dispositivo falló (verificación incorrecta).')
       }
     } catch (err) {
       console.error(err)
