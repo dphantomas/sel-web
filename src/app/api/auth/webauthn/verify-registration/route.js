@@ -44,7 +44,11 @@ export async function POST(request) {
     const { verified, registrationInfo } = verification
 
     if (verified && registrationInfo) {
-      const { credentialPublicKey, credentialID, counter, credentialDeviceType, credentialBackedUp } = registrationInfo
+      const credentialObj = registrationInfo.credential || registrationInfo
+      const credentialPublicKey = credentialObj.publicKey || credentialObj.credentialPublicKey
+      const credentialID = credentialObj.id || credentialObj.credentialID
+      const counter = credentialObj.counter !== undefined ? credentialObj.counter : registrationInfo.counter
+      const { credentialDeviceType, credentialBackedUp } = registrationInfo
 
       try {
         // Guardar el nuevo autenticador (o actualizar si ya existía en la BD pero no en el localStorage)
