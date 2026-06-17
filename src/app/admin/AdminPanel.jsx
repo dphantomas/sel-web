@@ -23,6 +23,137 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
   const [newCourseData, setNewCourseData] = useState({ title: '', slug: '', description: '', type: 'Curso', published: false })
   const [isSaving, setIsSaving] = useState(false)
 
+  // =================== LOGICA RECURSOS (R2) ===================
+  const [isUploading, setIsUploading] = useState(false)
+  const resourceInputRef = useRef(null)
+
+  const handleUploadResource = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setIsUploading(true)
+    try {
+      // 1. Pedir URL firmada
+      const urlRes = await fetch('/api/admin/upload-url', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fileName: file.name, fileType: file.type })
+      })
+
+      if (!urlRes.ok) throw new Error('Error al obtener link de subida')
+      const { uploadUrl, cloudflareKey } = await urlRes.json()
+
+      // 2. Subir archivo a R2 (S3) directamente
+      const uploadRes = await fetch(uploadUrl, {
+        method: 'PUT',
+        headers: { 'Content-Type': file.type },
+        body: file
+      })
+
+      if (!uploadRes.ok) throw new Error('Error subiendo archivo a la nube')
+
+      // 3. Guardar en BD
+      const isDownloadable = file.type.includes('pdf') || file.type.includes('zip') // por defecto
+      const dbRes = await fetch('/api/admin/resources', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: file.name,
+          type: file.type,
+          cloudflareKey,
+          isDownloadable,
+          courseId: editingCourse.id
+        })
+      })
+
+      if (!dbRes.ok) throw new Error('Error guardando en base de datos')
+      const newResource = await dbRes.json()
+
+      // Actualizar estado
+      const updatedCourse = { 
+        ...editingCourse, 
+        resources: [...(editingCourse.resources || []), newResource] 
+      }
+      setEditingCourse(updatedCourse)
+      setCourses(courses.map(c => c.id === editingCourse.id ? updatedCourse : c))
+      
+      if (resourceInputRef.current) resourceInputRef.current.value = ''
+    } catch (error) {
+      console.error(error)
+      alert(error.message || 'Error en la subida.')
+    } finally {
+      setIsUploading(false)
+    }
+  }
+
+  const handleDeleteResource = async (resourceId) => {
+    if (!window.confirm('¿Seguro que deseas eliminar este archivo? Se borrará permanentemente de la nube.')) return
+    
+    try {
+      const res = await fetch(`/api/admin/resources?id=${resourceId}`, { method: 'DELETE' })
+      if (!res.ok) throw new Error('Error borrando recurso')
+
+      const updatedResources = (editingCourse.resources || []).filter(r => r.id !== resourceId)
+      const updatedCourse = { ...editingCourse, resources: updatedResources }
+      
+      setEditingCourse(updatedCourse)
+      setCourses(courses.map(c => c.id === editingCourse.id ? updatedCourse : c))
+    } catch (error) {
+      alert('Error al borrar el archivo.')
+    }
+  }
+
+  // =================== LOGICA INSTANCIAS ===================
+  const [courseTab, setCourseTab] = useState('data') // 'data' | 'instances' | 'resources'
+  const [isCreatingInstance, setIsCreatingInstance] = useState(false)
+  const [newInstanceData, setNewInstanceData] = useState({ startDate: '', endDate: '', price: '', location: '' })
+
+  const handleCreateInstance = async (e) => {
+    e.preventDefault()
+    setIsSaving(true)
+    try {
+      const res = await fetch(`/api/admin/courses/${editingCourse.id}/instances`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newInstanceData)
+      })
+
+      if (!res.ok) {
+        const errorData = await res.json()
+        throw new Error(errorData.error || 'Error al crear instancia')
+      }
+      
+      const data = await res.json()
+      const updatedCourse = { ...editingCourse, instances: [data.instance, ...(editingCourse.instances || [])] }
+      setEditingCourse(updatedCourse)
+      setCourses(courses.map(c => c.id === editingCourse.id ? updatedCourse : c))
+      
+      setIsCreatingInstance(false)
+      setNewInstanceData({ startDate: '', endDate: '', price: '', location: '' })
+    } catch (error) {
+      console.error(error)
+      alert(error.message || 'Hubo un error al crear la instancia.')
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  const handleDeleteInstance = async (instanceId) => {
+    if (!window.confirm('¿Estás seguro de que deseas ELIMINAR esta instancia?')) return
+    try {
+      const res = await fetch(`/api/admin/instances/${instanceId}`, { method: 'DELETE' })
+      if (!res.ok) throw new Error('Error al borrar')
+      
+      const updatedInstances = editingCourse.instances.filter(i => i.id !== instanceId)
+      const updatedCourse = { ...editingCourse, instances: updatedInstances }
+      
+      setEditingCourse(updatedCourse)
+      setCourses(courses.map(c => c.id === editingCourse.id ? updatedCourse : c))
+    } catch (error) {
+      alert('Error al eliminar la instancia.')
+    }
+  }
+
   // =================== LOGICA DE ACCESOS ===================
   const handleToggleAccess = async (userId, courseId, isCurrentlyUnlocked) => {
     const shouldEnable = !isCurrentlyUnlocked
@@ -135,6 +266,7 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
         body: JSON.stringify({
           title: editingCourse.title,
           slug: editingCourse.slug,
+          type: editingCourse.type,
           description: editingCourse.description,
           published: editingCourse.published
         })
@@ -545,37 +677,213 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
         </div>
       )}
 
-      {/* MODAL EDITAR CURSO */}
+      {/* MODAL EDITAR CURSO COMPLETO */}
       {editingCourse && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
-            <h2 className="text-xl font-bold text-[#33275f] mb-4">Editar Curso</h2>
-            <form onSubmit={handleCourseSubmit}>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Título</label>
-                  <input type="text" required value={editingCourse.title} onChange={(e) => setEditingCourse({...editingCourse, title: e.target.value})} className="w-full px-4 py-2 rounded-xl border focus:border-[#9187BA] focus:ring-1 focus:ring-[#9187BA] outline-none" />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Slug (URL amigable)</label>
-                  <input type="text" required value={editingCourse.slug} onChange={(e) => setEditingCourse({...editingCourse, slug: e.target.value})} className="w-full px-4 py-2 rounded-xl border focus:border-[#9187BA] focus:ring-1 focus:ring-[#9187BA] outline-none" />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Descripción</label>
-                  <textarea rows="4" value={editingCourse.description || ''} onChange={(e) => setEditingCourse({...editingCourse, description: e.target.value})} className="w-full px-4 py-2 rounded-xl border focus:border-[#9187BA] focus:ring-1 focus:ring-[#9187BA] outline-none resize-none"></textarea>
-                </div>
-                <div className="flex items-center gap-2 mt-2">
-                  <input type="checkbox" id="published" checked={editingCourse.published} onChange={(e) => setEditingCourse({...editingCourse, published: e.target.checked})} className="w-5 h-5 rounded text-[#33275f] focus:ring-[#9187BA] border-gray-300 transition" />
-                  <label htmlFor="published" className="text-sm font-bold text-gray-700 cursor-pointer">Visible (Publicado)</label>
-                </div>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 md:p-6 overflow-y-auto">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl flex flex-col max-h-[90vh]">
+            
+            <div className="p-6 border-b border-gray-100 flex justify-between items-center shrink-0">
+              <div>
+                <h2 className="text-2xl font-bold text-[#33275f]">Gestionar Curso</h2>
+                <p className="text-sm text-gray-500">{editingCourse.title}</p>
               </div>
-              <div className="mt-6 flex justify-end gap-3">
-                <button type="button" onClick={() => setEditingCourse(null)} className="px-4 py-2 rounded-xl text-gray-500 font-bold hover:bg-gray-100 transition">Cancelar</button>
-                <button type="submit" disabled={isSaving} className="px-6 py-2 rounded-xl bg-[#B681AE] text-white font-bold hover:bg-[#9187BA] transition disabled:opacity-50">
-                  {isSaving ? 'Guardando...' : 'Guardar Cambios'}
+              <button onClick={() => setEditingCourse(null)} className="text-gray-400 hover:text-gray-700 bg-gray-100 hover:bg-gray-200 p-2 rounded-full transition">
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            <div className="flex flex-1 overflow-hidden" style={{ flexDirection: 'row' }}>
+              {/* Menú Lateral del Modal */}
+              <div 
+                className="bg-gray-50 border-r border-gray-200 shrink-0 overflow-y-auto"
+                style={{ width: '260px', display: 'flex', flexDirection: 'column' }}
+              >
+                <button 
+                  onClick={() => setCourseTab('data')}
+                  className={`px-6 py-4 text-left font-bold text-sm whitespace-nowrap transition-colors border-l-4 ${courseTab === 'data' ? 'bg-white text-[#33275f] border-[#B681AE]' : 'text-gray-500 border-transparent hover:bg-gray-100'}`}
+                >
+                  Datos Base
+                </button>
+                <button 
+                  onClick={() => setCourseTab('instances')}
+                  className={`px-6 py-4 text-left font-bold text-sm whitespace-nowrap transition-colors border-l-4 ${courseTab === 'instances' ? 'bg-white text-[#33275f] border-[#B681AE]' : 'text-gray-500 border-transparent hover:bg-gray-100'}`}
+                >
+                  Instancias Programadas
+                </button>
+                <button 
+                  onClick={() => setCourseTab('resources')}
+                  className={`px-6 py-4 text-left font-bold text-sm whitespace-nowrap transition-colors border-l-4 ${courseTab === 'resources' ? 'bg-white text-[#33275f] border-[#B681AE]' : 'text-gray-500 border-transparent hover:bg-gray-100'}`}
+                >
+                  Recursos y Archivos
                 </button>
               </div>
-            </form>
+
+              {/* Contenido de la Pestaña */}
+              <div className="flex-1 overflow-y-auto p-6 bg-white">
+                
+                {courseTab === 'data' && (
+                  <form id="editCourseForm" onSubmit={handleCourseSubmit} className="max-w-2xl">
+                    <h3 className="text-lg font-bold text-[#33275f] mb-6">Información General</h3>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Título</label>
+                        <input type="text" required value={editingCourse.title} onChange={(e) => setEditingCourse({...editingCourse, title: e.target.value})} className="w-full px-4 py-2 rounded-xl border focus:border-[#9187BA] focus:ring-1 focus:ring-[#9187BA] outline-none" />
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Slug (URL amigable)</label>
+                          <input type="text" required value={editingCourse.slug} onChange={(e) => setEditingCourse({...editingCourse, slug: e.target.value})} className="w-full px-4 py-2 rounded-xl border focus:border-[#9187BA] focus:ring-1 focus:ring-[#9187BA] outline-none" />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Tipo</label>
+                          <select value={editingCourse.type} onChange={(e) => setEditingCourse({...editingCourse, type: e.target.value})} className="w-full px-4 py-2 rounded-xl border focus:border-[#9187BA] focus:ring-1 focus:ring-[#9187BA] outline-none bg-white">
+                            <option value="Curso">Curso</option>
+                            <option value="Taller">Taller</option>
+                            <option value="Iniciacion">Iniciación</option>
+                            <option value="Activacion">Activación</option>
+                            <option value="Retiro">Retiro</option>
+                          </select>
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Descripción</label>
+                        <textarea rows="4" value={editingCourse.description || ''} onChange={(e) => setEditingCourse({...editingCourse, description: e.target.value})} className="w-full px-4 py-2 rounded-xl border focus:border-[#9187BA] focus:ring-1 focus:ring-[#9187BA] outline-none resize-none"></textarea>
+                      </div>
+                      <div className="flex items-center gap-2 mt-4 p-4 bg-gray-50 rounded-xl border border-gray-100">
+                        <input type="checkbox" id="published" checked={editingCourse.published} onChange={(e) => setEditingCourse({...editingCourse, published: e.target.checked})} className="w-5 h-5 rounded text-[#33275f] focus:ring-[#9187BA] border-gray-300 transition" />
+                        <label htmlFor="published" className="text-sm font-bold text-[#33275f] cursor-pointer">Hacer visible (Publicado)</label>
+                      </div>
+                    </div>
+                  </form>
+                )}
+
+                {courseTab === 'instances' && (
+                  <div>
+                    <div className="flex justify-between items-center mb-6">
+                      <h3 className="text-lg font-bold text-[#33275f]">Eventos e Instancias</h3>
+                      <button onClick={() => setIsCreatingInstance(!isCreatingInstance)} className="bg-[#33275f] text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-[#4c3c86] transition">
+                        {isCreatingInstance ? 'Cancelar' : '+ Nueva Instancia'}
+                      </button>
+                    </div>
+
+                    {isCreatingInstance && (
+                      <div className="bg-gray-50 p-5 rounded-xl border border-gray-200 mb-6">
+                        <h4 className="font-bold text-sm text-[#33275f] mb-3">Crear Nueva Instancia</h4>
+                        <form onSubmit={handleCreateInstance} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-xs font-bold text-gray-500 mb-1">Fecha de Inicio</label>
+                            <input type="datetime-local" required value={newInstanceData.startDate} onChange={(e) => setNewInstanceData({...newInstanceData, startDate: e.target.value})} className="w-full px-3 py-2 rounded-lg border outline-none text-sm" />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-bold text-gray-500 mb-1">Fecha de Fin (Opcional)</label>
+                            <input type="datetime-local" value={newInstanceData.endDate} onChange={(e) => setNewInstanceData({...newInstanceData, endDate: e.target.value})} className="w-full px-3 py-2 rounded-lg border outline-none text-sm" />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-bold text-gray-500 mb-1">Ubicación / Modalidad</label>
+                            <input type="text" placeholder="Ej: Zoom, o Buenos Aires" value={newInstanceData.location} onChange={(e) => setNewInstanceData({...newInstanceData, location: e.target.value})} className="w-full px-3 py-2 rounded-lg border outline-none text-sm" />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-bold text-gray-500 mb-1">Precio (Opcional)</label>
+                            <input type="number" placeholder="Ej: 5000" value={newInstanceData.price} onChange={(e) => setNewInstanceData({...newInstanceData, price: e.target.value})} className="w-full px-3 py-2 rounded-lg border outline-none text-sm" />
+                          </div>
+                          <div className="md:col-span-2 flex justify-end">
+                            <button type="submit" disabled={isSaving} className="bg-[#B681AE] text-white px-6 py-2 rounded-lg font-bold text-sm disabled:opacity-50 hover:bg-[#9187BA] transition">
+                              {isSaving ? 'Guardando...' : 'Guardar Instancia'}
+                            </button>
+                          </div>
+                        </form>
+                      </div>
+                    )}
+
+                    <div className="space-y-3">
+                      {!editingCourse.instances || editingCourse.instances.length === 0 ? (
+                        <p className="text-gray-500 text-sm text-center py-8 bg-gray-50 rounded-xl">No hay instancias programadas para este curso.</p>
+                      ) : (
+                        editingCourse.instances.map(inst => (
+                          <div key={inst.id} className="border border-gray-100 rounded-xl p-4 flex justify-between items-center bg-white shadow-sm hover:border-[#9187BA] transition">
+                            <div>
+                              <p className="font-bold text-[#33275f]">{new Date(inst.startDate).toLocaleString()}</p>
+                              <div className="flex gap-4 text-xs text-gray-500 mt-1">
+                                {inst.location && <span>📍 {inst.location}</span>}
+                                {inst.price && <span>💰 ${inst.price}</span>}
+                              </div>
+                            </div>
+                            <button onClick={() => handleDeleteInstance(inst.id)} className="text-red-500 hover:bg-red-50 p-2 rounded-lg transition" title="Borrar Instancia">
+                              <X className="w-5 h-5" />
+                            </button>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {courseTab === 'resources' && (
+                  <div>
+                    <div className="flex justify-between items-center mb-6">
+                      <h3 className="text-lg font-bold text-[#33275f]">Archivos y Materiales del Curso</h3>
+                      
+                      <div className="relative">
+                        <input 
+                          type="file" 
+                          ref={resourceInputRef}
+                          onChange={handleUploadResource}
+                          disabled={isUploading}
+                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed" 
+                        />
+                        <button disabled={isUploading} className="bg-[#B681AE] text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-[#9187BA] transition flex items-center gap-2 disabled:opacity-50">
+                          <UploadCloud className="w-4 h-4" />
+                          {isUploading ? 'Subiendo...' : 'Subir Archivo'}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      {!editingCourse.resources || editingCourse.resources.length === 0 ? (
+                        <p className="text-gray-500 text-sm text-center py-8 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+                          No hay archivos subidos. Los audios y PDFs que subas aparecerán aquí y estarán protegidos en la bóveda.
+                        </p>
+                      ) : (
+                        editingCourse.resources.map(res => (
+                          <div key={res.id} className="border border-gray-100 rounded-xl p-4 flex justify-between items-center bg-white shadow-sm hover:border-[#9187BA] transition group">
+                            <div className="flex-1 min-w-0 pr-4">
+                              <p className="font-bold text-[#33275f] truncate">{res.name}</p>
+                              <div className="flex gap-4 text-xs text-gray-500 mt-1">
+                                <span>📄 {res.type}</span>
+                                {res.isDownloadable && <span className="text-green-600 font-bold">Descargable</span>}
+                              </div>
+                            </div>
+                            <button onClick={() => handleDeleteResource(res.id)} className="text-red-500 hover:bg-red-50 p-2 rounded-lg transition opacity-0 group-hover:opacity-100" title="Borrar Archivo">
+                              <X className="w-5 h-5" />
+                            </button>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Footer Modal */}
+            <div className="p-6 border-t border-gray-100 bg-gray-50 flex items-center justify-end shrink-0 rounded-b-2xl">
+              <div className="flex gap-3">
+                <button type="button" onClick={() => setEditingCourse(null)} className="px-5 py-2.5 rounded-xl text-gray-600 font-bold hover:bg-gray-200 transition">
+                  Cerrar
+                </button>
+                {courseTab === 'data' && (
+                  <button 
+                    type="submit" 
+                    form="editCourseForm"
+                    disabled={isSaving} 
+                    className="px-6 py-2.5 rounded-xl bg-[#33275f] text-white font-bold hover:bg-[#4c3c86] transition shadow-sm disabled:opacity-50 flex items-center gap-2"
+                  >
+                    {isSaving ? 'Guardando...' : 'Guardar Datos Base'}
+                  </button>
+                )}
+              </div>
+            </div>
+
           </div>
         </div>
       )}

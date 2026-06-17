@@ -1,0 +1,56 @@
+import { NextResponse } from 'next/server'
+import { getServerSession } from 'next-auth/next'
+import { authOptions } from '@/lib/auth'
+import { prisma } from '@/lib/db'
+import { generateRegistrationOptions } from '@simplewebauthn/server'
+
+export async function GET(request) {
+  try {
+    const session = await getServerSession(authOptions)
+    
+    if (!session || !session.user?.id) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      include: { authenticators: true }
+    })
+
+    if (!user) {
+      return NextResponse.json({ error: 'Usuario no encontrado' }, { status: 404 })
+    }
+
+    const rpName = 'Sanación en Luz'
+    const host = request.headers.get('host') || 'localhost:3000'
+    const rpID = host.split(':')[0]
+
+    const options = await generateRegistrationOptions({
+      rpName,
+      rpID,
+      userID: new Uint8Array(Buffer.from(user.id)),
+      userName: user.email,
+      attestationType: 'none',
+      excludeCredentials: user.authenticators.map((auth) => ({
+        id: Buffer.from(auth.credentialID, 'base64url'),
+        type: 'public-key',
+        transports: auth.transports ? auth.transports.split(',') : undefined,
+      })),
+      authenticatorSelection: {
+        residentKey: 'preferred',
+        userVerification: 'preferred',
+      },
+    })
+
+    // Guarda el challenge
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { currentChallenge: options.challenge }
+    })
+
+    return NextResponse.json(options)
+  } catch (error) {
+    console.error('Error generating registration options:', error)
+    return NextResponse.json({ error: 'Error interno' }, { status: 500 })
+  }
+}

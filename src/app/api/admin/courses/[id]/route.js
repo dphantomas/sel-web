@@ -18,15 +18,21 @@ export async function PUT(req, { params }) {
     }
 
     const body = await req.json()
-    const { title, slug, description, published } = body
+    const { title, slug, type, description, published } = body
 
     const updatedCourse = await prisma.course.update({
       where: { id },
       data: {
         ...(title && { title }),
         ...(slug && { slug }),
+        ...(type && { type }),
         description: description !== undefined ? description : undefined, // Permite null/vacío
         ...(published !== undefined && { published }),
+      },
+      include: {
+        instances: {
+          orderBy: { startDate: 'desc' }
+        }
       }
     })
 

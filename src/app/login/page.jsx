@@ -3,6 +3,7 @@
 import { useState, useEffect, Suspense } from 'react'
 import { signIn } from 'next-auth/react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { startAuthentication } from '@simplewebauthn/browser'
 import Link from 'next/link'
 import { Eye, EyeOff } from 'lucide-react'
 
@@ -43,6 +44,62 @@ function LoginContent() {
       router.refresh()
     } catch (err) {
       setError(err.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleBiometricLogin = async () => {
+    if (!email) {
+      setError('Por favor, ingresa tu correo electrónico primero para identificar tu cuenta.')
+      return
+    }
+
+    setError('')
+    setSuccess('')
+    setLoading(true)
+
+    try {
+      // 1. Obtener opciones de autenticación
+      const resp = await fetch('/api/auth/webauthn/generate-authentication-options', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      })
+
+      if (!resp.ok) {
+        const errorData = await resp.json()
+        throw new Error(errorData.error || 'No se pudieron obtener las opciones de inicio de sesión.')
+      }
+
+      const options = await resp.json()
+
+      // 2. Pedir la huella o Face ID al dispositivo
+      let asseResp;
+      try {
+        asseResp = await startAuthentication(options)
+      } catch (err) {
+        if (err.name === 'NotAllowedError') {
+          throw new Error('Inicio de sesión cancelado.')
+        }
+        throw err
+      }
+
+      // 3. Enviar al provider de credenciales
+      const result = await signIn('credentials', {
+        redirect: false,
+        email,
+        assertion: JSON.stringify(asseResp)
+      })
+
+      if (result?.error) {
+        throw new Error(result.error)
+      }
+
+      router.push('/')
+      router.refresh()
+    } catch (err) {
+      setError(err.message || 'Error en el inicio de sesión biométrico.')
     } finally {
       setLoading(false)
     }
@@ -149,13 +206,25 @@ function LoginContent() {
             </div>
           </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-[#9187BA] hover:bg-[#B681AE] text-white font-bold py-3 px-6 rounded-xl transition duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-[1px] disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {loading ? 'INGRESANDO...' : 'INICIAR SESIÓN'}
-          </button>
+          <div className="space-y-3">
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-[#9187BA] hover:bg-[#B681AE] text-white font-bold py-3 px-6 rounded-xl transition duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-[1px] disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? 'INGRESANDO...' : 'INICIAR SESIÓN'}
+            </button>
+
+            <button
+              type="button"
+              onClick={handleBiometricLogin}
+              disabled={loading}
+              className="w-full md:hidden flex items-center justify-center gap-2 bg-white hover:bg-gray-50 text-[#33275f] font-bold py-3 px-6 rounded-xl border border-[#9187BA] transition duration-300 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4"></path></svg>
+              Ingresar con Huella / Face ID
+            </button>
+          </div>
         </form>
 
         <div className="mt-8 text-center text-sm text-[#666]">

@@ -23,9 +23,11 @@ model User {
   role          Role      @default(Guest)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+  currentChallenge String?
 
   unlockedCourses UserCourseAccess[]
   progress        Progress[]
+  authenticators  Authenticator[]
 }
 
 enum Role {
@@ -179,4 +181,16 @@ model EmailVerificationToken {
   createdAt DateTime @default(now())
 
   @@unique([email, token])
+}
+
+model Authenticator {
+  credentialID         String  @id
+  userId               String
+  credentialPublicKey  String
+  counter              Int
+  credentialDeviceType String
+  credentialBackedUp   Boolean
+  transports           String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

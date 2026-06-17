@@ -30,9 +30,18 @@ export default async function AdminPage() {
     }
   })
 
-  // Obtener todos los cursos
+  // Obtener todos los cursos con sus instancias y recursos
   const courses = await prisma.course.findMany({
-    orderBy: { id: 'asc' }
+    orderBy: { id: 'asc' },
+    include: {
+      resources: true,
+      instances: {
+        orderBy: { startDate: 'desc' },
+        include: {
+          resources: true
+        }
+      }
+    }
   })
 
   return (

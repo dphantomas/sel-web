@@ -32,6 +32,9 @@ export async function POST(req) {
         description: description || null,
         type,
         published: published || false
+      },
+      include: {
+        instances: true
       }
     })
 
