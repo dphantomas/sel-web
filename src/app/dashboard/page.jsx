@@ -5,6 +5,7 @@ import { prisma } from '@/lib/db'
 import Link from 'next/link'
 import LogoutButton from '@/components/LogoutButton'
 import UserProfileForm from './UserProfileForm'
+import FastLoginPrompt from '@/components/FastLoginPrompt'
 
 export const metadata = {
   title: 'Mi Panel | Sanación en Luz',
@@ -91,6 +92,9 @@ export default async function DashboardPage() {
             <LogoutButton />
           </div>
         </div>
+
+        {/* Prompt automático para configurar Face ID (se oculta solo si no corresponde) */}
+        <FastLoginPrompt />
 
         {/* Formulario de Mi Perfil */}
         <UserProfileForm user={user} />
