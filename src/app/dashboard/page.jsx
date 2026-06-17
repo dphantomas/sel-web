@@ -80,6 +80,8 @@ export default async function DashboardPage() {
             </p>
           </div>
           
+          <FastLoginPrompt userEmail={user.email} />
+
           <div className="flex flex-wrap items-center gap-3">
             {(user.role === 'Admin' || user.role === 'Transmisor') && (
               <Link 
@@ -92,9 +94,6 @@ export default async function DashboardPage() {
             <LogoutButton />
           </div>
         </div>
-
-        {/* Prompt automático para configurar Face ID (se oculta solo si no corresponde) */}
-        <FastLoginPrompt />
 
         {/* Formulario de Mi Perfil */}
         <UserProfileForm user={user} />

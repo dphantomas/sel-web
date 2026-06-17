@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { startRegistration, platformAuthenticatorIsAvailable } from '@simplewebauthn/browser'
 
-export default function FastLoginPrompt() {
+export default function FastLoginPrompt({ userEmail }) {
   const [isVisible, setIsVisible] = useState(false)
   const [isRegistering, setIsRegistering] = useState(false)
   const [error, setError] = useState(null)
@@ -73,6 +73,9 @@ export default function FastLoginPrompt() {
       if (verification.verified) {
         // Guardar bandera en este dispositivo para no volver a molestar
         localStorage.setItem('device_registered', 'true')
+        if (userEmail) {
+          localStorage.setItem('registered_email', userEmail)
+        }
         setSuccess(true)
         setTimeout(() => setIsVisible(false), 3000) // Ocultar después de 3 segs
       } else {

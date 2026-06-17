@@ -17,10 +17,28 @@ function LoginContent() {
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [supportsBiometrics, setSupportsBiometrics] = useState(false)
+  const [isDeviceRegistered, setIsDeviceRegistered] = useState(false)
+  const [autoTriggered, setAutoTriggered] = useState(false)
 
   useEffect(() => {
     platformAuthenticatorIsAvailable().then(setSupportsBiometrics)
-  }, [])
+    
+    // Check if device is registered for auto-login
+    const registered = localStorage.getItem('device_registered')
+    const savedEmail = localStorage.getItem('registered_email')
+    
+    if (registered === 'true') {
+      setIsDeviceRegistered(true)
+      if (savedEmail && !autoTriggered) {
+        setEmail(savedEmail)
+        setAutoTriggered(true)
+        // Agregamos un pequeño delay para asegurar que el usuario vea la UI antes de que el navegador bloquee la pantalla con Face ID
+        setTimeout(() => {
+          handleBiometricLogin(savedEmail)
+        }, 500)
+      }
+    }
+  }, [autoTriggered])
 
   useEffect(() => {
     if (searchParams.get('registered') === 'true') {
@@ -54,8 +72,8 @@ function LoginContent() {
     }
   }
 
-  const handleBiometricLogin = async () => {
-    if (!email) {
+  const handleBiometricLogin = async (emailToUse = email) => {
+    if (!emailToUse) {
       setError('Por favor, ingresa tu correo electrónico primero para identificar tu cuenta.')
       return
     }
@@ -69,7 +87,7 @@ function LoginContent() {
       const resp = await fetch('/api/auth/webauthn/generate-authentication-options', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email })
+        body: JSON.stringify({ email: emailToUse })
       })
 
       if (!resp.ok) {
@@ -93,7 +111,7 @@ function LoginContent() {
       // 3. Enviar al provider de credenciales
       const result = await signIn('credentials', {
         redirect: false,
-        email,
+        email: emailToUse,
         assertion: JSON.stringify(asseResp)
       })
 
@@ -220,10 +238,10 @@ function LoginContent() {
               {loading ? 'INGRESANDO...' : 'INICIAR SESIÓN'}
             </button>
 
-            {supportsBiometrics && (
+            {supportsBiometrics && !isDeviceRegistered && (
               <button
                 type="button"
-                onClick={handleBiometricLogin}
+                onClick={() => handleBiometricLogin()}
                 disabled={loading}
                 className="w-full flex items-center justify-center gap-2 bg-white hover:bg-gray-50 text-[#33275f] font-bold py-3 px-6 rounded-xl border border-[#9187BA] transition duration-300 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
               >
