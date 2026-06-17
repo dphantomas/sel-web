@@ -47,10 +47,17 @@ export async function POST(request) {
       const { credentialPublicKey, credentialID, counter, credentialDeviceType, credentialBackedUp } = registrationInfo
 
       try {
-        // Guardar el nuevo autenticador
-        await prisma.authenticator.create({
-          data: {
-            credentialID: typeof credentialID === 'string' ? credentialID : Buffer.from(credentialID).toString('base64url'),
+        // Guardar el nuevo autenticador (o actualizar si ya existía en la BD pero no en el localStorage)
+        const credentialIdString = typeof credentialID === 'string' ? credentialID : Buffer.from(credentialID).toString('base64url')
+        
+        await prisma.authenticator.upsert({
+          where: { credentialID: credentialIdString },
+          update: {
+            counter,
+            transports: body.response.transports ? body.response.transports.join(',') : '',
+          },
+          create: {
+            credentialID: credentialIdString,
             userId: user.id,
             credentialPublicKey: Buffer.from(credentialPublicKey).toString('base64url'),
             counter,
