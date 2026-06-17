@@ -28,14 +28,19 @@ function LoginContent() {
     const savedEmail = localStorage.getItem('registered_email')
     
     if (registered === 'true') {
-      setIsDeviceRegistered(true)
-      if (savedEmail && !autoTriggered) {
-        setEmail(savedEmail)
-        setAutoTriggered(true)
-        // Agregamos un pequeño delay para asegurar que el usuario vea la UI antes de que el navegador bloquee la pantalla con Face ID
-        setTimeout(() => {
-          handleBiometricLogin(savedEmail)
-        }, 500)
+      if (savedEmail) {
+        setIsDeviceRegistered(true)
+        if (!autoTriggered) {
+          setEmail(savedEmail)
+          setAutoTriggered(true)
+          // Agregamos un pequeño delay para asegurar que el usuario vea la UI antes de que el navegador bloquee la pantalla con Face ID
+          setTimeout(() => {
+            handleBiometricLogin(savedEmail)
+          }, 500)
+        }
+      } else {
+        // Estado inválido (código viejo guardó device_registered pero no el email). Limpiamos para que se pueda volver a registrar.
+        localStorage.removeItem('device_registered')
       }
     }
   }, [autoTriggered])
