@@ -46,31 +46,36 @@ export async function POST(request) {
     if (verified && registrationInfo) {
       const { credentialPublicKey, credentialID, counter, credentialDeviceType, credentialBackedUp } = registrationInfo
 
-      // Guardar el nuevo autenticador
-      await prisma.authenticator.create({
-        data: {
-          credentialID: Buffer.from(credentialID).toString('base64url'),
-          userId: user.id,
-          credentialPublicKey: Buffer.from(credentialPublicKey).toString('base64url'),
-          counter,
-          credentialDeviceType,
-          credentialBackedUp,
-          transports: body.response.transports ? body.response.transports.join(',') : '',
-        }
-      })
+      try {
+        // Guardar el nuevo autenticador
+        await prisma.authenticator.create({
+          data: {
+            credentialID: typeof credentialID === 'string' ? credentialID : Buffer.from(credentialID).toString('base64url'),
+            userId: user.id,
+            credentialPublicKey: Buffer.from(credentialPublicKey).toString('base64url'),
+            counter,
+            credentialDeviceType,
+            credentialBackedUp,
+            transports: body.response.transports ? body.response.transports.join(',') : '',
+          }
+        })
 
-      // Limpiar el challenge
-      await prisma.user.update({
-        where: { id: user.id },
-        data: { currentChallenge: null }
-      })
+        // Limpiar el challenge
+        await prisma.user.update({
+          where: { id: user.id },
+          data: { currentChallenge: null }
+        })
 
-      return NextResponse.json({ verified: true })
+        return NextResponse.json({ verified: true })
+      } catch (dbError) {
+        console.error('Error de base de datos:', dbError)
+        return NextResponse.json({ error: 'DB Error: ' + dbError.message }, { status: 500 })
+      }
     }
 
     return NextResponse.json({ error: 'No se pudo verificar' }, { status: 400 })
   } catch (error) {
-    console.error('Error en verify-registration:', error)
-    return NextResponse.json({ error: 'Error interno' }, { status: 500 })
+    console.error('Error general en verify-registration:', error)
+    return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }
