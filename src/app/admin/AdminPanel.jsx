@@ -37,7 +37,11 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
       const urlRes = await fetch('/api/admin/upload-url', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fileName: file.name, fileType: file.type })
+        body: JSON.stringify({ 
+          fileName: file.name, 
+          fileType: file.type,
+          folder: editingCourse.slug || 'varios'
+        })
       })
 
       if (!urlRes.ok) throw new Error('Error al obtener link de subida')

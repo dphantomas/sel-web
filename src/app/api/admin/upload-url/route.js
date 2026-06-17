@@ -13,7 +13,7 @@ export async function POST(request) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
     }
 
-    const { fileName, fileType } = await request.json()
+    const { fileName, fileType, folder } = await request.json()
 
     if (!fileName || !fileType) {
       return NextResponse.json({ error: 'Se requiere nombre y tipo de archivo' }, { status: 400 })
@@ -27,7 +27,9 @@ export async function POST(request) {
     // Generar un key único para evitar colisiones
     const uniqueId = crypto.randomBytes(8).toString('hex')
     const sanitizedFileName = fileName.replace(/[^a-zA-Z0-9.\-_]/g, '')
-    const cloudflareKey = `recursos/${uniqueId}-${sanitizedFileName}`
+    const folderName = folder ? `${folder.replace(/[^a-zA-Z0-9.\-_]/g, '')}/` : ''
+    
+    const cloudflareKey = `recursos/${folderName}${uniqueId}-${sanitizedFileName}`
 
     const command = new PutObjectCommand({
       Bucket: bucketName,
