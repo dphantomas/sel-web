@@ -1,6 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
+import { UploadCloud, User as UserIcon } from 'lucide-react'
+import ImageCropperModal from '@/components/ImageCropperModal'
+import { useRouter } from 'next/navigation'
 
 export default function UserProfileForm({ user }) {
   const [formData, setFormData] = useState({
@@ -10,6 +13,24 @@ export default function UserProfileForm({ user }) {
   })
   const [isSaving, setIsSaving] = useState(false)
   const [message, setMessage] = useState(null)
+  
+  const router = useRouter()
+  const editFileInputRef = useRef(null)
+  const [editImagePreview, setEditImagePreview] = useState(user.image || null)
+  const [cropModalImage, setCropModalImage] = useState(null)
+  const [croppedImageBlob, setCroppedImageBlob] = useState(null)
+
+  const handleEditImageChange = (e) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      const reader = new FileReader()
+      reader.onloadend = () => setCropModalImage(reader.result)
+      reader.readAsDataURL(file)
+    } else {
+      setEditImagePreview(user.image || null)
+      setCroppedImageBlob(null)
+    }
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -17,10 +38,17 @@ export default function UserProfileForm({ user }) {
     setMessage(null)
 
     try {
+      const formPayload = new FormData()
+      formPayload.append('firstName', formData.firstName)
+      formPayload.append('lastName', formData.lastName)
+      formPayload.append('phone', formData.phone)
+      if (croppedImageBlob) {
+        formPayload.append('image', croppedImageBlob, 'profile.jpg')
+      }
+
       const res = await fetch('/api/user/profile', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+        body: formPayload
       })
 
       if (!res.ok) {
@@ -28,6 +56,11 @@ export default function UserProfileForm({ user }) {
       }
 
       setMessage({ type: 'success', text: 'Perfil actualizado exitosamente.' })
+      
+      // Update session by refreshing
+      if (croppedImageBlob) {
+        router.refresh()
+      }
     } catch (error) {
       console.error(error)
       setMessage({ type: 'error', text: 'Hubo un error al guardar los cambios.' })
@@ -40,6 +73,22 @@ export default function UserProfileForm({ user }) {
 
   return (
     <div className="bg-white/80 backdrop-blur-md rounded-[24px] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-white/40 mb-8">
+      
+      {cropModalImage && (
+        <ImageCropperModal
+          imageSrc={cropModalImage}
+          onCropComplete={(blob) => {
+            setCroppedImageBlob(blob)
+            setEditImagePreview(URL.createObjectURL(blob))
+            setCropModalImage(null)
+          }}
+          onCancel={() => {
+            setCropModalImage(null)
+            if (editFileInputRef.current) editFileInputRef.current.value = ''
+          }}
+        />
+      )}
+
       <h2 className="text-[#33275f] text-xl font-bold mb-4 tracking-wide">MI PERFIL</h2>
       
       {message && (
@@ -49,6 +98,35 @@ export default function UserProfileForm({ user }) {
       )}
 
       <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        
+        {/* Foto de Perfil */}
+        <div className="md:col-span-2 flex flex-col sm:flex-row items-center gap-6 p-6 bg-gray-50/50 rounded-2xl border border-gray-100 mb-2">
+          <div className="relative w-24 h-24 shrink-0 rounded-full border-4 border-[#B681AE]/20 bg-white overflow-hidden flex items-center justify-center group">
+            {editImagePreview ? (
+              <img src={editImagePreview} alt="Preview" className="w-full h-full object-cover" />
+            ) : (
+              <UserIcon className="w-10 h-10 text-gray-300" />
+            )}
+            
+            <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+              <UploadCloud className="w-6 h-6 text-white" />
+            </div>
+            
+            <input 
+              ref={editFileInputRef}
+              type="file" 
+              name="image" 
+              accept="image/*" 
+              onChange={handleEditImageChange}
+              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" 
+            />
+          </div>
+          <div className="text-center sm:text-left">
+            <span className="text-lg font-bold text-[#33275f] block mb-1">Foto de Perfil</span>
+            <p className="text-sm text-gray-500">Haz clic en la imagen para cambiar tu foto.</p>
+          </div>
+        </div>
+
         <div>
           <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Nombre</label>
           <input
