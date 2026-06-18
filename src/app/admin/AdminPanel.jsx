@@ -1,8 +1,9 @@
 'use client'
 
 import { useState, useRef } from 'react'
-import { UploadCloud, User as UserIcon, X, Check, Search } from 'lucide-react'
+import { UploadCloud, User as UserIcon, X, Check, Search, Eye, EyeOff, FileText, CheckCircle, Edit2, Shield, Layout, Trash2, Calendar, Link2, DollarSign, Image as ImageIcon } from 'lucide-react'
 import Link from 'next/link'
+import ImageCropperModal from '@/components/ImageCropperModal'
 
 export default function AdminPanel({ initialUsers, courses: initialCourses }) {
   const [activeTab, setActiveTab] = useState('users') // 'users' | 'courses'
@@ -205,16 +206,18 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
   const openEditUser = (user) => {
     setEditingUser(user)
     setEditImagePreview(user.image || null)
+    setCroppedImageBlob(null)
   }
 
   const handleEditImageChange = (e) => {
     const file = e.target.files?.[0]
     if (file) {
       const reader = new FileReader()
-      reader.onloadend = () => setEditImagePreview(reader.result)
+      reader.onloadend = () => setCropModalImage(reader.result)
       reader.readAsDataURL(file)
     } else {
       setEditImagePreview(editingUser?.image || null)
+      setCroppedImageBlob(null)
     }
   }
 
@@ -223,6 +226,10 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
     setIsSaving(true)
     try {
       const formData = new FormData(e.target)
+      
+      if (croppedImageBlob) {
+        formData.set('image', croppedImageBlob, 'profile.jpg')
+      }
       
       const res = await fetch(`/api/admin/users/${editingUser.id}`, {
         method: 'PUT',
@@ -487,6 +494,21 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
       )}
 
       {/* MODAL EDITAR USUARIO COMPLETO */}
+      {cropModalImage && (
+        <ImageCropperModal
+          imageSrc={cropModalImage}
+          onCropComplete={(blob) => {
+            setCroppedImageBlob(blob)
+            setEditImagePreview(URL.createObjectURL(blob))
+            setCropModalImage(null)
+          }}
+          onCancel={() => {
+            setCropModalImage(null)
+            if (editFileInputRef.current) editFileInputRef.current.value = ''
+          }}
+        />
+      )}
+
       {editingUser && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 md:p-6 overflow-y-auto">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl flex flex-col max-h-full">
