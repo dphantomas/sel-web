@@ -37,7 +37,7 @@ export async function PUT(req, { params }) {
     const imageFile = formData.get('image')
 
     // Validar que el rol sea uno válido según el schema si se envía
-    const validRoles = ['Participante', 'Transmisor', 'Admin']
+    const validRoles = ['Guest', 'Participante', 'Transmisor', 'Admin']
     if (role && !validRoles.includes(role)) {
       return NextResponse.json({ error: 'Rol inválido' }, { status: 400 })
     }
