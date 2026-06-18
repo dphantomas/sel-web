@@ -37,9 +37,15 @@ export default async function DashboardPage() {
     redirect('/login')
   }
 
-  // Obtener todos los cursos publicados
-  const allCourses = await prisma.course.findMany({
-    where: { published: true },
+  const unlockedCourseIds = new Set(user.unlockedCourses.map((uc) => uc.courseId))
+  const completedLessonIds = new Set(user.progress.map((p) => p.lessonId))
+
+  // Obtener solo los cursos a los que el usuario tiene acceso
+  const unlockedCourseIdsArr = Array.from(unlockedCourseIds)
+  const myCourses = await prisma.course.findMany({
+    where: {
+      id: { in: unlockedCourseIdsArr }
+    },
     include: {
       modules: {
         include: {
@@ -55,9 +61,6 @@ export default async function DashboardPage() {
       id: 'asc'
     }
   })
-
-  const unlockedCourseIds = new Set(user.unlockedCourses.map((uc) => uc.courseId))
-  const completedLessonIds = new Set(user.progress.map((p) => p.lessonId))
 
   return (
     <div 
@@ -98,15 +101,13 @@ export default async function DashboardPage() {
         {/* Cursos / Talleres */}
         <h2 className="text-[#33275f] text-xl font-bold mb-6 tracking-wide">MIS TALLERES Y ENCUENTROS</h2>
 
-        {allCourses.length === 0 ? (
+        {myCourses.length === 0 ? (
           <div className="bg-white/80 backdrop-blur-md rounded-[24px] p-8 text-center shadow-[0_4px_20px_rgba(0,0,0,0.08)]">
-            <p className="text-gray-600">No hay talleres disponibles cargados en el sistema.</p>
+            <p className="text-gray-600">Aún no tienes talleres o encuentros habilitados.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {allCourses.map((course) => {
-              const isUnlocked = unlockedCourseIds.has(course.id)
-              
+            {myCourses.map((course) => {
               // Calcular progreso del curso
               const allLessons = course.modules.flatMap((m) => m.lessons)
               const totalLessons = allLessons.length
@@ -116,11 +117,7 @@ export default async function DashboardPage() {
               return (
                 <div 
                   key={course.id} 
-                  className={`bg-white/80 backdrop-blur-md rounded-[24px] overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.08)] border transition-all duration-300 flex flex-col justify-between ${
-                    isUnlocked 
-                      ? 'border-white/40 hover:shadow-[0_12px_30px_rgba(0,0,0,0.12)] hover:-translate-y-1' 
-                      : 'border-transparent opacity-75 grayscale'
-                  }`}
+                  className="bg-white/80 backdrop-blur-md rounded-[24px] overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-white/40 hover:shadow-[0_12px_30px_rgba(0,0,0,0.12)] hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between"
                 >
                   <div>
                     {/* Imagen de Taller */}
@@ -130,13 +127,6 @@ export default async function DashboardPage() {
                         alt={course.title}
                         className="w-full h-full object-cover"
                       />
-                      {!isUnlocked && (
-                        <div className="absolute inset-0 bg-[#33275f]/50 flex items-center justify-center">
-                          <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
-                          </svg>
-                        </div>
-                      )}
                     </div>
 
                     {/* Contenido */}
@@ -155,42 +145,28 @@ export default async function DashboardPage() {
 
                   {/* Pie de tarjeta con acciones y progreso */}
                   <div className="p-6 pt-0 mt-auto">
-                    {isUnlocked ? (
-                      <div>
-                        {totalLessons > 0 && (
-                          <div className="mb-4">
-                            <div className="flex justify-between text-xs text-gray-500 mb-1">
-                              <span>Progreso</span>
-                              <span>{completedInCourse}/{totalLessons} clases ({progressPercent}%)</span>
-                            </div>
-                            <div className="w-full bg-gray-200 h-1.5 rounded-full overflow-hidden">
-                              <div 
-                                className="bg-[#9187BA] h-1.5 rounded-full transition-all duration-500" 
-                                style={{ width: `${progressPercent}%` }}
-                              ></div>
-                            </div>
+                    <div>
+                      {totalLessons > 0 && (
+                        <div className="mb-4">
+                          <div className="flex justify-between text-xs text-gray-500 mb-1">
+                            <span>Progreso</span>
+                            <span>{completedInCourse}/{totalLessons} clases ({progressPercent}%)</span>
                           </div>
-                        )}
-                        <Link
-                          href={`/cursos/${course.slug}`}
-                          className="block text-center bg-[#9187BA] hover:bg-[#B681AE] text-white text-sm font-bold py-3 px-4 rounded-xl transition duration-300"
-                        >
-                          {completedInCourse > 0 ? 'Continuar Taller' : 'Comenzar Taller'}
-                        </Link>
-                      </div>
-                    ) : (
-                      <div>
-                        <p className="text-xs text-gray-500 italic text-center mb-4">
-                          Habilitado al realizar este encuentro.
-                        </p>
-                        <Link
-                          href="/contacto"
-                          className="block text-center border border-gray-300 hover:border-[#9187BA] text-gray-600 hover:text-[#33275f] text-sm font-bold py-3 px-4 rounded-xl transition duration-300"
-                        >
-                          Solicitar Acceso
-                        </Link>
-                      </div>
-                    )}
+                          <div className="w-full bg-gray-200 h-1.5 rounded-full overflow-hidden">
+                            <div 
+                              className="bg-[#9187BA] h-1.5 rounded-full transition-all duration-500" 
+                              style={{ width: `${progressPercent}%` }}
+                            ></div>
+                          </div>
+                        </div>
+                      )}
+                      <Link
+                        href={`/cursos/${course.slug}`}
+                        className="block text-center bg-[#9187BA] hover:bg-[#B681AE] text-white text-sm font-bold py-3 px-4 rounded-xl transition duration-300"
+                      >
+                        {completedInCourse > 0 ? 'Continuar Taller' : 'Comenzar Taller'}
+                      </Link>
+                    </div>
                   </div>
                 </div>
               )
