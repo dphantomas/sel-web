@@ -12,11 +12,10 @@ export async function POST(request) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
     }
 
-    const data = await request.json()
-    const { name, type, cloudflareKey, isDownloadable, courseId, courseInstanceId } = data
+    const { name, type, cloudflareKey, isDownloadable, courseId, lessonId, instanceId, overridesResourceId } = await request.json()
 
     if (!name || !type || !cloudflareKey) {
-      return NextResponse.json({ error: 'Faltan datos obligatorios del recurso' }, { status: 400 })
+      return NextResponse.json({ error: 'Faltan parámetros' }, { status: 400 })
     }
 
     // Guardar el registro en la base de datos
@@ -26,8 +25,10 @@ export async function POST(request) {
         type,
         cloudflareKey,
         isDownloadable: isDownloadable || false,
-        ...(courseId && { courseId }),
-        ...(courseInstanceId && { courseInstanceId }),
+        courseId,
+        lessonId,
+        courseInstanceId: instanceId,
+        overridesResourceId: overridesResourceId || null
       }
     })
 

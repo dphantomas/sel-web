@@ -11,38 +11,43 @@ export async function POST(request) {
       return NextResponse.json({ error: 'No autorizado. Se requieren permisos de Admin o Transmisor.' }, { status: 403 })
     }
 
-    const { userId, courseId, enabled } = await request.json()
+    const { userId, courseId, instanceId, enabled } = await request.json()
 
-    if (!userId || !courseId) {
-      return NextResponse.json({ error: 'Faltan parámetros requeridos.' }, { status: 400 })
+    if (!userId || !courseId || !instanceId) {
+      return NextResponse.json({ error: 'Faltan parámetros requeridos (userId, courseId, instanceId).' }, { status: 400 })
     }
 
     const user = await prisma.user.findUnique({ where: { id: userId } })
     const course = await prisma.course.findUnique({ where: { id: courseId } })
+    const instance = await prisma.courseInstance.findUnique({ where: { id: instanceId } })
 
-    if (!user || !course) {
-      return NextResponse.json({ error: 'Usuario o curso no encontrado.' }, { status: 404 })
+    if (!user || !course || !instance) {
+      return NextResponse.json({ error: 'Usuario, curso o instancia no encontrado.' }, { status: 404 })
     }
 
     if (enabled) {
-      // Habilitar acceso
-      await prisma.userCourseAccess.upsert({
+      // Habilitar acceso a la instancia
+      await prisma.userInstanceAccess.upsert({
         where: {
-          userId_courseId: {
-            userId,
-            courseId
-          }
+          userId_courseInstanceId: { userId, courseInstanceId: instanceId }
         },
         update: {},
-        create: {
-          userId,
-          courseId
-        }
+        create: { userId, courseInstanceId: instanceId }
+      })
+
+      // Siempre asegurar que tengan acceso al curso padre
+      await prisma.userCourseAccess.upsert({
+        where: {
+          userId_courseId: { userId, courseId }
+        },
+        update: {},
+        create: { userId, courseId }
       })
 
       // Enviar notificación de WhatsApp si el usuario tiene teléfono
       if (user.phone) {
-        const message = `¡Hola ${user.firstName}! Se ha habilitado tu acceso al taller "${course.title}" en la plataforma de Sanación en Luz. Ya puedes ingresar a tu panel en: ${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/dashboard`
+        const startDate = new Date(instance.startDate).toLocaleDateString('es-AR')
+        const message = `¡Hola ${user.firstName}! Se ha habilitado tu acceso a la instancia del ${startDate} del taller "${course.title}" en la plataforma de Sanación en Luz. Ya puedes ingresar a tu panel para ver los recursos en: ${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/dashboard`
         await sendWhatsAppNotification(user.phone, message)
       }
 
@@ -55,13 +60,25 @@ export async function POST(request) {
       }
 
     } else {
-      // Deshabilitar acceso
-      await prisma.userCourseAccess.deleteMany({
-        where: {
-          userId,
-          courseId
+      // Deshabilitar acceso a esta instancia
+      await prisma.userInstanceAccess.deleteMany({
+        where: { userId, courseInstanceId: instanceId }
+      })
+
+      // Verificar si le quedan otras instancias habilitadas para este curso
+      const otherInstances = await prisma.userInstanceAccess.findMany({
+        where: { 
+          userId, 
+          courseInstance: { courseId: courseId } 
         }
       })
+
+      // Si no le quedan instancias de este curso, le sacamos el acceso al curso padre
+      if (otherInstances.length === 0) {
+        await prisma.userCourseAccess.deleteMany({
+          where: { userId, courseId }
+        })
+      }
     }
 
     return NextResponse.json({ success: true })

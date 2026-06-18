@@ -26,6 +26,11 @@ export default async function AdminPage() {
         select: {
           courseId: true
         }
+      },
+      unlockedInstances: {
+        select: {
+          courseInstanceId: true
+        }
       }
     }
   })

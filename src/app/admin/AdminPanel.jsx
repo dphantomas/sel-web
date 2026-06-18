@@ -30,6 +30,7 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
 
   // =================== LOGICA RECURSOS (R2) ===================
   const [isUploading, setIsUploading] = useState(false)
+  const [overrideResourceId, setOverrideResourceId] = useState('')
   const resourceInputRef = useRef(null)
 
   const handleUploadResource = async (e) => {
@@ -71,7 +72,8 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
           type: file.type,
           cloudflareKey,
           isDownloadable,
-          courseId: editingCourse.id
+          courseId: editingCourse.id,
+          overridesResourceId: overrideResourceId || null
         })
       })
 
@@ -87,6 +89,7 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
       setCourses(courses.map(c => c.id === editingCourse.id ? updatedCourse : c))
       
       if (resourceInputRef.current) resourceInputRef.current.value = ''
+      setOverrideResourceId('') // Reset
     } catch (error) {
       console.error(error)
       alert(error.message || 'Error en la subida.')
@@ -164,43 +167,38 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
   }
 
   // =================== LOGICA DE ACCESOS ===================
-  const handleToggleAccess = async (userId, courseId, isCurrentlyUnlocked) => {
-    const shouldEnable = !isCurrentlyUnlocked
-    setUpdatingId(`${userId}-${courseId}`)
-
+  const handleToggleAccess = async (userId, courseId, instanceId, isCurrentlyUnlocked) => {
+    setUpdatingId(`${userId}-${instanceId}`)
     try {
-      const response = await fetch('/api/admin/access', {
+      const res = await fetch('/api/admin/access', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, courseId, enabled: shouldEnable })
+        body: JSON.stringify({
+          userId,
+          courseId,
+          instanceId,
+          enabled: !isCurrentlyUnlocked
+        })
       })
 
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || 'No se pudo actualizar el acceso.')
-      }
-
-      setUsers((prev) =>
-        prev.map((u) => {
-          if (u.id === userId) {
-            let newUnlocked = [...u.unlockedCourses]
-            if (shouldEnable) newUnlocked.push({ courseId })
-            else newUnlocked = newUnlocked.filter((uc) => uc.courseId !== courseId)
-            
-            const updatedUser = { ...u, unlockedCourses: newUnlocked }
-            
-            if (editingUser?.id === userId) {
-              setEditingUser(updatedUser)
-            }
-            
-            return updatedUser
+      if (res.ok) {
+        // Refrescar el usuario para obtener sus nuevos accesos completos
+        const userRes = await fetch(`/api/admin/users/${userId}`)
+        if (userRes.ok) {
+          const { user: updatedUser } = await userRes.json()
+          
+          setUsers(users.map(u => u.id === userId ? updatedUser : u))
+          if (editingUser?.id === userId) {
+            setEditingUser(updatedUser)
           }
-          return u
-        })
-      )
+        }
+      } else {
+        const errorData = await res.json()
+        alert(errorData.error || 'Error al actualizar acceso')
+      }
     } catch (error) {
       console.error(error)
-      alert(error.message || 'Error al modificar los accesos.')
+      alert('Error de conexión')
     } finally {
       setUpdatingId(null)
     }
@@ -654,30 +652,54 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
                 
                 <div className="space-y-3 flex-1 overflow-y-auto pr-2">
                   {courses.map((course) => {
-                    const isUnlocked = editingUser.unlockedCourses.some((uc) => uc.courseId === course.id)
-                    const isLoading = updatingId === `${editingUser.id}-${course.id}`
+                    // Check if they have access to ANY instance of this course to color the course header
+                    const hasAnyAccess = editingUser.unlockedCourses?.some((uc) => uc.courseId === course.id)
                     
                     return (
-                      <div key={course.id} className={`p-4 rounded-xl border flex items-center justify-between transition-all ${isUnlocked ? 'bg-white border-[#B681AE] shadow-sm' : 'bg-transparent border-gray-200'}`}>
-                        <div className="flex-1 pr-4">
-                          <p className={`font-bold text-sm ${isUnlocked ? 'text-[#33275f]' : 'text-gray-600'}`}>{course.title}</p>
-                          <p className="text-xs text-gray-400 mt-0.5">{course.type}</p>
+                      <div key={course.id} className="mb-4">
+                        <div className={`p-4 rounded-xl border flex items-center justify-between transition-all ${hasAnyAccess ? 'bg-white border-[#B681AE] shadow-sm' : 'bg-transparent border-gray-200'}`}>
+                          <div className="flex-1 pr-4">
+                            <p className={`font-bold text-sm ${hasAnyAccess ? 'text-[#33275f]' : 'text-gray-600'}`}>{course.title}</p>
+                            <p className="text-xs text-gray-400 mt-0.5">{course.type}</p>
+                          </div>
                         </div>
-                        <label className="relative inline-flex items-center cursor-pointer shrink-0">
-                          <input 
-                            type="checkbox" 
-                            className="sr-only peer"
-                            checked={isUnlocked}
-                            disabled={isLoading}
-                            onChange={() => handleToggleAccess(editingUser.id, course.id, isUnlocked)}
-                          />
-                          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#B681AE]"></div>
-                          {isLoading && (
-                            <span className="absolute inset-0 flex items-center justify-center bg-white/50 rounded-full">
-                              <span className="w-4 h-4 border-2 border-[#33275f] border-t-transparent rounded-full animate-spin"></span>
-                            </span>
+
+                        {/* Instances List */}
+                        <div className="space-y-2 mt-2 pl-4 border-l-2 border-gray-100 ml-4">
+                          {!course.instances || course.instances.length === 0 ? (
+                            <p className="text-xs text-gray-400 py-2">No hay instancias creadas para este taller.</p>
+                          ) : (
+                            course.instances.map(instance => {
+                              const isUnlocked = editingUser.unlockedInstances?.some((ui) => ui.courseInstanceId === instance.id)
+                              const isLoading = updatingId === `${editingUser.id}-${instance.id}`
+                              const dateStr = new Date(instance.startDate).toLocaleDateString('es-AR')
+                              
+                              return (
+                                <div key={instance.id} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
+                                  <div className="text-sm">
+                                    <span className="font-semibold text-gray-700">{dateStr}</span>
+                                    {instance.location && <span className="text-xs text-gray-500 ml-2">({instance.location})</span>}
+                                  </div>
+                                  <label className="relative inline-flex items-center cursor-pointer shrink-0">
+                                    <input 
+                                      type="checkbox" 
+                                      className="sr-only peer"
+                                      checked={isUnlocked || false}
+                                      disabled={isLoading}
+                                      onChange={() => handleToggleAccess(editingUser.id, course.id, instance.id, isUnlocked)}
+                                    />
+                                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#B681AE]"></div>
+                                    {isLoading && (
+                                      <span className="absolute inset-0 flex items-center justify-center bg-white/50 rounded-full">
+                                        <span className="w-4 h-4 border-2 border-[#33275f] border-t-transparent rounded-full animate-spin"></span>
+                                      </span>
+                                    )}
+                                  </label>
+                                </div>
+                              )
+                            })
                           )}
-                        </label>
+                        </div>
                       </div>
                     )
                   })}
@@ -879,6 +901,26 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
                           {isUploading ? 'Subiendo...' : 'Subir Archivo'}
                         </button>
                       </div>
+                    </div>
+
+                    <div className="mb-6 p-4 bg-gray-50 rounded-xl border border-gray-100">
+                      <label className="block text-sm font-bold text-[#33275f] mb-2">
+                        ¿Este nuevo archivo reemplaza a uno anterior? (Opcional)
+                      </label>
+                      <select 
+                        value={overrideResourceId} 
+                        onChange={e => setOverrideResourceId(e.target.value)}
+                        className="w-full px-3 py-2 rounded-lg border outline-none text-sm text-gray-700 bg-white"
+                        disabled={isUploading}
+                      >
+                        <option value="">-- No, es un archivo nuevo --</option>
+                        {courses.flatMap(c => (c.resources || []).map(r => ({ ...r, courseName: c.title }))).map(r => (
+                          <option key={r.id} value={r.id}>{r.name} ({r.courseName})</option>
+                        ))}
+                      </select>
+                      <p className="text-xs text-gray-400 mt-2">
+                        Si elegís un archivo, el sistema ocultará automáticamente el viejo y solo mostrará el nuevo a los alumnos, manteniendo sus bibliotecas organizadas. Seleccioná el archivo viejo antes de darle a "Subir Archivo".
+                      </p>
                     </div>
 
                     <div className="space-y-3">

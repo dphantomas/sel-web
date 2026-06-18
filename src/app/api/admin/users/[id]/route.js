@@ -82,6 +82,11 @@ export async function PUT(req, { params }) {
           select: {
             courseId: true
           }
+        },
+        unlockedInstances: {
+          select: {
+            courseInstanceId: true
+          }
         }
       }
     })

@@ -26,6 +26,7 @@ model User {
   currentChallenge String?
 
   unlockedCourses UserCourseAccess[]
+  unlockedInstances UserInstanceAccess[]
   progress        Progress[]
   authenticators  Authenticator[]
 }
@@ -94,6 +95,9 @@ model CourseInstance {
 
   // Pre-requisitos específicos de esta instancia
   prerequisites Course[] @relation("InstancePrerequisiteCourses")
+
+  // Usuarios con acceso a esta instancia
+  usersWithAccess UserInstanceAccess[]
 }
 
 model UserCourseAccess {
@@ -106,6 +110,18 @@ model UserCourseAccess {
   course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
 
   @@unique([userId, courseId])
+}
+
+model UserInstanceAccess {
+  id               String   @id @default(cuid())
+  userId           String
+  courseInstanceId String
+  grantedAt        DateTime @default(now())
+
+  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  courseInstance CourseInstance @relation(fields: [courseInstanceId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, courseInstanceId])
 }
 
 model Module {
