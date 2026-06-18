@@ -5,7 +5,6 @@ import { prisma } from '@/lib/db'
 import Link from 'next/link'
 import LogoutButton from '@/components/LogoutButton'
 import UserProfileForm from './UserProfileForm'
-import FastLoginPrompt from '@/components/FastLoginPrompt'
 
 export const metadata = {
   title: 'Mi Panel | Sanación en Luz',
@@ -80,8 +79,6 @@ export default async function DashboardPage() {
             </p>
           </div>
           
-          <FastLoginPrompt userEmail={user.email} />
-
           <div className="flex flex-wrap items-center gap-3">
             {(user.role === 'Admin' || user.role === 'Transmisor') && (
               <Link 

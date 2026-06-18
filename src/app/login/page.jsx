@@ -3,7 +3,6 @@
 import { useState, useEffect, Suspense } from 'react'
 import { signIn } from 'next-auth/react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { startAuthentication, platformAuthenticatorIsAvailable } from '@simplewebauthn/browser'
 import Link from 'next/link'
 import { Eye, EyeOff } from 'lucide-react'
 
@@ -16,34 +15,6 @@ function LoginContent() {
   const [success, setSuccess] = useState('')
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
-  const [supportsBiometrics, setSupportsBiometrics] = useState(false)
-  const [isDeviceRegistered, setIsDeviceRegistered] = useState(false)
-  const [autoTriggered, setAutoTriggered] = useState(false)
-
-  useEffect(() => {
-    platformAuthenticatorIsAvailable().then(setSupportsBiometrics)
-    
-    // Check if device is registered for auto-login
-    const registered = localStorage.getItem('device_registered')
-    const savedEmail = localStorage.getItem('registered_email')
-    
-    if (registered === 'true') {
-      if (savedEmail) {
-        setIsDeviceRegistered(true)
-        if (!autoTriggered) {
-          setEmail(savedEmail)
-          setAutoTriggered(true)
-          // Agregamos un pequeño delay para asegurar que el usuario vea la UI antes de que el navegador bloquee la pantalla con Face ID
-          setTimeout(() => {
-            handleBiometricLogin(savedEmail)
-          }, 500)
-        }
-      } else {
-        // Estado inválido (código viejo guardó device_registered pero no el email). Limpiamos para que se pueda volver a registrar.
-        localStorage.removeItem('device_registered')
-      }
-    }
-  }, [autoTriggered])
 
   useEffect(() => {
     if (searchParams.get('registered') === 'true') {
@@ -77,61 +48,7 @@ function LoginContent() {
     }
   }
 
-  const handleBiometricLogin = async (emailToUse = email) => {
-    if (!emailToUse) {
-      setError('Por favor, ingresa tu correo electrónico primero para identificar tu cuenta.')
-      return
-    }
 
-    setError('')
-    setSuccess('')
-    setLoading(true)
-
-    try {
-      // 1. Obtener opciones de autenticación
-      const resp = await fetch('/api/auth/webauthn/generate-authentication-options', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: emailToUse })
-      })
-
-      if (!resp.ok) {
-        const errorData = await resp.json()
-        throw new Error(errorData.error || 'No se pudieron obtener las opciones de inicio de sesión.')
-      }
-
-      const options = await resp.json()
-
-      // 2. Pedir la huella o Face ID al dispositivo
-      let asseResp;
-      try {
-        asseResp = await startAuthentication(options)
-      } catch (err) {
-        if (err.name === 'NotAllowedError') {
-          throw new Error('Inicio de sesión cancelado.')
-        }
-        throw err
-      }
-
-      // 3. Enviar al provider de credenciales
-      const result = await signIn('credentials', {
-        redirect: false,
-        email: emailToUse,
-        assertion: JSON.stringify(asseResp)
-      })
-
-      if (result?.error) {
-        throw new Error(result.error)
-      }
-
-      router.push('/')
-      router.refresh()
-    } catch (err) {
-      setError(err.message || 'Error en el inicio de sesión biométrico.')
-    } finally {
-      setLoading(false)
-    }
-  }
 
   return (
     <div 
