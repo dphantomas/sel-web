@@ -181,7 +181,14 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
             let newUnlocked = [...u.unlockedCourses]
             if (shouldEnable) newUnlocked.push({ courseId })
             else newUnlocked = newUnlocked.filter((uc) => uc.courseId !== courseId)
-            return { ...u, unlockedCourses: newUnlocked }
+            
+            const updatedUser = { ...u, unlockedCourses: newUnlocked }
+            
+            if (editingUser?.id === userId) {
+              setEditingUser(updatedUser)
+            }
+            
+            return updatedUser
           }
           return u
         })
@@ -550,7 +557,12 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
                       </div>
                       <div className="sm:col-span-2">
                         <label className="block text-xs font-bold text-gray-700 mb-1">Rol en la Plataforma</label>
-                        <select name="role" defaultValue={editingUser.role} className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#9187BA] outline-none bg-white">
+                        <select 
+                          name="role" 
+                          key={`role-${editingUser.role}-${editingUser.unlockedCourses?.length}`}
+                          defaultValue={(editingUser.role === 'Guest' && editingUser.unlockedCourses?.length > 0) ? 'Participante' : editingUser.role} 
+                          className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#9187BA] outline-none bg-white"
+                        >
                           <option value="Guest">Invitado (Guest)</option>
                           <option value="Participante">Participante</option>
                           <option value="Transmisor">Transmisor</option>
