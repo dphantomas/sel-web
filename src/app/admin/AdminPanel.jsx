@@ -551,6 +551,7 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
                       <div className="sm:col-span-2">
                         <label className="block text-xs font-bold text-gray-700 mb-1">Rol en la Plataforma</label>
                         <select name="role" defaultValue={editingUser.role} className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#9187BA] outline-none bg-white">
+                          <option value="Guest">Invitado (Guest)</option>
                           <option value="Participante">Participante</option>
                           <option value="Transmisor">Transmisor</option>
                           <option value="Admin">Admin</option>
