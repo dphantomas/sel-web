@@ -11,6 +11,10 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
   const [users, setUsers] = useState(initialUsers)
   const [courses, setCourses] = useState(initialCourses)
   
+  // Image Cropping States
+  const [cropModalImage, setCropModalImage] = useState(null)
+  const [croppedImageBlob, setCroppedImageBlob] = useState(null)
+  
   const [searchTerm, setSearchTerm] = useState('')
   const [updatingId, setUpdatingId] = useState(null) // para loaders de accesos
   
