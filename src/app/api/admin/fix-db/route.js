@@ -10,13 +10,23 @@ export async function GET() {
     // 2. Agregar las columnas nuevas si no existen
     await prisma.$executeRawUnsafe('ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "firstName" TEXT NOT NULL DEFAULT \'\';')
     await prisma.$executeRawUnsafe('ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "lastName" TEXT NOT NULL DEFAULT \'\';')
+    await prisma.$executeRawUnsafe('ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "passwordHash" TEXT NOT NULL DEFAULT \'\';')
+    await prisma.$executeRawUnsafe('ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "phone" TEXT;')
+    await prisma.$executeRawUnsafe('ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "addressLine1" TEXT;')
+    await prisma.$executeRawUnsafe('ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "addressLine2" TEXT;')
+    await prisma.$executeRawUnsafe('ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "zipCode" TEXT;')
+    await prisma.$executeRawUnsafe('ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "country" TEXT;')
+    await prisma.$executeRawUnsafe('ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "sparkName" TEXT;')
+    await prisma.$executeRawUnsafe('ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "image" TEXT;')
+    await prisma.$executeRawUnsafe('ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "currentChallenge" TEXT;')
     
-    // 3. Eliminar la columna vieja
+    // 3. Eliminar columnas viejas
     try {
       await prisma.$executeRawUnsafe('ALTER TABLE "User" DROP COLUMN "name";')
-    } catch(e) {
-      console.log('La columna name ya no existe o no se pudo borrar:', e.message)
-    }
+    } catch(e) { }
+    try {
+      await prisma.$executeRawUnsafe('ALTER TABLE "User" DROP COLUMN "password";')
+    } catch(e) { }
 
     // 4. Crear el administrador
     const passwordHash = await bcrypt.hash('adminpassword123', 10)
