@@ -55,29 +55,12 @@ export default function ImageCropperModal({ imageSrc, onCropComplete, onCancel }
         </div>
 
         {/* Controls Area */}
-        <div className="p-6 space-y-6">
-          <div className="flex items-center gap-4">
-            <ZoomOut className="w-5 h-5 text-gray-400" />
-            <input
-              type="range"
-              value={zoom}
-              min={1}
-              max={3}
-              step={0.1}
-              aria-labelledby="Zoom"
-              onChange={(e) => {
-                setZoom(e.target.value)
-              }}
-              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-[#B681AE]"
-            />
-            <ZoomIn className="w-5 h-5 text-gray-400" />
-          </div>
-
-          <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
+        <div className="p-4 space-y-4 bg-gray-50 border-t border-gray-100">
+          <div className="flex justify-end gap-3">
             <button
               type="button"
               onClick={onCancel}
-              className="px-5 py-2.5 rounded-xl font-bold text-gray-600 hover:bg-gray-100 transition"
+              className="px-5 py-2.5 rounded-xl font-bold text-gray-600 hover:bg-gray-200 transition"
               disabled={isProcessing}
             >
               Cancelar
@@ -91,10 +74,10 @@ export default function ImageCropperModal({ imageSrc, onCropComplete, onCancel }
               {isProcessing ? (
                 <>
                   <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-                  Recortando...
+                  Procesando...
                 </>
               ) : (
-                'Aplicar Recorte'
+                'Aceptar'
               )}
             </button>
           </div>
