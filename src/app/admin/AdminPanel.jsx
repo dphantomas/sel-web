@@ -709,7 +709,7 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
                             course.instances.map(instance => {
                               const isUnlocked = editingUser.unlockedInstances?.some((ui) => ui.courseInstanceId === instance.id)
                               const isLoading = updatingId === `${editingUser.id}-${instance.id}`
-                              const dateStr = new Date(instance.startDate).toLocaleDateString('es-AR')
+                              const dateStr = new Date(instance.startDate).toLocaleDateString('es-AR', { timeZone: 'UTC' })
                               
                               return (
                                 <div key={instance.id} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
@@ -874,19 +874,15 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
                         <form onSubmit={handleCreateInstance} className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div>
                             <label className="block text-xs font-bold text-gray-500 mb-1">Fecha de Inicio</label>
-                            <input type="datetime-local" required value={newInstanceData.startDate} onChange={(e) => setNewInstanceData({...newInstanceData, startDate: e.target.value})} className="w-full px-3 py-2 rounded-lg border outline-none text-sm" />
+                            <input type="date" required value={newInstanceData.startDate} onChange={(e) => setNewInstanceData({...newInstanceData, startDate: e.target.value})} className="w-full px-3 py-2 rounded-lg border outline-none text-sm" />
                           </div>
                           <div>
                             <label className="block text-xs font-bold text-gray-500 mb-1">Fecha de Fin (Opcional)</label>
-                            <input type="datetime-local" value={newInstanceData.endDate} onChange={(e) => setNewInstanceData({...newInstanceData, endDate: e.target.value})} className="w-full px-3 py-2 rounded-lg border outline-none text-sm" />
+                            <input type="date" value={newInstanceData.endDate} onChange={(e) => setNewInstanceData({...newInstanceData, endDate: e.target.value})} className="w-full px-3 py-2 rounded-lg border outline-none text-sm" />
                           </div>
-                          <div>
+                          <div className="md:col-span-2">
                             <label className="block text-xs font-bold text-gray-500 mb-1">Ubicación / Modalidad</label>
                             <input type="text" placeholder="Ej: Zoom, o Buenos Aires" value={newInstanceData.location} onChange={(e) => setNewInstanceData({...newInstanceData, location: e.target.value})} className="w-full px-3 py-2 rounded-lg border outline-none text-sm" />
-                          </div>
-                          <div>
-                            <label className="block text-xs font-bold text-gray-500 mb-1">Precio (Opcional)</label>
-                            <input type="number" placeholder="Ej: 5000" value={newInstanceData.price} onChange={(e) => setNewInstanceData({...newInstanceData, price: e.target.value})} className="w-full px-3 py-2 rounded-lg border outline-none text-sm" />
                           </div>
                           <div className="md:col-span-2 flex justify-end">
                             <button type="submit" disabled={isSaving} className="bg-[#B681AE] text-white px-6 py-2 rounded-lg font-bold text-sm disabled:opacity-50 hover:bg-[#9187BA] transition">
@@ -904,10 +900,11 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
                         editingCourse.instances.map(inst => (
                           <div key={inst.id} className="border border-gray-100 rounded-xl p-4 flex justify-between items-center bg-white shadow-sm hover:border-[#9187BA] transition">
                             <div>
-                              <p className="font-bold text-[#33275f]">{new Date(inst.startDate).toLocaleString()}</p>
+                              <p className="font-bold text-[#33275f]">
+                                {new Date(inst.startDate).toLocaleDateString('es-AR', { timeZone: 'UTC' })}
+                              </p>
                               <div className="flex gap-4 text-xs text-gray-500 mt-1">
                                 {inst.location && <span>📍 {inst.location}</span>}
-                                {inst.price && <span>💰 ${inst.price}</span>}
                               </div>
                             </div>
                             <button onClick={() => handleDeleteInstance(inst.id)} className="text-red-500 hover:bg-red-50 p-2 rounded-lg transition" title="Borrar Instancia">

@@ -26,7 +26,8 @@ export default function UserCourseHistory({ instances }) {
               const dateStr = new Date(instance.startDate).toLocaleDateString('es-AR', {
                 year: 'numeric',
                 month: 'long',
-                day: 'numeric'
+                day: 'numeric',
+                timeZone: 'UTC'
               })
 
               return (
