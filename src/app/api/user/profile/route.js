@@ -35,6 +35,11 @@ export async function PUT(req) {
     const firstName = formData.get('firstName')
     const lastName = formData.get('lastName')
     const phone = formData.get('phone')
+    const addressLine1 = formData.get('addressLine1')
+    const addressLine2 = formData.get('addressLine2')
+    const zipCode = formData.get('zipCode')
+    const country = formData.get('country')
+    const sparkName = formData.get('sparkName')
     const imageFile = formData.get('image')
 
     let imageUrl = undefined
@@ -81,6 +86,11 @@ export async function PUT(req) {
         ...(firstName && { firstName }),
         ...(lastName && { lastName }),
         phone: phone !== null ? phone : undefined,
+        addressLine1: addressLine1 !== null ? addressLine1 : undefined,
+        addressLine2: addressLine2 !== null ? addressLine2 : undefined,
+        zipCode: zipCode !== null ? zipCode : undefined,
+        country: country !== null ? country : undefined,
+        sparkName: sparkName !== null ? sparkName : undefined,
         ...(imageUrl && { image: imageUrl })
       }
     })

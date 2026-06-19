@@ -9,7 +9,12 @@ export default function UserProfileForm({ user }) {
   const [formData, setFormData] = useState({
     firstName: user.firstName,
     lastName: user.lastName,
-    phone: user.phone || ''
+    phone: user.phone || '',
+    addressLine1: user.addressLine1 || '',
+    addressLine2: user.addressLine2 || '',
+    zipCode: user.zipCode || '',
+    country: user.country || '',
+    sparkName: user.sparkName || ''
   })
   const [isSaving, setIsSaving] = useState(false)
   const [message, setMessage] = useState(null)
@@ -42,6 +47,11 @@ export default function UserProfileForm({ user }) {
       formPayload.append('firstName', formData.firstName)
       formPayload.append('lastName', formData.lastName)
       formPayload.append('phone', formData.phone)
+      formPayload.append('addressLine1', formData.addressLine1)
+      formPayload.append('addressLine2', formData.addressLine2)
+      formPayload.append('zipCode', formData.zipCode)
+      formPayload.append('country', formData.country)
+      formPayload.append('sparkName', formData.sparkName)
       if (croppedImageBlob) {
         formPayload.append('image', croppedImageBlob, 'profile.jpg')
       }
@@ -165,7 +175,55 @@ export default function UserProfileForm({ user }) {
             className="w-full px-4 py-2 rounded-xl border focus:border-[#9187BA] focus:ring-1 focus:ring-[#9187BA] outline-none"
           />
         </div>
-        <div className="md:col-span-2 flex justify-end mt-2">
+        <div className="md:col-span-2 mt-2">
+          <h3 className="text-sm font-bold text-[#33275f] border-b pb-1">Datos Adicionales</h3>
+        </div>
+        <div>
+          <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Nombre de Chispa (Opcional)</label>
+          <input
+            type="text"
+            value={formData.sparkName}
+            onChange={(e) => setFormData({ ...formData, sparkName: e.target.value })}
+            className="w-full px-4 py-2 rounded-xl border focus:border-[#9187BA] focus:ring-1 focus:ring-[#9187BA] outline-none"
+          />
+        </div>
+        <div>
+          <label className="block text-xs font-bold text-gray-500 uppercase mb-1">País</label>
+          <input
+            type="text"
+            value={formData.country}
+            onChange={(e) => setFormData({ ...formData, country: e.target.value })}
+            className="w-full px-4 py-2 rounded-xl border focus:border-[#9187BA] focus:ring-1 focus:ring-[#9187BA] outline-none"
+          />
+        </div>
+        <div className="md:col-span-2">
+          <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Dirección (Línea 1)</label>
+          <input
+            type="text"
+            value={formData.addressLine1}
+            onChange={(e) => setFormData({ ...formData, addressLine1: e.target.value })}
+            className="w-full px-4 py-2 rounded-xl border focus:border-[#9187BA] focus:ring-1 focus:ring-[#9187BA] outline-none"
+          />
+        </div>
+        <div>
+          <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Dirección (Línea 2) (Opcional)</label>
+          <input
+            type="text"
+            value={formData.addressLine2}
+            onChange={(e) => setFormData({ ...formData, addressLine2: e.target.value })}
+            className="w-full px-4 py-2 rounded-xl border focus:border-[#9187BA] focus:ring-1 focus:ring-[#9187BA] outline-none"
+          />
+        </div>
+        <div>
+          <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Código Postal</label>
+          <input
+            type="text"
+            value={formData.zipCode}
+            onChange={(e) => setFormData({ ...formData, zipCode: e.target.value })}
+            className="w-full px-4 py-2 rounded-xl border focus:border-[#9187BA] focus:ring-1 focus:ring-[#9187BA] outline-none"
+          />
+        </div>
+        <div className="md:col-span-2 flex justify-end mt-4">
           <button
             type="submit"
             disabled={isSaving}
