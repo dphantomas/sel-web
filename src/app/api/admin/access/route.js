@@ -44,12 +44,14 @@ export async function POST(request) {
         create: { userId, courseId }
       })
 
-      // Enviar notificación de WhatsApp si el usuario tiene teléfono
+      // Enviar notificación de WhatsApp si el usuario tiene teléfono (Deshabilitado por ahora)
+      /*
       if (user.phone) {
         const startDate = new Date(instance.startDate).toLocaleDateString('es-AR')
         const message = `¡Hola ${user.firstName}! Se ha habilitado tu acceso a la instancia del ${startDate} del taller "${course.title}" en la plataforma de Sanación en Luz. Ya puedes ingresar a tu panel para ver los recursos en: ${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/dashboard`
         await sendWhatsAppNotification(user.phone, message)
       }
+      */
 
       // Ascender de Guest a Participante si es su primer curso
       if (user.role === 'Guest') {
