@@ -31,11 +31,29 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
   // =================== LOGICA RECURSOS (R2) ===================
   const [isUploading, setIsUploading] = useState(false)
   const [overrideResourceId, setOverrideResourceId] = useState('')
+  const [selectedFile, setSelectedFile] = useState(null)
+  const [newResourceName, setNewResourceName] = useState('')
+  const [previewingId, setPreviewingId] = useState(null)
   const resourceInputRef = useRef(null)
 
-  const handleUploadResource = async (e) => {
+  const handleFileSelect = (e) => {
     const file = e.target.files?.[0]
-    if (!file) return
+    if (file) {
+      setSelectedFile(file)
+      const nameWithoutExt = file.name.replace(/\.[^/.]+$/, "")
+      setNewResourceName(nameWithoutExt)
+    }
+  }
+
+  const handleCancelFileSelect = () => {
+    setSelectedFile(null)
+    setNewResourceName('')
+    setOverrideResourceId('')
+    if (resourceInputRef.current) resourceInputRef.current.value = ''
+  }
+
+  const handleUploadResource = async () => {
+    if (!selectedFile) return
 
     setIsUploading(true)
     try {
@@ -44,8 +62,8 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          fileName: file.name, 
-          fileType: file.type,
+          fileName: selectedFile.name, 
+          fileType: selectedFile.type,
           folder: editingCourse.slug || 'varios'
         })
       })
@@ -56,8 +74,8 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
       // 2. Subir archivo a R2 (S3) directamente
       const uploadRes = await fetch(uploadUrl, {
         method: 'PUT',
-        headers: { 'Content-Type': file.type },
-        body: file
+        headers: { 'Content-Type': selectedFile.type },
+        body: selectedFile
       })
 
       if (!uploadRes.ok) {
@@ -66,13 +84,13 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
       }
 
       // 3. Guardar en BD
-      const isDownloadable = file.type.includes('pdf') || file.type.includes('zip') // por defecto
+      const isDownloadable = selectedFile.type.includes('pdf') || selectedFile.type.includes('zip') || selectedFile.type.includes('image')
       const dbRes = await fetch('/api/admin/resources', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name: file.name,
-          type: file.type,
+          name: newResourceName.trim() || selectedFile.name,
+          type: selectedFile.type,
           cloudflareKey,
           isDownloadable,
           courseId: editingCourse.id,
@@ -91,13 +109,29 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
       setEditingCourse(updatedCourse)
       setCourses(courses.map(c => c.id === editingCourse.id ? updatedCourse : c))
       
-      setOverrideResourceId('') // Reset
+      handleCancelFileSelect()
     } catch (error) {
       console.error(error)
       alert(error.message || 'Error en la subida.')
     } finally {
-      if (resourceInputRef.current) resourceInputRef.current.value = ''
       setIsUploading(false)
+    }
+  }
+
+  const handlePreviewResource = async (resource) => {
+    setPreviewingId(resource.id)
+    try {
+      const res = await fetch(`/api/resources/${resource.id}`)
+      if (!res.ok) {
+        const data = await res.json()
+        throw new Error(data.error || 'No se pudo generar la preview')
+      }
+      const { url } = await res.json()
+      window.open(url, '_blank')
+    } catch (error) {
+      alert(error.message)
+    } finally {
+      setPreviewingId(null)
     }
   }
 
@@ -891,40 +925,78 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
                     <div className="flex justify-between items-center mb-6">
                       <h3 className="text-lg font-bold text-[#33275f]">Archivos y Materiales del Curso</h3>
                       
-                      <div className="relative">
-                        <input 
-                          type="file" 
-                          ref={resourceInputRef}
-                          onChange={handleUploadResource}
-                          disabled={isUploading}
-                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed" 
-                        />
-                        <button disabled={isUploading} className="bg-[#B681AE] text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-[#9187BA] transition flex items-center gap-2 disabled:opacity-50">
-                          <UploadCloud className="w-4 h-4" />
-                          {isUploading ? 'Subiendo...' : 'Subir Archivo'}
-                        </button>
-                      </div>
+                      {!selectedFile && (
+                        <div className="relative">
+                          <input 
+                            type="file" 
+                            ref={resourceInputRef}
+                            onChange={handleFileSelect}
+                            disabled={isUploading}
+                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed" 
+                          />
+                          <button disabled={isUploading} className="bg-[#B681AE] text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-[#9187BA] transition flex items-center gap-2 disabled:opacity-50">
+                            <UploadCloud className="w-4 h-4" />
+                            Seleccionar Archivo
+                          </button>
+                        </div>
+                      )}
                     </div>
 
-                    <div className="mb-6 p-4 bg-gray-50 rounded-xl border border-gray-100">
-                      <label className="block text-sm font-bold text-[#33275f] mb-2">
-                        ¿Este nuevo archivo reemplaza a uno anterior? (Opcional)
-                      </label>
-                      <select 
-                        value={overrideResourceId} 
-                        onChange={e => setOverrideResourceId(e.target.value)}
-                        className="w-full px-3 py-2 rounded-lg border outline-none text-sm text-gray-700 bg-white"
-                        disabled={isUploading}
-                      >
-                        <option value="">-- No, es un archivo nuevo --</option>
-                        {courses.flatMap(c => (c.resources || []).map(r => ({ ...r, courseName: c.title }))).map(r => (
-                          <option key={r.id} value={r.id}>{r.name} ({r.courseName})</option>
-                        ))}
-                      </select>
-                      <p className="text-xs text-gray-400 mt-2">
-                        Si elegís un archivo, el sistema ocultará automáticamente el viejo y solo mostrará el nuevo a los alumnos, manteniendo sus bibliotecas organizadas. Seleccioná el archivo viejo antes de darle a "Subir Archivo".
-                      </p>
-                    </div>
+                    {selectedFile && (
+                      <div className="mb-6 p-5 bg-blue-50/50 rounded-xl border border-blue-100">
+                        <h4 className="font-bold text-[#33275f] text-sm mb-3">Preparar Subida</h4>
+                        <div className="space-y-4">
+                          <div>
+                            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Nombre Público del Archivo</label>
+                            <input 
+                              type="text" 
+                              value={newResourceName} 
+                              onChange={(e) => setNewResourceName(e.target.value)}
+                              placeholder="Ej: Meditación Guiada Nro 1"
+                              className="w-full px-4 py-2 rounded-xl border outline-none focus:ring-2 focus:ring-[#B681AE]"
+                              disabled={isUploading}
+                            />
+                            <p className="text-xs text-gray-400 mt-1">Este nombre servirá para reemplazar archivos viejos y lo verán los alumnos.</p>
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-bold text-[#33275f] mb-1">
+                              ¿Reemplaza a un archivo anterior? (Opcional)
+                            </label>
+                            <select 
+                              value={overrideResourceId} 
+                              onChange={e => setOverrideResourceId(e.target.value)}
+                              className="w-full px-3 py-2 rounded-xl border outline-none text-sm text-gray-700 bg-white focus:ring-2 focus:ring-[#B681AE]"
+                              disabled={isUploading}
+                            >
+                              <option value="">-- No, es un archivo nuevo --</option>
+                              {courses.flatMap(c => (c.resources || []).map(r => ({ ...r, courseName: c.title }))).map(r => (
+                                <option key={r.id} value={r.id}>{r.name} ({r.courseName})</option>
+                              ))}
+                            </select>
+                          </div>
+
+                          <div className="flex justify-end gap-3 pt-2">
+                            <button 
+                              type="button" 
+                              onClick={handleCancelFileSelect}
+                              disabled={isUploading}
+                              className="px-4 py-2 rounded-xl text-gray-600 font-bold hover:bg-gray-200 transition disabled:opacity-50 text-sm"
+                            >
+                              Cancelar
+                            </button>
+                            <button 
+                              onClick={handleUploadResource}
+                              disabled={isUploading || !newResourceName.trim()}
+                              className="bg-[#33275f] text-white px-6 py-2 rounded-xl text-sm font-bold hover:bg-[#4c3c86] transition flex items-center gap-2 disabled:opacity-50"
+                            >
+                              <UploadCloud className="w-4 h-4" />
+                              {isUploading ? 'Subiendo...' : 'Confirmar y Subir'}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
 
                     <div className="space-y-3">
                       {!editingCourse.resources || editingCourse.resources.length === 0 ? (
@@ -941,9 +1013,19 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
                                 {res.isDownloadable && <span className="text-green-600 font-bold">Descargable</span>}
                               </div>
                             </div>
-                            <button onClick={() => handleDeleteResource(res.id)} className="text-red-500 hover:bg-red-50 p-2 rounded-lg transition opacity-0 group-hover:opacity-100" title="Borrar Archivo">
-                              <X className="w-5 h-5" />
-                            </button>
+                            <div className="flex items-center gap-2">
+                              <button 
+                                onClick={() => handlePreviewResource(res)} 
+                                disabled={previewingId === res.id}
+                                className="text-[#9187BA] hover:text-[#33275f] bg-gray-50 hover:bg-gray-100 px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1 disabled:opacity-50"
+                                title="Ver Preview"
+                              >
+                                {previewingId === res.id ? 'Cargando...' : <><Eye className="w-4 h-4" /> Preview</>}
+                              </button>
+                              <button onClick={() => handleDeleteResource(res.id)} className="text-red-500 hover:bg-red-50 p-2 rounded-lg transition opacity-0 group-hover:opacity-100" title="Borrar Archivo">
+                                <X className="w-5 h-5" />
+                              </button>
+                            </div>
                           </div>
                         ))
                       )}
