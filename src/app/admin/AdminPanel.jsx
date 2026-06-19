@@ -84,7 +84,7 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
       }
 
       // 3. Guardar en BD
-      const isDownloadable = selectedFile.type.includes('pdf') || selectedFile.type.includes('zip') || selectedFile.type.includes('image')
+      const isDownloadable = selectedFile.type.includes('pdf') || selectedFile.type.includes('zip')
       const dbRes = await fetch('/api/admin/resources', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -970,8 +970,8 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
                               disabled={isUploading}
                             >
                               <option value="">-- No, es un archivo nuevo --</option>
-                              {courses.flatMap(c => (c.resources || []).map(r => ({ ...r, courseName: c.title }))).map(r => (
-                                <option key={r.id} value={r.id}>{r.name} ({r.courseName})</option>
+                              {editingCourse.resources?.map(r => (
+                                <option key={r.id} value={r.id}>{r.name}</option>
                               ))}
                             </select>
                           </div>
