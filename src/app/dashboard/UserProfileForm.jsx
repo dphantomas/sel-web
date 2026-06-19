@@ -158,6 +158,15 @@ export default function UserProfileForm({ user }) {
           />
         </div>
         <div>
+          <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Nombre de Chispa (Opcional)</label>
+          <input
+            type="text"
+            value={formData.sparkName}
+            onChange={(e) => setFormData({ ...formData, sparkName: e.target.value })}
+            className="w-full px-4 py-2 rounded-xl border focus:border-[#9187BA] focus:ring-1 focus:ring-[#9187BA] outline-none"
+          />
+        </div>
+        <div>
           <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Email (No editable)</label>
           <input
             type="email"
@@ -178,15 +187,7 @@ export default function UserProfileForm({ user }) {
         <div className="md:col-span-2 mt-2">
           <h3 className="text-sm font-bold text-[#33275f] border-b pb-1">Datos Adicionales</h3>
         </div>
-        <div>
-          <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Nombre de Chispa (Opcional)</label>
-          <input
-            type="text"
-            value={formData.sparkName}
-            onChange={(e) => setFormData({ ...formData, sparkName: e.target.value })}
-            className="w-full px-4 py-2 rounded-xl border focus:border-[#9187BA] focus:ring-1 focus:ring-[#9187BA] outline-none"
-          />
-        </div>
+
         <div>
           <label className="block text-xs font-bold text-gray-500 uppercase mb-1">País</label>
           <input

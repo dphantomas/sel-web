@@ -20,6 +20,7 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
   
   // Estados para modales de edición/creación
   const [editingUser, setEditingUser] = useState(null)
+  const [userTab, setUserTab] = useState('data') // 'data' | 'access'
   const [editImagePreview, setEditImagePreview] = useState(null)
   const editFileInputRef = useRef(null)
 
@@ -324,6 +325,7 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
   // =================== LOGICA EDICION USUARIO ===================
   const openEditUser = (user) => {
     setEditingUser(user)
+    setUserTab('data')
     setEditImagePreview(user.image || null)
     setCroppedImageBlob(null)
   }
@@ -632,20 +634,34 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 md:p-6 overflow-y-auto">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl flex flex-col max-h-full">
             
-            <div className="p-6 border-b border-gray-100 flex justify-between items-center shrink-0">
+            <div className="p-6 border-b border-gray-100 flex justify-between items-start shrink-0">
               <div>
                 <h2 className="text-2xl font-bold text-[#33275f]">Gestionar Participante</h2>
                 <p className="text-sm text-gray-500">{editingUser.email}</p>
+                <div className="flex gap-6 mt-6">
+                  <button 
+                    onClick={() => setUserTab('data')} 
+                    className={`pb-2 text-sm font-bold border-b-2 transition ${userTab === 'data' ? 'border-[#33275f] text-[#33275f]' : 'border-transparent text-gray-400 hover:text-gray-600'}`}
+                  >
+                    Datos Personales
+                  </button>
+                  <button 
+                    onClick={() => setUserTab('access')} 
+                    className={`pb-2 text-sm font-bold border-b-2 transition ${userTab === 'access' ? 'border-[#33275f] text-[#33275f]' : 'border-transparent text-gray-400 hover:text-gray-600'}`}
+                  >
+                    Talleres y Accesos
+                  </button>
+                </div>
               </div>
               <button onClick={() => setEditingUser(null)} className="text-gray-400 hover:text-gray-700 bg-gray-100 hover:bg-gray-200 p-2 rounded-full transition">
                 <X className="w-6 h-6" />
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-6 grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="flex-1 overflow-y-auto p-6">
               
-              {/* Columna Izquierda: Formulario de Datos */}
-              <div className="lg:col-span-2 space-y-8">
+              {userTab === 'data' && (
+                <div className="max-w-2xl mx-auto space-y-8">
                 <form id="editUserForm" onSubmit={handleUserSubmit} className="space-y-8">
                   
                   {/* Foto de Perfil */}
@@ -760,14 +776,14 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
                     </div>
                   </div>
                 </form>
-              </div>
+              )}
 
-              {/* Columna Derecha: Accesos a Cursos e Historial */}
-              <div className="bg-gray-50/50 rounded-2xl border border-gray-100 p-6 flex flex-col h-full">
-                <h3 className="text-[#33275f] font-bold text-lg mb-2">Historial de Cursos</h3>
-                <p className="text-sm text-gray-500 mb-6">Gestioná a qué talleres tiene acceso este usuario. Los cambios aquí se guardan instantáneamente.</p>
-                
-                <div className="space-y-3 flex-1 overflow-y-auto pr-2">
+              {userTab === 'access' && (
+                <div className="max-w-3xl mx-auto bg-gray-50/50 rounded-2xl border border-gray-100 p-6 flex flex-col h-full">
+                  <h3 className="text-[#33275f] font-bold text-lg mb-2">Historial de Talleres y Accesos</h3>
+                  <p className="text-sm text-gray-500 mb-6">Gestioná a qué talleres tiene acceso este usuario. Los cambios aquí se guardan instantáneamente.</p>
+                  
+                  <div className="space-y-4 flex-1 overflow-y-auto pr-2">
                   {courses.map((course) => {
                     // Check if they have access to ANY instance of this course to color the course header
                     const hasAnyAccess = editingUser.unlockedCourses?.some((uc) => uc.courseId === course.id)
@@ -834,23 +850,18 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
                 Eliminar Usuario
               </button>
               <div className="flex gap-3">
+                {userTab === 'data' && (
+                  <button 
+                    type="submit" 
+                    form="editUserForm"
+                    disabled={isSaving} 
+                    className="px-6 py-2.5 rounded-xl bg-[#33275f] text-white font-bold hover:bg-[#4c3c86] transition shadow-sm disabled:opacity-50 flex items-center gap-2"
+                  >
+                    {isSaving ? 'Guardando...' : 'Guardar Datos Personales'}
+                  </button>
+                )}
                 <button type="button" onClick={() => setEditingUser(null)} className="px-5 py-2.5 rounded-xl text-gray-600 font-bold hover:bg-gray-200 transition">
-                  Cancelar
-                </button>
-                <button 
-                  type="submit" 
-                  form="editUserForm"
-                  disabled={isSaving} 
-                  className="px-6 py-2.5 rounded-xl bg-[#33275f] text-white font-bold hover:bg-[#4c3c86] transition shadow-sm disabled:opacity-50 flex items-center gap-2"
-                >
-                  {isSaving ? (
-                    <>
-                      <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-                      Guardando...
-                    </>
-                  ) : (
-                    'Guardar Cambios'
-                  )}
+                  Cerrar
                 </button>
               </div>
             </div>
