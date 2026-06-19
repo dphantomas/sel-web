@@ -60,7 +60,10 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
         body: file
       })
 
-      if (!uploadRes.ok) throw new Error('Error subiendo archivo a la nube')
+      if (!uploadRes.ok) {
+        const errorText = await uploadRes.text()
+        throw new Error(`Error de la nube (${uploadRes.status}): ${errorText.substring(0, 100)}`)
+      }
 
       // 3. Guardar en BD
       const isDownloadable = file.type.includes('pdf') || file.type.includes('zip') // por defecto
@@ -88,12 +91,12 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
       setEditingCourse(updatedCourse)
       setCourses(courses.map(c => c.id === editingCourse.id ? updatedCourse : c))
       
-      if (resourceInputRef.current) resourceInputRef.current.value = ''
       setOverrideResourceId('') // Reset
     } catch (error) {
       console.error(error)
       alert(error.message || 'Error en la subida.')
     } finally {
+      if (resourceInputRef.current) resourceInputRef.current.value = ''
       setIsUploading(false)
     }
   }
