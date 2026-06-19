@@ -155,7 +155,11 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
   // =================== LOGICA INSTANCIAS ===================
   const [courseTab, setCourseTab] = useState('data') // 'data' | 'instances' | 'resources'
   const [isCreatingInstance, setIsCreatingInstance] = useState(false)
-  const [newInstanceData, setNewInstanceData] = useState({ startDate: '', endDate: '', price: '', location: '' })
+  const [editingInstanceId, setEditingInstanceId] = useState(null)
+  const [newInstanceData, setNewInstanceData] = useState({ startDate: '', endDate: '', location: '' })
+  
+  const [editingResourceId, setEditingResourceId] = useState(null)
+  const [editResourceData, setEditResourceData] = useState({ name: '', overridesResourceId: '' })
 
   const handleCreateInstance = async (e) => {
     e.preventDefault()
@@ -178,7 +182,7 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
       setCourses(courses.map(c => c.id === editingCourse.id ? updatedCourse : c))
       
       setIsCreatingInstance(false)
-      setNewInstanceData({ startDate: '', endDate: '', price: '', location: '' })
+      setNewInstanceData({ startDate: '', endDate: '', location: '' })
     } catch (error) {
       console.error(error)
       alert(error.message || 'Hubo un error al crear la instancia.')
@@ -186,6 +190,82 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
       setIsSaving(false)
     }
   }
+
+  const startEditInstance = (inst) => {
+    setEditingInstanceId(inst.id)
+    setNewInstanceData({
+      startDate: new Date(inst.startDate).toISOString().split('T')[0],
+      endDate: inst.endDate ? new Date(inst.endDate).toISOString().split('T')[0] : '',
+      location: inst.location || ''
+    })
+  }
+
+  const handleEditInstanceSubmit = async (e) => {
+    e.preventDefault()
+    setIsSaving(true)
+    try {
+      const res = await fetch(`/api/admin/instances/${editingInstanceId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newInstanceData)
+      })
+
+      if (!res.ok) throw new Error('Error al actualizar instancia')
+      
+      const data = await res.json()
+      const updatedInstances = editingCourse.instances.map(i => i.id === editingInstanceId ? data.instance : i)
+      const updatedCourse = { ...editingCourse, instances: updatedInstances }
+      
+      setEditingCourse(updatedCourse)
+      setCourses(courses.map(c => c.id === editingCourse.id ? updatedCourse : c))
+      setEditingInstanceId(null)
+      setNewInstanceData({ startDate: '', endDate: '', location: '' })
+    } catch (error) {
+      alert(error.message)
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  const startEditResource = (res) => {
+    setEditingResourceId(res.id)
+    setEditResourceData({
+      name: res.name,
+      overridesResourceId: res.overridesResourceId || ''
+    })
+  }
+
+  const handleEditResourceSubmit = async (e) => {
+    e.preventDefault()
+    setIsSaving(true)
+    try {
+      const res = await fetch(`/api/admin/resources`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: editingResourceId,
+          name: editResourceData.name,
+          overridesResourceId: editResourceData.overridesResourceId || null
+        })
+      })
+
+      if (!res.ok) throw new Error('Error al actualizar recurso')
+      
+      const updatedRes = await res.json()
+      const updatedResources = editingCourse.resources.map(r => r.id === editingResourceId ? updatedRes : r)
+      const updatedCourse = { ...editingCourse, resources: updatedResources }
+      
+      setEditingCourse(updatedCourse)
+      setCourses(courses.map(c => c.id === editingCourse.id ? updatedCourse : c))
+      setEditingResourceId(null)
+    } catch (error) {
+      alert(error.message)
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+
 
   const handleDeleteInstance = async (instanceId) => {
     if (!window.confirm('¿Estás seguro de que deseas ELIMINAR esta instancia?')) return
@@ -897,21 +977,57 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
                       {!editingCourse.instances || editingCourse.instances.length === 0 ? (
                         <p className="text-gray-500 text-sm text-center py-8 bg-gray-50 rounded-xl">No hay instancias programadas para este curso.</p>
                       ) : (
-                        editingCourse.instances.map(inst => (
-                          <div key={inst.id} className="border border-gray-100 rounded-xl p-4 flex justify-between items-center bg-white shadow-sm hover:border-[#9187BA] transition">
-                            <div>
-                              <p className="font-bold text-[#33275f]">
-                                {new Date(inst.startDate).toLocaleDateString('es-AR', { timeZone: 'UTC' })}
-                              </p>
-                              <div className="flex gap-4 text-xs text-gray-500 mt-1">
-                                {inst.location && <span>📍 {inst.location}</span>}
+                        editingCourse.instances.map(inst => {
+                          if (editingInstanceId === inst.id) {
+                            return (
+                              <div key={inst.id} className="bg-gray-50 p-5 rounded-xl border border-gray-200">
+                                <h4 className="font-bold text-sm text-[#33275f] mb-3">Editar Instancia</h4>
+                                <form onSubmit={handleEditInstanceSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                  <div>
+                                    <label className="block text-xs font-bold text-gray-500 mb-1">Fecha de Inicio</label>
+                                    <input type="date" required value={newInstanceData.startDate} onChange={(e) => setNewInstanceData({...newInstanceData, startDate: e.target.value})} className="w-full px-3 py-2 rounded-lg border outline-none text-sm" />
+                                  </div>
+                                  <div>
+                                    <label className="block text-xs font-bold text-gray-500 mb-1">Fecha de Fin (Opcional)</label>
+                                    <input type="date" value={newInstanceData.endDate} onChange={(e) => setNewInstanceData({...newInstanceData, endDate: e.target.value})} className="w-full px-3 py-2 rounded-lg border outline-none text-sm" />
+                                  </div>
+                                  <div className="md:col-span-2">
+                                    <label className="block text-xs font-bold text-gray-500 mb-1">Ubicación / Modalidad</label>
+                                    <input type="text" placeholder="Ej: Zoom, o Buenos Aires" value={newInstanceData.location} onChange={(e) => setNewInstanceData({...newInstanceData, location: e.target.value})} className="w-full px-3 py-2 rounded-lg border outline-none text-sm" />
+                                  </div>
+                                  <div className="md:col-span-2 flex justify-end gap-2">
+                                    <button type="button" onClick={() => setEditingInstanceId(null)} className="px-4 py-2 rounded-lg text-gray-500 text-sm font-bold hover:bg-gray-100 transition">
+                                      Cancelar
+                                    </button>
+                                    <button type="submit" disabled={isSaving} className="bg-[#B681AE] text-white px-6 py-2 rounded-lg font-bold text-sm disabled:opacity-50 hover:bg-[#9187BA] transition">
+                                      {isSaving ? 'Guardando...' : 'Guardar Cambios'}
+                                    </button>
+                                  </div>
+                                </form>
+                              </div>
+                            )
+                          }
+                          return (
+                            <div key={inst.id} className="border border-gray-100 rounded-xl p-4 flex justify-between items-center bg-white shadow-sm hover:border-[#9187BA] transition group">
+                              <div>
+                                <p className="font-bold text-[#33275f]">
+                                  {new Date(inst.startDate).toLocaleDateString('es-AR', { timeZone: 'UTC' })}
+                                </p>
+                                <div className="flex gap-4 text-xs text-gray-500 mt-1">
+                                  {inst.location && <span>📍 {inst.location}</span>}
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition">
+                                <button onClick={() => startEditInstance(inst)} className="text-[#9187BA] hover:bg-[#9187BA]/10 p-2 rounded-lg transition" title="Editar Instancia">
+                                  <Edit2 className="w-4 h-4" />
+                                </button>
+                                <button onClick={() => handleDeleteInstance(inst.id)} className="text-red-500 hover:bg-red-50 p-2 rounded-lg transition" title="Borrar Instancia">
+                                  <X className="w-5 h-5" />
+                                </button>
                               </div>
                             </div>
-                            <button onClick={() => handleDeleteInstance(inst.id)} className="text-red-500 hover:bg-red-50 p-2 rounded-lg transition" title="Borrar Instancia">
-                              <X className="w-5 h-5" />
-                            </button>
-                          </div>
-                        ))
+                          )
+                        })
                       )}
                     </div>
                   </div>
@@ -1001,30 +1117,78 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
                           No hay archivos subidos. Los audios y PDFs que subas aparecerán aquí y estarán protegidos en la bóveda.
                         </p>
                       ) : (
-                        editingCourse.resources.map(res => (
-                          <div key={res.id} className="border border-gray-100 rounded-xl p-4 flex justify-between items-center bg-white shadow-sm hover:border-[#9187BA] transition group">
-                            <div className="flex-1 min-w-0 pr-4">
-                              <p className="font-bold text-[#33275f] truncate">{res.name}</p>
-                              <div className="flex gap-4 text-xs text-gray-500 mt-1">
-                                <span>📄 {res.type}</span>
-                                {res.isDownloadable && <span className="text-green-600 font-bold">Descargable</span>}
+                        editingCourse.resources.map(res => {
+                          if (editingResourceId === res.id) {
+                            return (
+                              <div key={res.id} className="bg-gray-50 p-5 rounded-xl border border-gray-200">
+                                <h4 className="font-bold text-sm text-[#33275f] mb-3">Editar Archivo</h4>
+                                <form onSubmit={handleEditResourceSubmit} className="space-y-4">
+                                  <div>
+                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Nombre Público</label>
+                                    <input 
+                                      type="text" 
+                                      value={editResourceData.name} 
+                                      onChange={(e) => setEditResourceData({...editResourceData, name: e.target.value})}
+                                      className="w-full px-3 py-2 rounded-lg border outline-none text-sm"
+                                      required
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Reemplaza a un archivo anterior</label>
+                                    <select 
+                                      value={editResourceData.overridesResourceId} 
+                                      onChange={(e) => setEditResourceData({...editResourceData, overridesResourceId: e.target.value})}
+                                      className="w-full px-3 py-2 rounded-lg border outline-none text-sm bg-white"
+                                    >
+                                      <option value="">-- No reemplaza a ninguno --</option>
+                                      {courses.flatMap(c => (c.resources || []).map(r => ({ ...r, courseName: c.title }))).filter(r => r.id !== res.id).map(r => (
+                                        <option key={r.id} value={r.id}>{r.name} ({r.courseName})</option>
+                                      ))}
+                                    </select>
+                                  </div>
+                                  <div className="flex justify-end gap-2 pt-2">
+                                    <button type="button" onClick={() => setEditingResourceId(null)} className="px-4 py-2 rounded-lg text-gray-500 text-sm font-bold hover:bg-gray-100 transition">
+                                      Cancelar
+                                    </button>
+                                    <button type="submit" disabled={isSaving} className="bg-[#B681AE] text-white px-6 py-2 rounded-lg font-bold text-sm disabled:opacity-50 hover:bg-[#9187BA] transition">
+                                      {isSaving ? 'Guardando...' : 'Guardar Cambios'}
+                                    </button>
+                                  </div>
+                                </form>
+                              </div>
+                            )
+                          }
+                          return (
+                            <div key={res.id} className="border border-gray-100 rounded-xl p-4 flex justify-between items-center bg-white shadow-sm hover:border-[#9187BA] transition group">
+                              <div className="flex-1 min-w-0 pr-4">
+                                <p className="font-bold text-[#33275f] truncate">{res.name}</p>
+                                <div className="flex gap-4 text-xs text-gray-500 mt-1">
+                                  <span>📄 {res.type}</span>
+                                  {res.isDownloadable && <span className="text-green-600 font-bold">Descargable</span>}
+                                  {res.overridesResourceId && <span className="text-[#B681AE] font-bold">Reemplaza un archivo</span>}
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <button 
+                                  onClick={() => handlePreviewResource(res)} 
+                                  disabled={previewingId === res.id}
+                                  className="text-[#9187BA] hover:text-[#33275f] bg-gray-50 hover:bg-gray-100 px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1 disabled:opacity-50"
+                                  title="Ver Preview"
+                                >
+                                  {previewingId === res.id ? 'Cargando...' : <><Eye className="w-4 h-4" /> Preview</>}
+                                </button>
+                                <div className="flex items-center opacity-0 group-hover:opacity-100 transition">
+                                  <button onClick={() => startEditResource(res)} className="text-[#9187BA] hover:bg-[#9187BA]/10 p-2 rounded-lg transition" title="Editar Archivo">
+                                    <Edit2 className="w-4 h-4" />
+                                  </button>
+                                  <button onClick={() => handleDeleteResource(res.id)} className="text-red-500 hover:bg-red-50 p-2 rounded-lg transition" title="Borrar Archivo">
+                                    <X className="w-5 h-5" />
+                                  </button>
+                                </div>
                               </div>
                             </div>
-                            <div className="flex items-center gap-2">
-                              <button 
-                                onClick={() => handlePreviewResource(res)} 
-                                disabled={previewingId === res.id}
-                                className="text-[#9187BA] hover:text-[#33275f] bg-gray-50 hover:bg-gray-100 px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1 disabled:opacity-50"
-                                title="Ver Preview"
-                              >
-                                {previewingId === res.id ? 'Cargando...' : <><Eye className="w-4 h-4" /> Preview</>}
-                              </button>
-                              <button onClick={() => handleDeleteResource(res.id)} className="text-red-500 hover:bg-red-50 p-2 rounded-lg transition opacity-0 group-hover:opacity-100" title="Borrar Archivo">
-                                <X className="w-5 h-5" />
-                              </button>
-                            </div>
-                          </div>
-                        ))
+                          )
+                        })
                       )}
                     </div>
                   </div>

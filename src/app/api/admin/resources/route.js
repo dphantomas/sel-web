@@ -39,6 +39,34 @@ export async function POST(request) {
   }
 }
 
+export async function PUT(request) {
+  try {
+    const session = await getServerSession(authOptions)
+    if (!session || (session.user.role !== 'Admin' && session.user.role !== 'Transmisor')) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+    }
+
+    const { id, name, overridesResourceId } = await request.json()
+
+    if (!id || !name) {
+      return NextResponse.json({ error: 'Faltan parámetros' }, { status: 400 })
+    }
+
+    const updatedResource = await prisma.resource.update({
+      where: { id },
+      data: {
+        name,
+        overridesResourceId: overridesResourceId || null
+      }
+    })
+
+    return NextResponse.json(updatedResource)
+  } catch (error) {
+    console.error('Error actualizando recurso:', error)
+    return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 })
+  }
+}
+
 export async function DELETE(request) {
   try {
     const session = await getServerSession(authOptions)
