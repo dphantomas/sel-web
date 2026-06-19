@@ -8,9 +8,9 @@ const founders = [
     id: 'dario',
     name: 'Darío Gabriel Geier',
     role: { es: 'Complemento Divino', en: 'Divine Complement' },
-    photo: '/assets/darioymonica.jpg',
+    photo: '/assets/dario.jpg',
     photoClass: 'object-cover',
-    photoStyle: { objectPosition: '100% center', transform: 'scale(1.8)' },
+    photoStyle: { objectPosition: 'center' },
     summary: {
       es: 'Nacido en Buenos Aires, Argentina. Técnico electrónico, músico clásico, programador informático y orfebre. Entre 1984 y 2009 vivió en el exterior transitando diferentes senderos espirituales. En 2010 regresó a Argentina.',
       en: 'Born in Buenos Aires, Argentina. Electronic technician, classical musician, computer programmer and goldsmith. Between 1984 and 2009 he lived abroad on different spiritual paths. In 2010 he returned to Argentina.',
@@ -34,9 +34,9 @@ const founders = [
     id: 'monica',
     name: 'Mónica Nidia García',
     role: { es: 'Complemento Divino', en: 'Divine Complement' },
-    photo: '/assets/darioymonica.jpg',
+    photo: '/assets/monica.jpg',
     photoClass: 'object-cover',
-    photoStyle: { objectPosition: '0% center', transform: 'scale(1.8)' },
+    photoStyle: { objectPosition: 'center' },
     summary: {
       es: 'Nacida en Comodoro Rivadavia, Patagonia Argentina. Aproximadamente 28 años de trayectoria en sanación y crecimiento personal. Terapeuta holística que integra la danza como comunicación no verbal.',
       en: 'Born in Comodoro Rivadavia, Patagonia Argentina. Approximately 28 years of experience in healing and personal growth. Holistic therapist who integrates dance as non-verbal communication.',
