@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/db'
 import Link from 'next/link'
 import LogoutButton from '@/components/LogoutButton'
+import UserProfileForm from './UserProfileForm'
 import UserResourcesList from './UserResourcesList'
 import UserCourseHistory from './UserCourseHistory'
 
