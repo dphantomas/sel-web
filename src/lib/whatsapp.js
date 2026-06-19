@@ -17,14 +17,20 @@ export async function sendWhatsAppNotification(to, message) {
   }
 
   try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
+
     const response = await fetch(providerUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`
       },
-      body: JSON.stringify({ to, message })
+      body: JSON.stringify({ to, message }),
+      signal: controller.signal
     });
+    
+    clearTimeout(timeoutId);
     return { success: response.ok, status: response.status };
   } catch (error) {
     console.error("Error enviando notificación de WhatsApp:", error);
