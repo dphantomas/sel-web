@@ -970,8 +970,8 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
                               disabled={isUploading}
                             >
                               <option value="">-- No, es un archivo nuevo --</option>
-                              {editingCourse.resources?.map(r => (
-                                <option key={r.id} value={r.id}>{r.name}</option>
+                              {courses.flatMap(c => (c.resources || []).map(r => ({ ...r, courseName: c.title }))).map(r => (
+                                <option key={r.id} value={r.id}>{r.name} ({r.courseName})</option>
                               ))}
                             </select>
                           </div>
