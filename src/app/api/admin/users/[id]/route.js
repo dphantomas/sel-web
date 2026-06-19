@@ -22,6 +22,32 @@ const getPublicIdFromUrl = (url) => {
   return fileWithExtension.substring(0, lastDotIndex)
 }
 
+export async function GET(req, { params }) {
+  try {
+    const session = await getServerSession(authOptions)
+    if (!session || (session.user.role !== 'Admin' && session.user.role !== 'Transmisor')) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 403 })
+    }
+
+    const { id } = await params
+    if (!id) return NextResponse.json({ error: 'Falta ID' }, { status: 400 })
+
+    const user = await prisma.user.findUnique({
+      where: { id },
+      include: {
+        unlockedCourses: { select: { courseId: true } },
+        unlockedInstances: { select: { courseInstanceId: true } }
+      }
+    })
+
+    if (!user) return NextResponse.json({ error: 'No encontrado' }, { status: 404 })
+
+    return NextResponse.json({ user })
+  } catch (error) {
+    return NextResponse.json({ error: 'Error interno' }, { status: 500 })
+  }
+}
+
 export async function PUT(req, { params }) {
   try {
     const session = await getServerSession(authOptions)
