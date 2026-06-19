@@ -8,7 +8,7 @@ const founders = [
     id: 'dario',
     name: 'Darío Gabriel Geier',
     role: { es: 'Complemento Divino', en: 'Divine Complement' },
-    photo: '/assets/dario.png',
+    photo: '/assets/Dario.png',
     photoClass: 'object-cover',
     photoStyle: { objectPosition: 'center' },
     summary: {
@@ -34,7 +34,7 @@ const founders = [
     id: 'monica',
     name: 'Mónica Nidia García',
     role: { es: 'Complemento Divino', en: 'Divine Complement' },
-    photo: '/assets/monica.png',
+    photo: '/assets/Monica.png',
     photoClass: 'object-cover',
     photoStyle: { objectPosition: 'center' },
     summary: {
