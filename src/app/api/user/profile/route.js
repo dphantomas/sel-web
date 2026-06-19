@@ -10,6 +10,18 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 })
 
+const getPublicIdFromUrl = (url) => {
+  if (!url || !url.includes('cloudinary.com')) return null
+  const parts = url.split('/upload/')
+  if (parts.length < 2) return null
+  const pathParts = parts[1].split('/')
+  if (/^v\d+$/.test(pathParts[0])) pathParts.shift()
+  const fileWithExtension = pathParts.join('/')
+  const lastDotIndex = fileWithExtension.lastIndexOf('.')
+  if (lastDotIndex === -1) return fileWithExtension
+  return fileWithExtension.substring(0, lastDotIndex)
+}
+
 export async function PUT(req) {
   try {
     const session = await getServerSession(authOptions)
@@ -43,6 +55,23 @@ export async function PUT(req) {
         )
         uploadStream.end(buffer)
       })
+
+      // Si subió una nueva exitosamente, borramos la vieja
+      const existingUser = await prisma.user.findUnique({
+        where: { id: session.user.id },
+        select: { image: true }
+      })
+
+      if (existingUser?.image) {
+        const publicId = getPublicIdFromUrl(existingUser.image)
+        if (publicId) {
+          try {
+            await cloudinary.uploader.destroy(publicId)
+          } catch (e) {
+            console.error('Error eliminando imagen anterior de Cloudinary:', e)
+          }
+        }
+      }
     }
 
     // Actualizar solo los datos permitidos del propio usuario
