@@ -46,15 +46,15 @@ export default function GalleryAdmin() {
     try {
       // 1. Obtener folder desde el servidor
       const folderRes = await fetch('/api/admin/cloudinary-sign')
-      const { folder } = await folderRes.json()
+      const { folder, apiKey } = await folderRes.json()
 
-      if (!folder) throw new Error('No se pudo obtener el folder')
+      if (!folder || !apiKey) throw new Error('No se pudieron obtener los parámetros de Cloudinary')
 
       // 2. Abrir Widget
       window.cloudinary.createUploadWidget(
         {
           cloudName: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
-          apiKey: process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY, 
+          apiKey: apiKey, 
           folder: folder,
           multiple: true,
           clientAllowedFormats: ['jpg', 'png', 'jpeg', 'webp'],

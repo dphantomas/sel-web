@@ -17,7 +17,10 @@ export async function GET(req) {
     }
     const rootFolder = process.env.CLOUDINARY_ROOT_FOLDER
     const galleryFolder = process.env.CLOUDINARY_GALLERY_FOLDER
-    return NextResponse.json({ folder: `${rootFolder}/${galleryFolder}` })
+    return NextResponse.json({ 
+      folder: `${rootFolder}/${galleryFolder}`,
+      apiKey: process.env.CLOUDINARY_API_KEY
+    })
   } catch (error) {
     return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 })
   }
