@@ -8,7 +8,7 @@ export const metadata = {
 
 export default async function GaleriaPage() {
   const images = await prisma.galleryImage.findMany({
-    orderBy: { order: 'asc' },
+    orderBy: { createdAt: 'desc' },
   })
   
   return <Gallery initialImages={images} />

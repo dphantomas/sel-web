@@ -11,7 +11,7 @@ export async function GET() {
     }
 
     const images = await prisma.galleryImage.findMany({
-      orderBy: { order: 'asc' },
+      orderBy: { createdAt: 'desc' },
     })
 
     return NextResponse.json(images)
