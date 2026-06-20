@@ -776,6 +776,7 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
                     </div>
                   </div>
                 </form>
+                </div>
               )}
 
               {userTab === 'access' && (
@@ -838,6 +839,7 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
                   })}
                 </div>
               </div>
+              )}
 
             </div>
 
