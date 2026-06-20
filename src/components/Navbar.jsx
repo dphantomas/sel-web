@@ -108,9 +108,21 @@ export default function Navbar() {
   }
 
 
-  // Only the home page has a dark hero image under the header
-  const textColor = (!isScrolled && isHome) ? '#ffffff' : '#33275f'
-  const borderColor = (!isScrolled && isHome) ? '#ffffff' : '#33275f'
+  // Solo las páginas internas de app y auth tienen fondo claro bajo el Navbar
+  const isLightHeaderPage = [
+    '/login',
+    '/registro',
+    '/verificar-email',
+    '/olvide-contrasena',
+    '/reset-password',
+    '/dashboard',
+    '/admin'
+  ].some(route => pathname.startsWith(route))
+
+  const hasDarkHeader = !isLightHeaderPage
+
+  const textColor = (!isScrolled && hasDarkHeader) ? '#ffffff' : '#33275f'
+  const borderColor = (!isScrolled && hasDarkHeader) ? '#ffffff' : '#33275f'
 
   // Language toggle: links to the equivalent page in the other language
   const langToggle = lang === 'en'
@@ -131,7 +143,7 @@ export default function Navbar() {
             src="/assets/logo-sel.png"
             alt="Sanación en Luz"
             className="h-10 md:h-12 w-auto object-contain transition-all duration-300"
-            style={!isScrolled ? { filter: 'brightness(0) invert(1)' } : {}}
+            style={(!isScrolled && hasDarkHeader) ? { filter: 'brightness(0) invert(1)' } : {}}
           />
         </Link>
 
@@ -192,9 +204,9 @@ export default function Navbar() {
             href={langToggle.href}
             className="text-xs font-bold px-3 py-1 rounded-full border-2 transition-all duration-200 hover:scale-105 whitespace-nowrap ml-2"
             style={{
-              color: (isHome && !isScrolled) ? '#33275f' : '#fff',
-              backgroundColor: (isHome && !isScrolled) ? 'rgba(255,255,255,0.9)' : '#33275f',
-              borderColor: (isHome && !isScrolled) ? 'rgba(255,255,255,0.9)' : '#33275f',
+              color: (hasDarkHeader && !isScrolled) ? '#33275f' : '#fff',
+              backgroundColor: (hasDarkHeader && !isScrolled) ? 'rgba(255,255,255,0.9)' : '#33275f',
+              borderColor: (hasDarkHeader && !isScrolled) ? 'rgba(255,255,255,0.9)' : '#33275f',
               textDecoration: 'none',
               letterSpacing: '1px',
               boxShadow: !isScrolled ? '0px 2px 4px rgba(0,0,0,0.4)' : 'none',
