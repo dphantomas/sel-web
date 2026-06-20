@@ -12,14 +12,27 @@ cloudinary.config({
 
 const getPublicIdFromUrl = (url) => {
   if (!url || !url.includes('cloudinary.com')) return null
-  const parts = url.split('/upload/')
-  if (parts.length < 2) return null
-  const pathParts = parts[1].split('/')
-  if (/^v\d+$/.test(pathParts[0])) pathParts.shift()
-  const fileWithExtension = pathParts.join('/')
-  const lastDotIndex = fileWithExtension.lastIndexOf('.')
-  if (lastDotIndex === -1) return fileWithExtension
-  return fileWithExtension.substring(0, lastDotIndex)
+  try {
+    const parts = url.split('/upload/')
+    if (parts.length < 2) return null
+    let pathParts = parts[1].split('/')
+    
+    // Remover transformaciones (ej. c_fill, w_200, f_auto) si existen
+    if (pathParts[0].includes(',') || /^[a-z]_[a-zA-Z0-9]+/.test(pathParts[0])) {
+      pathParts.shift()
+    }
+    // Remover versión (ej. v1718826505) si existe
+    if (/^v\d+$/.test(pathParts[0])) {
+      pathParts.shift()
+    }
+    
+    const fileWithExtension = pathParts.join('/')
+    const lastDotIndex = fileWithExtension.lastIndexOf('.')
+    if (lastDotIndex === -1) return fileWithExtension
+    return fileWithExtension.substring(0, lastDotIndex)
+  } catch (e) {
+    return null
+  }
 }
 
 export async function PUT(req) {
@@ -71,7 +84,8 @@ export async function PUT(req) {
         const publicId = getPublicIdFromUrl(existingUser.image)
         if (publicId) {
           try {
-            await cloudinary.uploader.destroy(publicId)
+            const result = await cloudinary.uploader.destroy(publicId, { invalidate: true })
+            console.log('Cloudinary delete result:', result)
           } catch (e) {
             console.error('Error eliminando imagen anterior de Cloudinary:', e)
           }

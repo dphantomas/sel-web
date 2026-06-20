@@ -25,7 +25,7 @@ export async function DELETE(req, { params }) {
 
     // Borrar de Cloudinary
     try {
-      await cloudinary.uploader.destroy(image.publicId)
+      await cloudinary.uploader.destroy(image.publicId, { invalidate: true })
     } catch (e) {
       console.error('Error eliminando de Cloudinary:', e)
     }
