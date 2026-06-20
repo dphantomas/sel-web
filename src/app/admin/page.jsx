@@ -49,7 +49,14 @@ export default async function AdminPage() {
     }
   })
 
-  // Sort courses by type, and then by the date of their first instance
+  const categoryOrder = {
+    'Curso': 1,
+    'Taller': 2,
+    'Retiro': 3,
+    'Iniciacion': 4,
+    'Activacion': 5
+  }
+
   const getFirstInstanceDate = (course) => {
     if (!course.instances || course.instances.length === 0) return Infinity
     // instances are sorted by startDate desc, so the last one is the oldest (first instance)
@@ -58,10 +65,9 @@ export default async function AdminPage() {
   }
 
   courses.sort((a, b) => {
-    const typeA = a.type || ''
-    const typeB = b.type || ''
-    if (typeA < typeB) return -1
-    if (typeA > typeB) return 1
+    const orderA = categoryOrder[a.type] || 99
+    const orderB = categoryOrder[b.type] || 99
+    if (orderA !== orderB) return orderA - orderB
 
     return getFirstInstanceDate(a) - getFirstInstanceDate(b)
   })

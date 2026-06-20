@@ -9,6 +9,25 @@ export default function UserCourseHistory({ instances }) {
     )
   }
 
+  const categoryOrder = {
+    'Curso': 1,
+    'Taller': 2,
+    'Retiro': 3,
+    'Iniciacion': 4,
+    'Activacion': 5
+  }
+
+  const sortedInstances = [...instances].sort((a, b) => {
+    const orderA = categoryOrder[a.courseInstance.course?.type] || 99
+    const orderB = categoryOrder[b.courseInstance.course?.type] || 99
+    
+    if (orderA !== orderB) return orderA - orderB
+    
+    const dateA = new Date(a.courseInstance.startDate).getTime()
+    const dateB = new Date(b.courseInstance.startDate).getTime()
+    return dateA - dateB // más antiguos primero dentro de la misma categoría
+  })
+
   return (
     <div className="bg-white/80 backdrop-blur-md rounded-[24px] overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-white/40">
       <div className="overflow-x-auto">
@@ -21,7 +40,7 @@ export default function UserCourseHistory({ instances }) {
             </tr>
           </thead>
           <tbody>
-            {instances.map((access) => {
+            {sortedInstances.map((access) => {
               const instance = access.courseInstance
               const dateStr = new Date(instance.startDate).toLocaleDateString('es-AR', {
                 year: 'numeric',
