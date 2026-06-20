@@ -15,7 +15,7 @@ export async function POST(req) {
     })
 
     if (!verificationRecord) {
-      return NextResponse.json({ error: 'El enlace de verificación es inválido o ya ha sido utilizado.' }, { status: 400 })
+      return NextResponse.json({ error: 'El enlace de verificación es inválido, expiró, o tu cuenta ya fue verificada anteriormente.' }, { status: 400 })
     }
 
     // Comprobar expiración

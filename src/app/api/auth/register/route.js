@@ -76,9 +76,9 @@ export async function POST(request) {
     })
 
     // URL de verificación dinámica
-    const protocol = request.headers.get('x-forwarded-proto') || 'http'
+    const protocol = request.headers.get('x-forwarded-proto') || 'https'
     const host = request.headers.get('host') || 'localhost:3000'
-    const baseUrl = process.env.NEXTAUTH_URL
+    const baseUrl = (process.env.NEXTAUTH_URL || `${protocol}://${host}`).replace(/\/$/, '')
     const verifyUrl = `${baseUrl}/verificar-email?token=${token}`
 
     // Enviar email
