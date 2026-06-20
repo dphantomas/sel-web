@@ -1,5 +1,5 @@
 import Gallery from '@/components/Gallery'
-import prisma from '@/lib/prisma'
+import prisma from '@/lib/db'
 
 export const metadata = {
   title: 'Galería | Sanación en Luz',
