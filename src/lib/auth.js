@@ -3,6 +3,7 @@ import GoogleProvider from 'next-auth/providers/google'
 import { prisma } from '@/lib/db'
 import bcrypt from 'bcryptjs'
 import { verifyAuthenticationResponse } from '@simplewebauthn/server'
+import { sendEmail } from '@/lib/email'
 
 export const authOptions = {
   providers: [
@@ -155,6 +156,27 @@ export const authOptions = {
                 role: 'Guest'
               }
             })
+
+            // Enviar notificación al administrador
+            try {
+              await sendEmail({
+                to: 'registro@sanacionenluz.com',
+                subject: `Nuevo usuario registrado (Google): ${dbUser.firstName} ${dbUser.lastName}`,
+                html: `
+                  <div style="font-family: Arial, sans-serif; padding: 20px;">
+                    <h3 style="color: #2e7d32;">Nuevo registro automático vía Google</h3>
+                    <ul style="line-height: 1.6;">
+                      <li><strong>Nombre:</strong> ${dbUser.firstName} ${dbUser.lastName}</li>
+                      <li><strong>Email:</strong> ${dbUser.email}</li>
+                      <li><strong>Estado:</strong> Cuenta Activa y Verificada (Google OAuth)</li>
+                      <li><strong>Fecha:</strong> ${new Date().toLocaleString('es-AR')}</li>
+                    </ul>
+                  </div>
+                `
+              })
+            } catch (adminEmailError) {
+              console.error('Error enviando notificación al admin (Google OAuth):', adminEmailError)
+            }
           }
 
           // Asignar datos al objeto user para que pasen al jwt
