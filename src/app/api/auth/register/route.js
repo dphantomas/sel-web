@@ -81,7 +81,7 @@ export async function POST(request) {
     const baseUrl = (process.env.NEXTAUTH_URL || `${protocol}://${host}`).replace(/\/$/, '')
     const verifyUrl = `${baseUrl}/verificar-email?token=${token}`
 
-    // Enviar email
+    // Enviar email de verificación al usuario
     await sendEmail({
       to: emailLower,
       subject: 'Verifica tu correo electrónico - Sanación en Luz',
@@ -101,6 +101,28 @@ export async function POST(request) {
         </div>
       `
     })
+
+    // Enviar notificación al administrador
+    try {
+      await sendEmail({
+        to: 'registro@sanacionenluz.com',
+        subject: `Nuevo usuario registrado: ${firstName} ${lastName}`,
+        html: `
+          <div style="font-family: Arial, sans-serif; padding: 20px;">
+            <h3 style="color: #33275f;">Nuevo registro en el sistema (Pendiente de Verificación)</h3>
+            <ul style="line-height: 1.6;">
+              <li><strong>Nombre:</strong> ${firstName} ${lastName}</li>
+              <li><strong>Email:</strong> ${emailLower}</li>
+              <li><strong>Teléfono:</strong> ${phone || 'No especificado'}</li>
+              <li><strong>Estado:</strong> Pendiente de verificación de email</li>
+              <li><strong>Fecha:</strong> ${new Date().toLocaleString('es-AR')}</li>
+            </ul>
+          </div>
+        `
+      })
+    } catch (adminEmailError) {
+      console.error('Error enviando notificación al admin:', adminEmailError)
+    }
 
     return NextResponse.json({
       success: true,

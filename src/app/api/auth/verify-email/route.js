@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
+import { sendEmail } from '@/lib/email'
 
 export async function POST(req) {
   try {
@@ -41,6 +42,28 @@ export async function POST(req) {
     await prisma.emailVerificationToken.delete({
       where: { id: verificationRecord.id }
     })
+
+    // Enviar notificación al administrador
+    try {
+      await sendEmail({
+        to: 'registro@sanacionenluz.com',
+        subject: `Usuario verificado: ${user.firstName} ${user.lastName}`,
+        html: `
+          <div style="font-family: Arial, sans-serif; padding: 20px;">
+            <h3 style="color: #2e7d32;">Un usuario ha verificado su cuenta</h3>
+            <ul style="line-height: 1.6;">
+              <li><strong>Nombre:</strong> ${user.firstName} ${user.lastName}</li>
+              <li><strong>Email:</strong> ${user.email}</li>
+              <li><strong>Teléfono:</strong> ${user.phone || 'No especificado'}</li>
+              <li><strong>Estado:</strong> Cuenta Activa y Verificada</li>
+              <li><strong>Fecha de verificación:</strong> ${new Date().toLocaleString('es-AR')}</li>
+            </ul>
+          </div>
+        `
+      })
+    } catch (adminEmailError) {
+      console.error('Error enviando notificación al admin de verificación:', adminEmailError)
+    }
 
     return NextResponse.json({ success: true, message: 'Correo verificado exitosamente.' })
   } catch (error) {
