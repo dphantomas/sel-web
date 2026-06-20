@@ -1,13 +1,14 @@
 'use client'
 
 import { useState, useRef } from 'react'
-import { UploadCloud, User as UserIcon, X, Check, Search, Eye, EyeOff, FileText, CheckCircle, Edit2, Shield, Layout, Trash2, Calendar, Link2, DollarSign, Image as ImageIcon } from 'lucide-react'
+import { UploadCloud, User as UserIcon, X, Check, Search, Eye, EyeOff, FileText, CheckCircle, Edit2, Shield, Layout, Trash2, Calendar, Link2, DollarSign, Image as ImageIcon, ChevronDown, ChevronRight } from 'lucide-react'
 import Link from 'next/link'
 import ImageCropperModal from '@/components/ImageCropperModal'
 import GalleryAdmin from './GalleryAdmin'
 
 export default function AdminPanel({ initialUsers, courses: initialCourses }) {
   const [activeTab, setActiveTab] = useState('users') // 'users' | 'courses' | 'gallery'
+  const [expandedCourses, setExpandedCourses] = useState(new Set())
   
   const [users, setUsers] = useState(initialUsers)
 
@@ -322,6 +323,15 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
     } finally {
       setUpdatingId(null)
     }
+  }
+
+  const toggleCourseExpansion = (courseId) => {
+    setExpandedCourses(prev => {
+      const next = new Set(prev)
+      if (next.has(courseId)) next.delete(courseId)
+      else next.add(courseId)
+      return next
+    })
   }
 
   // =================== LOGICA EDICION USUARIO ===================
@@ -822,15 +832,22 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
                     
                     return (
                       <div key={course.id} className="mb-4">
-                        <div className={`p-4 rounded-xl border flex items-center justify-between transition-all ${hasAnyAccess ? 'bg-white border-[#B681AE] shadow-sm' : 'bg-transparent border-gray-200'}`}>
+                        <div 
+                          className={`p-4 rounded-xl border flex items-center justify-between transition-all cursor-pointer ${hasAnyAccess ? 'bg-white border-[#B681AE] shadow-sm' : 'bg-transparent border-gray-200 hover:bg-white'}`}
+                          onClick={() => toggleCourseExpansion(course.id)}
+                        >
                           <div className="flex-1 pr-4">
                             <p className={`font-bold text-sm ${hasAnyAccess ? 'text-[#33275f]' : 'text-gray-600'}`}>{course.title}</p>
                             <p className="text-xs text-gray-400 mt-0.5">{course.type}</p>
                           </div>
+                          <div className="text-gray-400">
+                            {expandedCourses.has(course.id) ? <ChevronDown className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
+                          </div>
                         </div>
 
                         {/* Instances List */}
-                        <div className="space-y-2 mt-2 pl-4 border-l-2 border-gray-100 ml-4">
+                        {expandedCourses.has(course.id) && (
+                          <div className="space-y-2 mt-2 pl-4 border-l-2 border-gray-100 ml-4 animate-in fade-in slide-in-from-top-2 duration-200">
                           {!course.instances || course.instances.length === 0 ? (
                             <p className="text-xs text-gray-400 py-2">No hay instancias creadas para este taller.</p>
                           ) : (
@@ -864,7 +881,8 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
                               )
                             })
                           )}
-                        </div>
+                            </div>
+                        )}
                       </div>
                     )
                   })}
