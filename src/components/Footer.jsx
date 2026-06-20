@@ -32,8 +32,10 @@ export default function Footer() {
             <img src={`${BASE}/face.png`} alt="Facebook" className="w-9 h-9 object-contain" />
           </a>
           <a href="https://twitter.com/SanacionEnLuz" target="_blank" rel="noopener noreferrer"
-            className="transition-transform hover:scale-110" aria-label="Twitter">
-            <img src={`${BASE}/twitter.png`} alt="Twitter" className="w-9 h-9 object-contain" />
+            className="transition-transform hover:scale-110 flex items-center justify-center w-9 h-9" aria-label="X (formerly Twitter)">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 1227" className="w-[18px] h-[18px]" fill="#33275f">
+              <path d="M714.163 519.284L1160.89 0H1055.03L667.137 450.887L357.328 0H0L468.492 681.821L0 1226.37H105.866L515.491 750.218L842.672 1226.37H1200L714.137 519.284H714.163ZM569.165 687.828L521.697 619.934L144.011 79.6944H306.615L611.412 515.685L658.88 583.579L1055.08 1150.3H892.476L569.165 687.854V687.828Z" />
+            </svg>
           </a>
           <a href="https://api.whatsapp.com/send/?phone=5491141771120" target="_blank" rel="noopener noreferrer"
             className="transition-transform hover:scale-110" aria-label="WhatsApp">
