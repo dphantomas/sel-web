@@ -4,9 +4,7 @@ import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/db'
 import Link from 'next/link'
 import LogoutButton from '@/components/LogoutButton'
-import UserProfileForm from './UserProfileForm'
-import UserResourcesList from './UserResourcesList'
-import UserCourseHistory from './UserCourseHistory'
+import DashboardTabs from './DashboardTabs'
 
 export const metadata = {
   title: 'Mi Panel | Sanación en Luz',
@@ -102,25 +100,12 @@ export default async function DashboardPage() {
           </div>
         </div>
 
-        {/* Formulario de Mi Perfil */}
-        <UserProfileForm user={user} />
-
-        {/* Material de Estudio (Recursos) */}
-        <div className="mb-12">
-          <div className="flex items-center gap-3 mb-6">
-            <h2 className="text-[#33275f] text-xl font-bold tracking-wide">MATERIAL DE ESTUDIO</h2>
-            <span className="bg-[#B681AE]/10 text-[#33275f] text-xs font-bold px-3 py-1 rounded-full">
-              {finalResources.length} Archivos
-            </span>
-          </div>
-          <UserResourcesList resources={finalResources} />
-        </div>
-
-        {/* Historial de Encuentros (Instancias) */}
-        <div>
-          <h2 className="text-[#33275f] text-xl font-bold mb-6 tracking-wide">HISTORIAL DE ENCUENTROS</h2>
-          <UserCourseHistory instances={user.unlockedInstances} />
-        </div>
+        {/* Pestañas (Perfil vs Recursos/Historial) */}
+        <DashboardTabs 
+          user={user} 
+          finalResources={finalResources} 
+          unlockedInstances={user.unlockedInstances} 
+        />
 
       </div>
     </div>
