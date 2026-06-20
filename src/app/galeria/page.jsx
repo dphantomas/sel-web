@@ -1,6 +1,8 @@
 import Gallery from '@/components/Gallery'
 import prisma from '@/lib/db'
 
+export const dynamic = 'force-dynamic'
+
 export const metadata = {
   title: 'Galería | Sanación en Luz',
   description: 'Galería de fotos de encuentros, talleres y retiros de Sanación en Luz.',

@@ -17,7 +17,7 @@ export async function DELETE(req, { params }) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
     }
 
-    const { id } = params
+    const { id } = await params
     const image = await prisma.galleryImage.findUnique({ where: { id } })
     if (!image) {
       return NextResponse.json({ error: 'Imagen no encontrada' }, { status: 404 })
@@ -47,7 +47,7 @@ export async function PUT(req, { params }) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
     }
 
-    const { id } = params
+    const { id } = await params
     const body = await req.json()
     const { alt, order } = body
 

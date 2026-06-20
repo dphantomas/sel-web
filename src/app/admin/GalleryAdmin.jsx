@@ -57,6 +57,7 @@ export default function GalleryAdmin() {
           apiKey: apiKey, 
           folder: folder,
           multiple: true,
+          language: 'es',
           clientAllowedFormats: ['jpg', 'png', 'jpeg', 'webp'],
           maxImageFileSize: 5000000,
           uploadSignature: async (callback, params_to_sign) => {
@@ -86,7 +87,7 @@ export default function GalleryAdmin() {
 
             if (saveRes.ok) {
               const newImage = await saveRes.json()
-              setImages((prev) => [...prev, newImage])
+              setImages((prev) => [newImage, ...prev])
             }
           }
         }
