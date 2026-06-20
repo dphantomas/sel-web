@@ -42,3 +42,26 @@ export async function PUT(req, { params }) {
     return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 })
   }
 }
+
+export async function DELETE(req, { params }) {
+  try {
+    const session = await getServerSession(authOptions)
+    if (!session || session.user.role !== 'Admin') {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 403 })
+    }
+
+    const { id } = await params
+    if (!id) {
+      return NextResponse.json({ error: 'Falta el ID del curso' }, { status: 400 })
+    }
+
+    // El esquema Prisma tiene onDelete: Cascade para instancias, módulos, accesos de usuarios, etc.
+    // Al borrar el curso se borra todo su árbol dependiente.
+    await prisma.course.delete({ where: { id } })
+
+    return NextResponse.json({ message: 'Curso eliminado' })
+  } catch (error) {
+    console.error('Error eliminando curso:', error)
+    return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 })
+  }
+}

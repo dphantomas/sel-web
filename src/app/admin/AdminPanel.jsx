@@ -455,6 +455,22 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
     }
   }
 
+  const handleDeleteCourse = async (courseId) => {
+    if (!window.confirm('🚨 PELIGRO: ¿Estás seguro de que querés BORRAR ESTE CURSO COMPLETO? Se borrarán permanentemente todas sus instancias, progreso de alumnos, módulos y lecciones.\n\nESTA ACCIÓN NO SE PUEDE DESHACER.')) return
+
+    try {
+      const res = await fetch(`/api/admin/courses/${courseId}`, { method: 'DELETE' })
+      if (res.ok) {
+        setCourses(courses.filter((c) => c.id !== courseId))
+        setEditingCourse(null)
+      } else {
+        alert('Error al borrar el curso')
+      }
+    } catch (e) {
+      alert('Error de red')
+    }
+  }
+
 
   // =================== RENDERIZADO ===================
   const filteredUsers = users.filter((user) => {
@@ -1225,7 +1241,20 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
             </div>
 
             {/* Footer Modal */}
-            <div className="p-6 border-t border-gray-100 bg-gray-50 flex items-center justify-end shrink-0 rounded-b-2xl">
+            <div className="p-6 border-t border-gray-100 bg-gray-50 flex items-center justify-between shrink-0 rounded-b-2xl">
+              <div>
+                {courseTab === 'data' && (
+                  <button 
+                    type="button" 
+                    onClick={() => handleDeleteCourse(editingCourse.id)}
+                    className="px-4 py-2.5 rounded-xl text-red-500 font-bold hover:bg-red-50 transition flex items-center gap-2"
+                    title="Borrar curso permanentemente"
+                  >
+                    <Trash2 className="w-5 h-5" />
+                    Borrar Curso
+                  </button>
+                )}
+              </div>
               <div className="flex gap-3">
                 <button type="button" onClick={() => setEditingCourse(null)} className="px-5 py-2.5 rounded-xl text-gray-600 font-bold hover:bg-gray-200 transition">
                   Cerrar
