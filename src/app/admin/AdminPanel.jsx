@@ -181,7 +181,10 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
       }
       
       const data = await res.json()
-      const updatedCourse = { ...editingCourse, instances: [data.instance, ...(editingCourse.instances || [])] }
+      const newInstances = [data.instance, ...(editingCourse.instances || [])]
+      newInstances.sort((a, b) => new Date(b.startDate) - new Date(a.startDate))
+      
+      const updatedCourse = { ...editingCourse, instances: newInstances }
       setEditingCourse(updatedCourse)
       setCourses(courses.map(c => c.id === editingCourse.id ? updatedCourse : c))
       
@@ -218,6 +221,8 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
       
       const data = await res.json()
       const updatedInstances = editingCourse.instances.map(i => i.id === editingInstanceId ? data.instance : i)
+      updatedInstances.sort((a, b) => new Date(b.startDate) - new Date(a.startDate))
+      
       const updatedCourse = { ...editingCourse, instances: updatedInstances }
       
       setEditingCourse(updatedCourse)

@@ -49,6 +49,23 @@ export default async function AdminPage() {
     }
   })
 
+  // Sort courses by type, and then by the date of their first instance
+  const getFirstInstanceDate = (course) => {
+    if (!course.instances || course.instances.length === 0) return Infinity
+    // instances are sorted by startDate desc, so the last one is the oldest (first instance)
+    const oldest = course.instances[course.instances.length - 1]
+    return new Date(oldest.startDate).getTime()
+  }
+
+  courses.sort((a, b) => {
+    const typeA = a.type || ''
+    const typeB = b.type || ''
+    if (typeA < typeB) return -1
+    if (typeA > typeB) return 1
+
+    return getFirstInstanceDate(a) - getFirstInstanceDate(b)
+  })
+
   return (
     <div className="min-h-screen bg-gray-50 pt-28 pb-16 px-4 md:px-6">
       <div className="max-w-7xl mx-auto">
