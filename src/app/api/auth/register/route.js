@@ -79,7 +79,7 @@ export async function POST(request) {
     const protocol = request.headers.get('x-forwarded-proto') || 'https'
     const host = request.headers.get('host') || 'localhost:3000'
     const baseUrl = (process.env.NEXTAUTH_URL || `${protocol}://${host}`).replace(/\/$/, '')
-    const verifyUrl = `${baseUrl}/verificar-email?token=${token}`
+    const verifyUrl = `${baseUrl}/api/auth/verify?token=${token}`
 
     // Enviar email de verificación al usuario
     await sendEmail({
@@ -130,6 +130,18 @@ export async function POST(request) {
     })
   } catch (error) {
     console.error('Error al registrar usuario:', error)
+    
+    // Alerta de error interno al admin
+    try {
+      await sendEmail({
+        to: 'registro@sanacionenluz.com',
+        subject: `⚠️ Error Crítico en Registro de Usuario`,
+        html: `<p>Se produjo un error interno al intentar registrar un usuario:</p><pre>${error.message || 'Error desconocido'}</pre>`
+      })
+    } catch (e) {
+      console.error('No se pudo enviar alerta de error:', e)
+    }
+
     return NextResponse.json(
       { error: 'Ocurrió un error inesperado durante el registro.' },
       { status: 500 }

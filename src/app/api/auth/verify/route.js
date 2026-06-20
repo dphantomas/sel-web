@@ -2,26 +2,29 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { sendEmail } from '@/lib/email'
 
-export async function POST(req) {
-  try {
-    const { token } = await req.json()
-    
-    if (!token) {
-      return NextResponse.json({ error: 'Token no proporcionado.' }, { status: 400 })
-    }
+export async function GET(req) {
+  const { searchParams } = new URL(req.url)
+  const token = searchParams.get('token')
 
+  const baseUrl = process.env.NEXTAUTH_URL || `https://${req.headers.get('host')}`
+
+  if (!token) {
+    return NextResponse.redirect(`${baseUrl}/verificar-email?status=error&message=Token no proporcionado.`)
+  }
+
+  try {
     // Buscar token
     const verificationRecord = await prisma.emailVerificationToken.findUnique({
       where: { token }
     })
 
     if (!verificationRecord) {
-      return NextResponse.json({ error: 'El enlace de verificación es inválido, expiró, o tu cuenta ya fue verificada anteriormente.' }, { status: 400 })
+      return NextResponse.redirect(`${baseUrl}/verificar-email?status=error&message=El enlace de verificación es inválido, expiró, o tu cuenta ya fue verificada anteriormente.`)
     }
 
     // Comprobar expiración
     if (verificationRecord.expires < new Date()) {
-      return NextResponse.json({ error: 'El enlace de verificación ha expirado. Por favor, regístrate nuevamente.' }, { status: 400 })
+      return NextResponse.redirect(`${baseUrl}/verificar-email?status=error&message=El enlace de verificación ha expirado. Por favor, regístrate nuevamente.`)
     }
 
     // Actualizar usuario
@@ -30,7 +33,7 @@ export async function POST(req) {
     })
 
     if (!user) {
-      return NextResponse.json({ error: 'Usuario no encontrado.' }, { status: 404 })
+      return NextResponse.redirect(`${baseUrl}/verificar-email?status=error&message=Usuario no encontrado.`)
     }
 
     await prisma.user.update({
@@ -65,9 +68,18 @@ export async function POST(req) {
       console.error('Error enviando notificación al admin de verificación:', adminEmailError)
     }
 
-    return NextResponse.json({ success: true, message: 'Correo verificado exitosamente.' })
+    return NextResponse.redirect(`${baseUrl}/verificar-email?status=success&message=Tu correo ha sido verificado exitosamente.`)
   } catch (error) {
     console.error('Error al verificar email:', error)
-    return NextResponse.json({ error: 'Ocurrió un error inesperado.' }, { status: 500 })
+    
+    try {
+      await sendEmail({
+        to: 'registro@sanacionenluz.com',
+        subject: `⚠️ Error Crítico en Verificación`,
+        html: `<p>Se produjo un error al intentar verificar el correo con token ${token}:</p><pre>${error.message}</pre>`
+      })
+    } catch (e) {}
+
+    return NextResponse.redirect(`${baseUrl}/verificar-email?status=error&message=Ocurrió un error inesperado al verificar.`)
   }
 }

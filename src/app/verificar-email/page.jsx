@@ -7,44 +7,8 @@ import { CheckCircle2, XCircle, Loader2 } from 'lucide-react'
 
 function VerificationContent() {
   const searchParams = useSearchParams()
-  const token = searchParams.get('token')
-  const router = useRouter()
-
-  const [status, setStatus] = useState('loading') // loading, success, error
-  const [message, setMessage] = useState('')
-
-  useEffect(() => {
-    if (!token) {
-      setStatus('error')
-      setMessage('No se encontró el token de verificación.')
-      return
-    }
-
-    const verifyToken = async () => {
-      try {
-        const res = await fetch('/api/auth/verify-email', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ token })
-        })
-
-        const data = await res.json()
-
-        if (res.ok) {
-          setStatus('success')
-          setMessage(data.message || 'Tu correo ha sido verificado exitosamente.')
-        } else {
-          setStatus('error')
-          setMessage(data.error || 'El enlace es inválido o expiró.')
-        }
-      } catch (err) {
-        setStatus('error')
-        setMessage('Ocurrió un error al intentar verificar el correo.')
-      }
-    }
-
-    verifyToken()
-  }, [token])
+  const status = searchParams.get('status') || 'loading' // loading (if no params), success, error
+  const message = searchParams.get('message') || ''
 
   return (
     <div className="relative z-10 w-full max-w-md bg-white/90 backdrop-blur-md p-8 md:p-10 rounded-[24px] shadow-[0_12px_40px_rgba(0,0,0,0.25)] border border-white/20 text-center">
