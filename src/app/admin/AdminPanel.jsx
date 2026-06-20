@@ -588,7 +588,14 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
                           {user.firstName} {user.lastName}
                           {user.sparkName && <span className="text-[#9187BA] font-normal ml-2">✨ {user.sparkName}</span>}
                         </div>
-                        <div className="text-sm text-gray-500 mt-0.5">{user.email}</div>
+                        <div className="text-sm text-gray-500 mt-0.5 flex items-center gap-2">
+                          <span>{user.email}</span>
+                          {user.emailVerified ? (
+                            <span title="Email Verificado"><CheckCircle className="w-3.5 h-3.5 text-green-500" /></span>
+                          ) : (
+                            <span title="Email Pendiente de Verificación"><Shield className="w-3.5 h-3.5 text-amber-500" /></span>
+                          )}
+                        </div>
                         <div className="text-xs text-gray-400 mt-1 flex items-center gap-2">
                           {user.phone && <span>Wa: {user.phone}</span>}
                           {user.country && <span>📍 {user.country}</span>}
@@ -683,7 +690,18 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
             <div className="p-6 border-b border-gray-100 flex justify-between items-start shrink-0">
               <div>
                 <h2 className="text-2xl font-bold text-[#33275f]">Gestionar Participante</h2>
-                <p className="text-sm text-gray-500">{editingUser.email}</p>
+                <div className="flex items-center gap-2 mt-1">
+                  <p className="text-sm text-gray-500">{editingUser.email}</p>
+                  {editingUser.emailVerified ? (
+                    <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider bg-green-50 text-green-600 px-2 py-0.5 rounded-full">
+                      <CheckCircle className="w-3 h-3" /> Verificado
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider bg-amber-50 text-amber-600 px-2 py-0.5 rounded-full" title="Pendiente de verificación">
+                      <Shield className="w-3 h-3" /> Pendiente
+                    </span>
+                  )}
+                </div>
                 <div className="flex gap-6 mt-6">
                   <button 
                     onClick={() => setUserTab('data')} 
