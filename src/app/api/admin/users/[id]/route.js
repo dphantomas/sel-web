@@ -78,8 +78,9 @@ export async function PUT(req, { params }) {
     const formData = await req.formData()
     const firstName = formData.get('firstName')
     const lastName = formData.get('lastName')
-    const phone = formData.get('phone')
+    const phone = formData.get('phone') || null
     const role = formData.get('role')
+    const forceVerify = formData.get('forceVerify') === 'true'
     const addressLine1 = formData.get('addressLine1')
     const addressLine2 = formData.get('addressLine2')
     const zipCode = formData.get('zipCode')
@@ -143,7 +144,8 @@ export async function PUT(req, { params }) {
         zipCode: zipCode !== null ? zipCode : undefined,
         country: country !== null ? country : undefined,
         sparkName: sparkName !== null ? sparkName : undefined,
-        ...(imageUrl && { image: imageUrl })
+        ...(imageUrl && { image: imageUrl }),
+        ...(forceVerify && { emailVerified: new Date() })
       },
       // Devolvemos también los accesos para que AdminPanel tenga data completa
       include: {

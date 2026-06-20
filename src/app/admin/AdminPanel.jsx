@@ -697,9 +697,30 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
                       <CheckCircle className="w-3 h-3" /> Verificado
                     </span>
                   ) : (
-                    <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider bg-amber-50 text-amber-600 px-2 py-0.5 rounded-full" title="Pendiente de verificación">
-                      <Shield className="w-3 h-3" /> Pendiente
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider bg-amber-50 text-amber-600 px-2 py-0.5 rounded-full" title="Pendiente de verificación">
+                        <Shield className="w-3 h-3" /> Pendiente
+                      </span>
+                      <button 
+                        onClick={async () => {
+                          if (window.confirm('¿Forzar la verificación de este usuario?')) {
+                            const formData = new FormData()
+                            formData.append('forceVerify', 'true')
+                            try {
+                              const res = await fetch(`/api/admin/users/${editingUser.id}`, { method: 'PUT', body: formData })
+                              if (res.ok) {
+                                const data = await res.json()
+                                setEditingUser(data.user)
+                                setFilteredUsers(prev => prev.map(u => u.id === data.user.id ? data.user : u))
+                              } else alert('Error al verificar.')
+                            } catch (e) { alert('Error de conexión.') }
+                          }
+                        }}
+                        className="text-[10px] font-bold uppercase tracking-wider text-white bg-[#9187BA] hover:bg-[#33275f] px-2 py-0.5 rounded-full transition shadow-sm"
+                      >
+                        Forzar Verificación
+                      </button>
+                    </div>
                   )}
                 </div>
                 <div className="flex gap-6 mt-6">
