@@ -7,8 +7,8 @@ import { verifyAuthenticationResponse } from '@simplewebauthn/server'
 export const authOptions = {
   providers: [
     GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID || '',
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
+      clientId: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
       authorization: {
         params: {
           prompt: "consent select_account",
@@ -62,7 +62,7 @@ export const authOptions = {
           }
 
           const originHeader = req.headers?.origin || (req.headers?.referer ? new URL(req.headers.referer).origin : null);
-          const appUrl = originHeader || process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL || 'http://localhost:3000'
+          const appUrl = process.env.NEXTAUTH_URL
           const expectedOrigin = appUrl
           const expectedRPID = new URL(appUrl).hostname
 
@@ -198,5 +198,5 @@ export const authOptions = {
   session: {
     strategy: 'jwt',
   },
-  secret: process.env.NEXTAUTH_SECRET || 'secret-lms-sanacion-luz-2026',
+  secret: process.env.NEXTAUTH_SECRET,
 }

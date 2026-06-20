@@ -3,18 +3,14 @@
 import { useState, useEffect, useCallback } from 'react'
 import { X, ChevronLeft, ChevronRight } from 'lucide-react'
 
-import galleryData from '../../content/galeria.json'
-
-const ALL_IMAGES = galleryData
-
 const PAGE_SIZE = 8
 
-export default function Gallery({ lang = 'es' }) {
+export default function Gallery({ lang = 'es', initialImages = [] }) {
   const [lightboxIndex, setLightboxIndex] = useState(null)
   const [failed, setFailed] = useState(new Set())
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
 
-  const visible = ALL_IMAGES.filter((img) => !failed.has(img.id))
+  const visible = initialImages.filter((img) => !failed.has(img.id))
   const displayed = visible.slice(0, visibleCount)
   const hasMore = visibleCount < visible.length
 

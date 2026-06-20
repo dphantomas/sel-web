@@ -4,11 +4,13 @@ import { useState, useRef } from 'react'
 import { UploadCloud, User as UserIcon, X, Check, Search, Eye, EyeOff, FileText, CheckCircle, Edit2, Shield, Layout, Trash2, Calendar, Link2, DollarSign, Image as ImageIcon } from 'lucide-react'
 import Link from 'next/link'
 import ImageCropperModal from '@/components/ImageCropperModal'
+import GalleryAdmin from './GalleryAdmin'
 
 export default function AdminPanel({ initialUsers, courses: initialCourses }) {
-  const [activeTab, setActiveTab] = useState('users') // 'users' | 'courses'
+  const [activeTab, setActiveTab] = useState('users') // 'users' | 'courses' | 'gallery'
   
   const [users, setUsers] = useState(initialUsers)
+
   const [courses, setCourses] = useState(initialCourses)
   
   // Image Cropping States
@@ -486,6 +488,14 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
         >
           Cursos y Talleres
         </button>
+        <button
+          onClick={() => setActiveTab('gallery')}
+          className={`px-6 py-4 font-bold text-sm transition ${
+            activeTab === 'gallery' ? 'border-b-2 border-[#9187BA] text-[#33275f]' : 'text-gray-500 hover:text-gray-700'
+          }`}
+        >
+          Galería
+        </button>
       </div>
 
       {/* VISTA PARTICIPANTES */}
@@ -612,6 +622,11 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
             ))}
           </div>
         </div>
+      )}
+
+      {/* VISTA GALERIA */}
+      {activeTab === 'gallery' && (
+        <GalleryAdmin />
       )}
 
       {/* MODAL EDITAR USUARIO COMPLETO */}

@@ -35,7 +35,7 @@ export async function POST(req) {
     // URL de reseteo dinámica
     const protocol = req.headers.get('x-forwarded-proto') || 'http'
     const host = req.headers.get('host') || 'localhost:3000'
-    const baseUrl = process.env.NEXTAUTH_URL || `${protocol}://${host}`
+    const baseUrl = process.env.NEXTAUTH_URL
     const resetUrl = `${baseUrl}/reset-password?token=${token}`
 
     // Enviar email

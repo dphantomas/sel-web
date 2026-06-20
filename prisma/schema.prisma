@@ -210,3 +210,12 @@ model Authenticator {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
+
+model GalleryImage {
+  id        String   @id @default(cuid())
+  url       String
+  publicId  String   @unique
+  alt       String?
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+}

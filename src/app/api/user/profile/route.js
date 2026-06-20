@@ -48,7 +48,7 @@ export async function PUT(req) {
     if (imageFile && imageFile.size > 0) {
       const arrayBuffer = await imageFile.arrayBuffer()
       const buffer = Buffer.from(arrayBuffer)
-      const folder = `${process.env.CLOUDINARY_ROOT_FOLDER || 'sanacion-en-luz'}/${process.env.CLOUDINARY_PROFIL_FOLDER || 'perfil-usuario'}`
+      const folder = `${process.env.CLOUDINARY_ROOT_FOLDER}/${process.env.CLOUDINARY_PROFILE_FOLDER}`
 
       imageUrl = await new Promise((resolve, reject) => {
         const uploadStream = cloudinary.uploader.upload_stream(

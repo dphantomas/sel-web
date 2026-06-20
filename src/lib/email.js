@@ -7,7 +7,7 @@ export async function sendEmail({ to, subject, html }) {
     secure: true,
     auth: {
       type: 'OAuth2',
-      user: process.env.SMTP_USER || 'registro@sanacionenluz.com',
+      user: process.env.SMTP_USER,
       clientId: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
       refreshToken: process.env.GOOGLE_REFRESH_TOKEN
@@ -15,7 +15,7 @@ export async function sendEmail({ to, subject, html }) {
   })
 
   const mailOptions = {
-    from: `"Sanación en Luz" <${process.env.SMTP_FROM || process.env.SMTP_USER || 'registro@sanacionenluz.com'}>`,
+    from: `"Sanación en Luz" <${process.env.SMTP_FROM}>`,
     to,
     subject,
     html

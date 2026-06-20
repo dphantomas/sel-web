@@ -48,7 +48,7 @@ export async function POST(request) {
       /*
       if (user.phone) {
         const startDate = new Date(instance.startDate).toLocaleDateString('es-AR')
-        const message = `¡Hola ${user.firstName}! Se ha habilitado tu acceso a la instancia del ${startDate} del taller "${course.title}" en la plataforma de Sanación en Luz. Ya puedes ingresar a tu panel para ver los recursos en: ${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/dashboard`
+        const message = `¡Hola ${user.firstName}! Se ha habilitado tu acceso a la instancia del ${startDate} del taller "${course.title}" en la plataforma de Sanación en Luz. Ya puedes ingresar a tu panel para ver los recursos en: ${process.env.NEXTAUTH_URL}/dashboard`
         await sendWhatsAppNotification(user.phone, message)
       }
       */
