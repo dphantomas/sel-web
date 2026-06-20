@@ -1035,14 +1035,14 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
                       </div>
                     )}
 
-                    <div className="space-y-3">
+                    <div className="bg-white border border-gray-200 rounded-xl divide-y divide-gray-100 max-h-[400px] overflow-y-auto">
                       {!editingCourse.instances || editingCourse.instances.length === 0 ? (
-                        <p className="text-gray-500 text-sm text-center py-8 bg-gray-50 rounded-xl">No hay instancias programadas para este curso.</p>
+                        <p className="text-gray-500 text-sm text-center py-8">No hay instancias programadas para este curso.</p>
                       ) : (
                         editingCourse.instances.map(inst => {
                           if (editingInstanceId === inst.id) {
                             return (
-                              <div key={inst.id} className="bg-gray-50 p-5 rounded-xl border border-gray-200">
+                              <div key={inst.id} className="bg-gray-50 p-5">
                                 <h4 className="font-bold text-sm text-[#33275f] mb-3">Editar Instancia</h4>
                                 <form onSubmit={handleEditInstanceSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                   <div>
@@ -1070,20 +1070,18 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
                             )
                           }
                           return (
-                            <div key={inst.id} className="border border-gray-100 rounded-xl p-4 flex justify-between items-center bg-white shadow-sm hover:border-[#9187BA] transition group">
-                              <div>
-                                <p className="font-bold text-[#33275f]">
+                            <div key={inst.id} className="p-3 flex justify-between items-center hover:bg-gray-50 transition group">
+                              <div className="flex items-center gap-6">
+                                <p className="font-bold text-sm text-[#33275f] min-w-[90px]">
                                   {new Date(inst.startDate).toLocaleDateString('es-AR', { timeZone: 'UTC' })}
                                 </p>
-                                <div className="flex gap-4 text-xs text-gray-500 mt-1">
-                                  {inst.location && <span>📍 {inst.location}</span>}
-                                </div>
+                                {inst.location && <span className="text-xs text-gray-500">📍 {inst.location}</span>}
                               </div>
-                              <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition">
-                                <button onClick={() => startEditInstance(inst)} className="text-[#9187BA] hover:bg-[#9187BA]/10 p-2 rounded-lg transition" title="Editar Instancia">
+                              <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition">
+                                <button onClick={() => startEditInstance(inst)} className="text-[#9187BA] hover:bg-[#9187BA]/10 p-1.5 rounded-lg transition" title="Editar Instancia">
                                   <Edit2 className="w-4 h-4" />
                                 </button>
-                                <button onClick={() => handleDeleteInstance(inst.id)} className="text-red-500 hover:bg-red-50 p-2 rounded-lg transition" title="Borrar Instancia">
+                                <button onClick={() => handleDeleteInstance(inst.id)} className="text-red-500 hover:bg-red-50 p-1.5 rounded-lg transition" title="Borrar Instancia">
                                   <X className="w-5 h-5" />
                                 </button>
                               </div>
