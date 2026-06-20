@@ -68,7 +68,6 @@ export default function GalleryAdmin() {
           uploadSignatureTimestamp: timestamp,
           uploadSignature: signature,
           folder: folder,
-          sources: ['local', 'camera', 'url'],
           multiple: true,
           clientAllowedFormats: ['jpg', 'png', 'jpeg', 'webp'],
           maxImageFileSize: 5000000,
