@@ -9,6 +9,20 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 })
 
+export async function GET(req) {
+  try {
+    const session = await getServerSession(authOptions)
+    if (!session || session.user.role !== 'Admin') {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+    }
+    const rootFolder = process.env.CLOUDINARY_ROOT_FOLDER
+    const galleryFolder = process.env.CLOUDINARY_GALLERY_FOLDER
+    return NextResponse.json({ folder: `${rootFolder}/${galleryFolder}` })
+  } catch (error) {
+    return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 })
+  }
+}
+
 export async function POST(req) {
   try {
     const session = await getServerSession(authOptions)
@@ -23,19 +37,18 @@ export async function POST(req) {
       return NextResponse.json({ error: 'Faltan parámetros' }, { status: 400 })
     }
 
-    // Asegurar que el folder siempre sea el de la galería y esté controlado por el servidor
+    // Asegurar que el folder siempre sea el de la galería
     const rootFolder = process.env.CLOUDINARY_ROOT_FOLDER
     const galleryFolder = process.env.CLOUDINARY_GALLERY_FOLDER
     const secureFolder = `${rootFolder}/${galleryFolder}`
 
-    const finalParamsToSign = {
-      ...paramsToSign,
-      folder: secureFolder,
+    if (paramsToSign.folder && paramsToSign.folder !== secureFolder) {
+      return NextResponse.json({ error: 'Folder no permitido' }, { status: 400 })
     }
 
-    const signature = cloudinary.utils.api_sign_request(finalParamsToSign, process.env.CLOUDINARY_API_SECRET)
+    const signature = cloudinary.utils.api_sign_request(paramsToSign, process.env.CLOUDINARY_API_SECRET)
 
-    return NextResponse.json({ signature, folder: secureFolder })
+    return NextResponse.json({ signature })
   } catch (error) {
     console.error('Error al generar firma de Cloudinary:', error)
     return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 })

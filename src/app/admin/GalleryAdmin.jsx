@@ -43,34 +43,35 @@ export default function GalleryAdmin() {
   }
 
   const openCloudinaryWidget = async () => {
-    // 1. Obtener parámetros y firma desde el servidor
-    const timestamp = Math.round((new Date).getTime()/1000)
-    
-    const paramsToSign = {
-      timestamp,
-    }
-
     try {
-      const signRes = await fetch('/api/admin/cloudinary-sign', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ paramsToSign })
-      })
-      const { signature, folder } = await signRes.json()
+      // 1. Obtener folder desde el servidor
+      const folderRes = await fetch('/api/admin/cloudinary-sign')
+      const { folder } = await folderRes.json()
 
-      if (!signature) throw new Error('No se pudo firmar la petición')
+      if (!folder) throw new Error('No se pudo obtener el folder')
 
       // 2. Abrir Widget
       window.cloudinary.createUploadWidget(
         {
           cloudName: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
           apiKey: process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY, 
-          uploadSignatureTimestamp: timestamp,
-          uploadSignature: signature,
           folder: folder,
           multiple: true,
           clientAllowedFormats: ['jpg', 'png', 'jpeg', 'webp'],
           maxImageFileSize: 5000000,
+          uploadSignature: async (callback, params_to_sign) => {
+            try {
+              const signRes = await fetch('/api/admin/cloudinary-sign', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ paramsToSign: params_to_sign })
+              })
+              const { signature } = await signRes.json()
+              callback(signature)
+            } catch (err) {
+              console.error('Error al firmar:', err)
+            }
+          }
         },
         async (error, result) => {
           if (!error && result && result.event === 'success') {
