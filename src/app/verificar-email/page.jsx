@@ -1,26 +1,34 @@
 'use client'
 
 import { useEffect, useState, Suspense } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { CheckCircle2, XCircle, Loader2 } from 'lucide-react'
 
 function VerificationContent() {
   const searchParams = useSearchParams()
-  const status = searchParams.get('status') || 'loading' // loading (if no params), success, error
+  const token = searchParams.get('token')
+  const status = searchParams.get('status') || (token ? 'redirecting' : 'loading')
   const message = searchParams.get('message') || ''
+
+  useEffect(() => {
+    // Si viene de un correo viejo que solo tenía ?token=..., redirigimos a la nueva ruta
+    if (token && !searchParams.get('status')) {
+      window.location.href = `/api/auth/verify?token=${token}`
+    }
+  }, [token, searchParams])
 
   return (
     <div className="relative z-10 w-full max-w-md bg-white/90 backdrop-blur-md p-8 md:p-10 rounded-[24px] shadow-[0_12px_40px_rgba(0,0,0,0.25)] border border-white/20 text-center">
       
-      {status === 'loading' && (
+      {(status === 'loading' || status === 'redirecting') && (
         <div className="flex flex-col items-center space-y-4">
           <Loader2 className="w-16 h-16 text-[#9187BA] animate-spin" />
           <h2 className="text-[#33275f] text-2xl font-extrabold tracking-wide">
             Verificando...
           </h2>
           <p className="text-[#666]">
-            Estamos confirmando tu correo electrónico.
+            {status === 'redirecting' ? 'Redirigiendo al sistema seguro...' : 'Estamos confirmando tu correo electrónico.'}
           </p>
         </div>
       )}
