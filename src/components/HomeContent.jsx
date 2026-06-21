@@ -91,9 +91,9 @@ export default function HomeContent({ lang = 'es', enPosts = null }) {
   return (
     <div className="bg-white">
       {/* 1. HERO SECTION */}
-      <section className="hero-bg relative min-h-[85vh] flex flex-col items-center justify-center overflow-hidden">
+      <section className="hero-bg relative min-h-[75vh] flex flex-col items-center justify-center overflow-hidden">
         <div className="absolute inset-0 bg-black/40" />
-        <div className="relative z-10 flex flex-col items-center text-center px-4 py-20 animate-fade-in-up mt-10">
+        <div className="relative z-10 flex flex-col items-center text-center px-4 py-20 animate-fade-in-up mt-4">
           <div className="mb-8 transform transition-transform duration-1000 hover:scale-105">
             <img
               src={`${BASE}/logo-principal-1.png`}
