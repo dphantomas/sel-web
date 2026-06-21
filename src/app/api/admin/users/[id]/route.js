@@ -188,6 +188,23 @@ export async function DELETE(req, { params }) {
       return NextResponse.json({ error: 'No puedes eliminar tu propia cuenta' }, { status: 400 })
     }
 
+    // Buscar si el usuario tiene imagen antes de borrarlo
+    const existingUser = await prisma.user.findUnique({
+      where: { id },
+      select: { image: true }
+    })
+
+    if (existingUser?.image) {
+      const publicId = getPublicIdFromUrl(existingUser.image)
+      if (publicId) {
+        try {
+          await cloudinary.uploader.destroy(publicId, { invalidate: true })
+        } catch (e) {
+          console.error('Error eliminando imagen de Cloudinary al borrar usuario:', e)
+        }
+      }
+    }
+
     await prisma.user.delete({
       where: { id }
     })
