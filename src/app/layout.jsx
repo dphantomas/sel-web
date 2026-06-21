@@ -3,6 +3,8 @@ import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import WhatsAppFloat from '@/components/WhatsAppFloat'
 import AuthProvider from '@/components/AuthProvider'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
 
 export const metadata = {
   title: 'Sanación en Luz | Nada de lo que has hecho hasta ahora define quién Eres',
@@ -34,7 +36,9 @@ export const viewport = {
   themeColor: '#33275f',
 }
 
-export default function RootLayout({ children }) {
+export default async function RootLayout({ children }) {
+  const session = await getServerSession(authOptions)
+
   return (
     <html lang="es">
       <head>
@@ -42,7 +46,7 @@ export default function RootLayout({ children }) {
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </head>
       <body className="relative min-h-screen overflow-x-hidden bg-white">
-        <AuthProvider>
+        <AuthProvider session={session}>
           <Navbar />
           <main>{children}</main>
           <Footer />
