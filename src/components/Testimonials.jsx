@@ -21,7 +21,7 @@ export default function Testimonials({ lang = 'es' }) {
 
       {/* Main content area with parallax background */}
       <div 
-        className="relative py-16 md:py-24 bg-cover bg-center bg-fixed"
+        className="relative pt-8 pb-16 md:pt-10 md:pb-24 bg-cover bg-center bg-fixed"
         style={{ backgroundImage: "url('/assets/fondo-quienes.jpg')" }}
       >
         {/* Semi-transparent overlay to ensure readability */}
