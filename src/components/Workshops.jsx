@@ -111,14 +111,9 @@ export default function Workshops({ lang = 'es' }) {
         className="section-header-bg flex flex-col items-center justify-center"
         style={{ minHeight: '160px', paddingTop: '60px', paddingBottom: '20px' }}
       >
-        <h2 className="text-white text-[28px] md:text-[34px] tracking-[5px] md:tracking-[10px] font-light text-center pl-[5px] md:pl-[10px] mb-2">
+        <h2 className="text-white text-[28px] md:text-[34px] tracking-[5px] md:tracking-[10px] font-light text-center pl-[5px] md:pl-[10px]">
           {t.title}
         </h2>
-        <img
-          src="/assets/flecha.png"
-          alt=""
-          className="w-[50px] h-auto"
-        />
       </div>
 
       {/* Main content area with parallax background */}
@@ -130,6 +125,15 @@ export default function Workshops({ lang = 'es' }) {
         <div className="absolute inset-0 bg-white/10"></div> 
 
         <div className="relative max-w-5xl mx-auto px-4 md:px-6">
+          {/* Arrow ornament */}
+          <div className="text-center mb-10">
+            <img
+              src="/assets/flecha.png"
+              alt=""
+              style={{ width: '50px', height: 'auto', margin: '0 auto' }}
+            />
+          </div>
+
           <div className="space-y-20 md:space-y-24">
             {t.items.map((item) => (
               <div key={item.id} className="flex flex-col md:flex-row items-center md:items-start gap-8 md:gap-16">
