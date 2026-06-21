@@ -52,14 +52,22 @@ export default function Gallery({ lang = 'es', initialImages = [] }) {
         </h2>
       </div>
 
-      {/* Arrow ornament */}
-      <div className="text-center mt-8 mb-8">
-        <img
-          src="/assets/flecha.png"
-          alt=""
-          style={{ width: '50px', height: 'auto', margin: '0 auto' }}
-        />
-      </div>
+      {/* Main content area with parallax background */}
+      <div 
+        className="relative py-16 md:py-24 bg-cover bg-center bg-fixed"
+        style={{ backgroundImage: "url('/assets/fondo-quienes.jpg')" }}
+      >
+        <div className="absolute inset-0 bg-white/10"></div> 
+
+        <div className="relative z-10 w-full max-w-6xl mx-auto px-4 md:px-6">
+          {/* Arrow ornament */}
+          <div className="text-center mb-16">
+            <img
+              src="/assets/flecha2.png"
+              alt=""
+              style={{ width: '60px', height: 'auto', margin: '0 auto' }}
+            />
+          </div>
 
       {/* Intro text */}
       <div className="text-center max-w-2xl mx-auto px-6 mb-10">
@@ -71,7 +79,6 @@ export default function Gallery({ lang = 'es', initialImages = [] }) {
       </div>
 
       {/* Image grid */}
-      <div className="max-w-6xl mx-auto px-4 md:px-6">
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
           {displayed.map((img, idx) => (
             <div
@@ -124,6 +131,7 @@ export default function Gallery({ lang = 'es', initialImages = [] }) {
             </button>
           </div>
         )}
+      </div>
       </div>
 
       {/* Lightbox */}

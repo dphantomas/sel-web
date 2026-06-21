@@ -126,11 +126,11 @@ export default function Workshops({ lang = 'es' }) {
 
         <div className="relative max-w-5xl mx-auto px-4 md:px-6">
           {/* Arrow ornament */}
-          <div className="text-center mb-10">
+          <div className="text-center mb-16">
             <img
-              src="/assets/flecha.png"
+              src="/assets/flecha2.png"
               alt=""
-              style={{ width: '50px', height: 'auto', margin: '0 auto' }}
+              style={{ width: '60px', height: 'auto', margin: '0 auto' }}
             />
           </div>
 

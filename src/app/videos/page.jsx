@@ -44,14 +44,22 @@ export default function VideosPage() {
         </h1>
       </div>
 
-      {/* Arrow ornament */}
-      <div className="text-center mt-8 mb-6">
-        <img
-          src="/assets/flecha.png"
-          alt=""
-          style={{ width: '50px', height: 'auto', margin: '0 auto' }}
-        />
-      </div>
+      {/* Main content area with parallax background */}
+      <div 
+        className="relative py-16 md:py-24 bg-cover bg-center bg-fixed"
+        style={{ backgroundImage: "url('/assets/fondo-quienes.jpg')" }}
+      >
+        <div className="absolute inset-0 bg-white/10"></div> 
+
+        <div className="relative z-10 w-full max-w-6xl mx-auto px-4 md:px-6">
+          {/* Arrow ornament */}
+          <div className="text-center mb-16">
+            <img
+              src="/assets/flecha2.png"
+              alt=""
+              style={{ width: '60px', height: 'auto', margin: '0 auto' }}
+            />
+          </div>
 
       {/* Channel link */}
       <div className="text-center mb-12">
@@ -86,7 +94,7 @@ export default function VideosPage() {
         </a>
       </div>
 
-      <div className="max-w-6xl mx-auto px-4 md:px-6 pb-16">
+      <div className="pb-16">
 
         {/* Loading state */}
         {loading && (
@@ -157,6 +165,8 @@ export default function VideosPage() {
             </div>
           </>
         )}
+        </div>
+        </div>
       </div>
     </section>
   )

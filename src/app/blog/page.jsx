@@ -26,17 +26,22 @@ export default async function BlogPage() {
         </h1>
       </div>
 
-      {/* Arrow ornament */}
-      <div className="text-center mt-8 mb-10">
-        <img
-          src="/assets/flecha.png"
-          alt=""
-          style={{ width: '50px', height: 'auto', margin: '0 auto' }}
-        />
-      </div>
+      {/* Main content area with parallax background */}
+      <div 
+        className="relative py-16 md:py-24 bg-cover bg-center bg-fixed"
+        style={{ backgroundImage: "url('/assets/fondo-quienes.jpg')" }}
+      >
+        <div className="absolute inset-0 bg-white/10"></div> 
 
-      {/* Posts grid */}
-      <div className="max-w-6xl mx-auto px-4 md:px-6 pb-16">
+        <div className="relative z-10 w-full max-w-6xl mx-auto px-4 md:px-6">
+          {/* Arrow ornament */}
+          <div className="text-center mb-16">
+            <img
+              src="/assets/flecha2.png"
+              alt=""
+              style={{ width: '60px', height: 'auto', margin: '0 auto' }}
+            />
+          </div>
         {posts.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {posts.map((post) => {
@@ -113,6 +118,7 @@ export default async function BlogPage() {
             </a>
           </div>
         )}
+        </div>
       </div>
     </section>
   )

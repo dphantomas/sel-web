@@ -78,17 +78,22 @@ export default function AboutUs({ lang = 'es' }) {
         </h2>
       </div>
 
-      {/* Content area */}
-      <div className="max-w-5xl mx-auto px-4 md:px-6 py-16">
+      {/* Main content area with parallax background */}
+      <div 
+        className="relative py-16 md:py-24 bg-cover bg-center bg-fixed"
+        style={{ backgroundImage: "url('/assets/fondo-quienes.jpg')" }}
+      >
+        <div className="absolute inset-0 bg-white/10"></div> 
 
-        {/* Arrow ornament */}
-        <div className="text-center mb-10">
-          <img
-            src="/assets/flecha.png"
-            alt=""
-            style={{ width: '50px', height: 'auto', margin: '0 auto' }}
-          />
-        </div>
+        <div className="relative z-10 w-full max-w-5xl mx-auto px-4 md:px-6">
+          {/* Arrow ornament */}
+          <div className="text-center mb-16">
+            <img
+              src="/assets/flecha2.png"
+              alt=""
+              style={{ width: '60px', height: 'auto', margin: '0 auto' }}
+            />
+          </div>
 
         {/* Joint photo */}
         <div
@@ -206,6 +211,7 @@ export default function AboutUs({ lang = 'es' }) {
             </div>
           ))}
         </div>
+      </div>
       </div>
 
       {/* Bio Modal */}

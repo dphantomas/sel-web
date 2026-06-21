@@ -40,10 +40,22 @@ export default function EnVideosPage() {
         </h1>
       </div>
 
-      <div className="text-center mt-8 mb-6">
-        <img src="/assets/flecha.png" alt=""
-          style={{ width: '50px', height: 'auto', margin: '0 auto' }} />
-      </div>
+      {/* Main content area with parallax background */}
+      <div 
+        className="relative py-16 md:py-24 bg-cover bg-center bg-fixed"
+        style={{ backgroundImage: "url('/assets/fondo-quienes.jpg')" }}
+      >
+        <div className="absolute inset-0 bg-white/10"></div> 
+
+        <div className="relative z-10 w-full max-w-6xl mx-auto px-4 md:px-6">
+          {/* Arrow ornament */}
+          <div className="text-center mb-16">
+            <img
+              src="/assets/flecha2.png"
+              alt=""
+              style={{ width: '60px', height: 'auto', margin: '0 auto' }}
+            />
+          </div>
 
       <div className="text-center mb-12">
         <a
@@ -65,7 +77,7 @@ export default function EnVideosPage() {
         </a>
       </div>
 
-      <div className="max-w-6xl mx-auto px-4 md:px-6 pb-16">
+      <div className="pb-16">
         {loading && (
           <div className="text-center py-20">
             <div className="inline-block w-10 h-10 border-4 rounded-full animate-spin mb-4"
@@ -102,6 +114,8 @@ export default function EnVideosPage() {
             </div>
           </>
         )}
+        </div>
+        </div>
       </div>
     </section>
   )

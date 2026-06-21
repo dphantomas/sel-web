@@ -19,16 +19,23 @@ export default function Testimonials({ lang = 'es' }) {
         </h2>
       </div>
 
-      {/* Arrow ornament */}
-      <div className="text-center mt-8 mb-16">
-        <img
-          src="/assets/flecha.png"
-          alt=""
-          style={{ width: '50px', height: 'auto', margin: '0 auto' }}
-        />
-      </div>
+      {/* Main content area with parallax background */}
+      <div 
+        className="relative py-16 md:py-24 bg-cover bg-center bg-fixed"
+        style={{ backgroundImage: "url('/assets/fondo-quienes.jpg')" }}
+      >
+        {/* Semi-transparent overlay to ensure readability */}
+        <div className="absolute inset-0 bg-white/10"></div> 
 
-      <div className="max-w-6xl mx-auto px-4 md:px-6">
+        <div className="relative z-10 w-full max-w-6xl mx-auto px-4 md:px-6">
+          {/* Arrow ornament */}
+          <div className="text-center mb-16">
+            <img
+              src="/assets/flecha2.png"
+              alt=""
+              style={{ width: '60px', height: 'auto', margin: '0 auto' }}
+            />
+          </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {testimonials.map((t, idx) => (
             <div
@@ -77,6 +84,7 @@ export default function Testimonials({ lang = 'es' }) {
               </p>
             </div>
           ))}
+        </div>
         </div>
       </div>
     </section>

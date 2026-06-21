@@ -20,15 +20,22 @@ export default async function EnBlogPage() {
         </h1>
       </div>
 
-      <div className="text-center mt-8 mb-10">
-        <img
-          src="/assets/flecha.png"
-          alt=""
-          style={{ width: '50px', height: 'auto', margin: '0 auto' }}
-        />
-      </div>
+      {/* Main content area with parallax background */}
+      <div 
+        className="relative py-16 md:py-24 bg-cover bg-center bg-fixed"
+        style={{ backgroundImage: "url('/assets/fondo-quienes.jpg')" }}
+      >
+        <div className="absolute inset-0 bg-white/10"></div> 
 
-      <div className="max-w-6xl mx-auto px-4 md:px-6 pb-16">
+        <div className="relative z-10 w-full max-w-6xl mx-auto px-4 md:px-6">
+          {/* Arrow ornament */}
+          <div className="text-center mb-16">
+            <img
+              src="/assets/flecha2.png"
+              alt=""
+              style={{ width: '60px', height: 'auto', margin: '0 auto' }}
+            />
+          </div>
         {posts.length === 0 ? (
           <div className="text-center py-16">
             <p style={{ fontFamily: "'Open Sans', sans-serif", fontSize: '16px', color: '#999' }}>
@@ -95,6 +102,7 @@ export default async function EnBlogPage() {
             })}
           </div>
         )}
+        </div>
       </div>
     </section>
   )
