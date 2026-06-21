@@ -152,6 +152,7 @@ export const authOptions = {
                 emailVerified: new Date(), // Usuarios de Google se verifican automáticamente
                 firstName: profile?.given_name || user.name || 'Usuario',
                 lastName: profile?.family_name || '',
+                image: profile?.picture || user.image || null,
                 passwordHash: '', // Vacío para usuarios de Google
                 role: 'Guest'
               }
@@ -176,6 +177,15 @@ export const authOptions = {
               })
             } catch (adminEmailError) {
               console.error('Error enviando notificación al admin (Google OAuth):', adminEmailError)
+            }
+          } else {
+            // Si el usuario ya existe pero NO tiene foto, le asignamos la de Google automáticamente
+            const googleImage = profile?.picture || user.image
+            if (!dbUser.image && googleImage) {
+              dbUser = await prisma.user.update({
+                where: { id: dbUser.id },
+                data: { image: googleImage }
+              })
             }
           }
 
