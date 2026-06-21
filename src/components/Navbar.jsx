@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react'
 import { Menu, X } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useSession } from 'next-auth/react'
+import { useSession, signOut } from 'next-auth/react'
+import UserDropdown from './UserDropdown'
 
 const NAV_ES = [
   { href: '/',               label: 'Inicio' },
@@ -171,32 +172,7 @@ export default function Navbar() {
 
           {/* Enlaces de Autenticación (Desktop) */}
           {status === 'authenticated' && (
-            <Link
-              href="/dashboard"
-              className="text-[15px] xl:text-[16px] transition-all duration-300 whitespace-nowrap font-bold hover:opacity-80"
-              style={{
-                color: textColor,
-                textDecoration: 'none',
-                textShadow: !isScrolled ? '0px 2px 4px rgba(0,0,0,0.6)' : 'none',
-              }}
-            >
-              Mi Panel
-            </Link>
-          )}
-
-          {/* Enlace Admin si corresponde */}
-          {(session?.user?.role === 'Admin' || session?.user?.role === 'Transmisor') && (
-            <Link
-              href="/admin"
-              className="text-[15px] xl:text-[16px] transition-all duration-300 whitespace-nowrap font-bold hover:opacity-80"
-              style={{
-                color: '#B681AE',
-                textDecoration: 'none',
-                textShadow: !isScrolled ? '0px 2px 4px rgba(0,0,0,0.6)' : 'none',
-              }}
-            >
-              Admin
-            </Link>
+            <UserDropdown session={session} isScrolled={isScrolled} hasDarkHeader={hasDarkHeader} />
           )}
 
           {/* Language toggle button — visually distinct */}
@@ -253,34 +229,43 @@ export default function Navbar() {
 
             {/* Enlaces de Autenticación (Mobile) */}
             {status === 'authenticated' && (
-              <Link
-                href="/dashboard"
-                onClick={() => setIsOpen(false)}
-                className="text-left px-6 py-3 text-sm font-bold transition-colors hover:bg-purple-50"
-                style={{
-                  color: '#33275f',
-                  borderLeft: '3px solid transparent',
-                  textDecoration: 'none',
-                }}
-              >
-                Mi Panel
-              </Link>
-            )}
-
-            {/* Enlace Admin si corresponde (Mobile) */}
-            {(session?.user?.role === 'Admin' || session?.user?.role === 'Transmisor') && (
-              <Link
-                href="/admin"
-                onClick={() => setIsOpen(false)}
-                className="text-left px-6 py-3 text-sm font-bold transition-colors hover:bg-purple-50"
-                style={{
-                  color: '#B681AE',
-                  borderLeft: '3px solid transparent',
-                  textDecoration: 'none',
-                }}
-              >
-                Admin
-              </Link>
+              <div className="mt-2 border-t border-gray-100 pt-2">
+                <Link
+                  href="/dashboard/perfil"
+                  onClick={() => setIsOpen(false)}
+                  className="text-left px-6 py-3 text-sm font-bold transition-colors hover:bg-purple-50 block"
+                  style={{ color: '#33275f', textDecoration: 'none' }}
+                >
+                  Mis datos
+                </Link>
+                <Link
+                  href="/dashboard/talleres"
+                  onClick={() => setIsOpen(false)}
+                  className="text-left px-6 py-3 text-sm font-bold transition-colors hover:bg-purple-50 block"
+                  style={{ color: '#33275f', textDecoration: 'none' }}
+                >
+                  Mis talleres
+                </Link>
+                {(session?.user?.role === 'Admin' || session?.user?.role === 'Transmisor') && (
+                  <Link
+                    href="/admin"
+                    onClick={() => setIsOpen(false)}
+                    className="text-left px-6 py-3 text-sm font-bold transition-colors hover:bg-purple-50 block"
+                    style={{ color: '#B681AE', textDecoration: 'none' }}
+                  >
+                    Panel de Admin
+                  </Link>
+                )}
+                <button
+                  onClick={() => {
+                    setIsOpen(false)
+                    signOut({ callbackUrl: '/' })
+                  }}
+                  className="text-left px-6 py-3 text-sm font-bold text-red-600 transition-colors hover:bg-red-50 w-full"
+                >
+                  Cerrar sesión
+                </button>
+              </div>
             )}
 
             {/* Language toggle — mobile */}
