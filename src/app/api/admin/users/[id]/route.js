@@ -87,6 +87,7 @@ export async function PUT(req, { params }) {
     const country = formData.get('country')
     const sparkName = formData.get('sparkName')
     const imageFile = formData.get('image')
+    const removeImage = formData.get('removeImage')
 
     // Validar que el rol sea uno válido según el schema si se envía
     const validRoles = ['Guest', 'Participante', 'Transmisor', 'Admin']
@@ -130,6 +131,23 @@ export async function PUT(req, { params }) {
           }
         }
       }
+    } else if (removeImage === 'true') {
+      const existingUser = await prisma.user.findUnique({
+        where: { id },
+        select: { image: true }
+      })
+
+      if (existingUser?.image) {
+        const publicId = getPublicIdFromUrl(existingUser.image)
+        if (publicId) {
+          try {
+            await cloudinary.uploader.destroy(publicId, { invalidate: true })
+          } catch (e) {
+            console.error('Error eliminando imagen de Cloudinary:', e)
+          }
+        }
+      }
+      imageUrl = null
     }
 
     const updatedUser = await prisma.user.update({
@@ -144,7 +162,7 @@ export async function PUT(req, { params }) {
         zipCode: zipCode !== null ? zipCode : undefined,
         country: country !== null ? country : undefined,
         sparkName: sparkName !== null ? sparkName : undefined,
-        ...(imageUrl && { image: imageUrl }),
+        ...(imageUrl !== undefined && { image: imageUrl }),
         ...(forceVerify && { emailVerified: new Date() })
       },
       // Devolvemos también los accesos para que AdminPanel tenga data completa

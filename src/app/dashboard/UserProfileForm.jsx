@@ -24,6 +24,7 @@ export default function UserProfileForm({ user }) {
   const [editImagePreview, setEditImagePreview] = useState(user.image || null)
   const [cropModalImage, setCropModalImage] = useState(null)
   const [croppedImageBlob, setCroppedImageBlob] = useState(null)
+  const [removeImage, setRemoveImage] = useState(false)
 
   const handleEditImageChange = (e) => {
     const file = e.target.files?.[0]
@@ -35,6 +36,7 @@ export default function UserProfileForm({ user }) {
       setEditImagePreview(user.image || null)
       setCroppedImageBlob(null)
     }
+    setRemoveImage(false)
   }
 
   const handleSubmit = async (e) => {
@@ -54,6 +56,8 @@ export default function UserProfileForm({ user }) {
       formPayload.append('sparkName', formData.sparkName)
       if (croppedImageBlob) {
         formPayload.append('image', croppedImageBlob, 'profile.jpg')
+      } else if (removeImage) {
+        formPayload.append('removeImage', 'true')
       }
 
       const res = await fetch('/api/user/profile', {
@@ -68,7 +72,7 @@ export default function UserProfileForm({ user }) {
       setMessage({ type: 'success', text: 'Perfil actualizado exitosamente.' })
       
       // Update session by refreshing
-      if (croppedImageBlob) {
+      if (croppedImageBlob || removeImage) {
         router.refresh()
       }
     } catch (error) {
@@ -133,7 +137,21 @@ export default function UserProfileForm({ user }) {
           </div>
           <div className="text-center sm:text-left">
             <span className="text-lg font-bold text-[#33275f] block mb-1">Foto de Perfil</span>
-            <p className="text-sm text-gray-500">Haz clic en la imagen para cambiar tu foto.</p>
+            <p className="text-sm text-gray-500 mb-2">Haz clic en la imagen para cambiar tu foto.</p>
+            {editImagePreview && (
+              <button
+                type="button"
+                onClick={() => {
+                  setEditImagePreview(null)
+                  setCroppedImageBlob(null)
+                  setRemoveImage(true)
+                  if (editFileInputRef.current) editFileInputRef.current.value = ''
+                }}
+                className="text-xs text-red-500 font-bold hover:underline"
+              >
+                Eliminar foto
+              </button>
+            )}
           </div>
         </div>
 

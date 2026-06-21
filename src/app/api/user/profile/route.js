@@ -54,8 +54,10 @@ export async function PUT(req) {
     const country = formData.get('country')
     const sparkName = formData.get('sparkName')
     const imageFile = formData.get('image')
+    const removeImage = formData.get('removeImage')
 
     let imageUrl = undefined
+    let setHideGooglePhoto = undefined
 
     // Subir imagen a Cloudinary si existe
     if (imageFile && imageFile.size > 0) {
@@ -91,6 +93,25 @@ export async function PUT(req) {
           }
         }
       }
+      setHideGooglePhoto = false // Si subió foto nueva, reseteamos este flag
+    } else if (removeImage === 'true') {
+      const existingUser = await prisma.user.findUnique({
+        where: { id: session.user.id },
+        select: { image: true }
+      })
+
+      if (existingUser?.image) {
+        const publicId = getPublicIdFromUrl(existingUser.image)
+        if (publicId) {
+          try {
+            await cloudinary.uploader.destroy(publicId, { invalidate: true })
+          } catch (e) {
+            console.error('Error eliminando imagen anterior de Cloudinary:', e)
+          }
+        }
+      }
+      imageUrl = null // Para que pise la bd con null
+      setHideGooglePhoto = true
     }
 
     // Actualizar solo los datos permitidos del propio usuario
@@ -105,7 +126,8 @@ export async function PUT(req) {
         zipCode: zipCode !== null ? zipCode : undefined,
         country: country !== null ? country : undefined,
         sparkName: sparkName !== null ? sparkName : undefined,
-        ...(imageUrl && { image: imageUrl })
+        ...(imageUrl !== undefined && { image: imageUrl }),
+        ...(setHideGooglePhoto !== undefined && { hideGooglePhoto: setHideGooglePhoto })
       }
     })
 

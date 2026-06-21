@@ -181,7 +181,7 @@ export const authOptions = {
           } else {
             // Si el usuario ya existe pero NO tiene foto, le asignamos la de Google automáticamente
             const googleImage = profile?.picture || user.image
-            if (!dbUser.image && googleImage) {
+            if (!dbUser.image && googleImage && !dbUser.hideGooglePhoto) {
               dbUser = await prisma.user.update({
                 where: { id: dbUser.id },
                 data: { image: googleImage }

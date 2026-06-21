@@ -339,12 +339,14 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
     })
   }
 
-  // =================== LOGICA EDICION USUARIO ===================
+  const [removeImage, setRemoveImage] = useState(false)
+
   const openEditUser = (user) => {
     setEditingUser(user)
     setUserTab('data')
     setEditImagePreview(user.image || null)
     setCroppedImageBlob(null)
+    setRemoveImage(false)
   }
 
   const handleEditImageChange = (e) => {
@@ -357,6 +359,7 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
       setEditImagePreview(editingUser?.image || null)
       setCroppedImageBlob(null)
     }
+    setRemoveImage(false)
   }
 
   const handleUserSubmit = async (e) => {
@@ -367,6 +370,8 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
       
       if (croppedImageBlob) {
         formData.set('image', croppedImageBlob, 'profile.jpg')
+      } else if (removeImage) {
+        formData.set('removeImage', 'true')
       }
       
       const res = await fetch(`/api/admin/users/${editingUser.id}`, {
@@ -773,7 +778,21 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
                     </div>
                     <div className="text-center sm:text-left">
                       <span className="text-lg font-bold text-[#33275f] block mb-1">Foto de Perfil</span>
-                      <p className="text-sm text-gray-500">Haz clic en la imagen para actualizarla.</p>
+                      <p className="text-sm text-gray-500 mb-2">Haz clic en la imagen para cambiarla.</p>
+                      {editImagePreview && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEditImagePreview(null)
+                            setCroppedImageBlob(null)
+                            setRemoveImage(true)
+                            if (editFileInputRef.current) editFileInputRef.current.value = ''
+                          }}
+                          className="text-xs text-red-500 font-bold hover:underline"
+                        >
+                          Eliminar foto
+                        </button>
+                      )}
                     </div>
                   </div>
 
