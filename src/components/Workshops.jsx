@@ -109,9 +109,9 @@ export default function Workshops({ lang = 'es' }) {
       {/* Header section identical to other pages */}
       <div
         className="section-header-bg flex flex-col items-center justify-end"
-        style={{ minHeight: '260px', paddingBottom: '30px' }}
+        style={{ minHeight: '190px', paddingBottom: '30px' }}
       >
-        <h2 className="text-white text-[28px] md:text-[38px] tracking-[10px] md:tracking-[20px] font-light uppercase text-center mb-6 pl-[10px] md:pl-[20px]">
+        <h2 className="text-white text-[28px] md:text-[34px] tracking-[5px] md:tracking-[10px] font-light uppercase text-center mb-6 pl-[5px] md:pl-[10px]">
           {t.title}
         </h2>
         <img

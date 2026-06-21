@@ -11,19 +11,10 @@ export default function Testimonials({ lang = 'es' }) {
     <section id="testimonios" className="bg-[#fcfbfe] pb-24">
       {/* Section header */}
       <div
-        className="section-header-bg flex items-end justify-center"
-        style={{ minHeight: '220px', paddingBottom: '40px', paddingTop: '80px' }}
+        className="section-header-bg flex flex-col items-center justify-end"
+        style={{ minHeight: '190px', paddingBottom: '30px' }}
       >
-        <h2
-          style={{
-            fontFamily: "'Lato', Helvetica, Arial, Lucida, sans-serif",
-            fontSize: '28px',
-            letterSpacing: '2px',
-            color: '#ffffff',
-            margin: 0,
-            fontWeight: 400,
-          }}
-        >  
+        <h2 className="text-white text-[28px] md:text-[34px] tracking-[5px] md:tracking-[10px] font-light uppercase text-center mb-6 pl-[5px] md:pl-[10px]">
           {lang === 'en' ? 'Testimonials' : 'Testimonios'}
         </h2>
       </div>

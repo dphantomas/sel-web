@@ -12,19 +12,10 @@ export default async function EnBlogPage() {
   return (
     <section className="bg-white">
       <div
-        className="section-header-bg flex items-end justify-center"
-        style={{ minHeight: '220px', paddingBottom: '40px', paddingTop: '80px' }}
+        className="section-header-bg flex flex-col items-center justify-end"
+        style={{ minHeight: '190px', paddingBottom: '30px' }}
       >
-        <h1
-          style={{
-            fontFamily: "'Lato', Helvetica, Arial, Lucida, sans-serif",
-            fontSize: '28px',
-            letterSpacing: '2px',
-            color: '#ffffff',
-            margin: 0,
-            fontWeight: 400,
-          }}
-        >
+        <h1 className="text-white text-[28px] md:text-[34px] tracking-[5px] md:tracking-[10px] font-light uppercase text-center mb-6 pl-[5px] md:pl-[10px]">
           Blog
         </h1>
       </div>
