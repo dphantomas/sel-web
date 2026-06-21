@@ -4,7 +4,7 @@ export default function Workshops({ lang = 'es' }) {
   const isEn = lang === 'en';
 
   const t = {
-    title: isEn ? 'WORKSHOPS' : 'TALLERES',
+    title: isEn ? 'Workshops' : 'Talleres',
     moreInfo: isEn ? 'more info' : 'más info',
     items: [
       {
@@ -108,10 +108,10 @@ export default function Workshops({ lang = 'es' }) {
     <section id="talleres" className="w-full">
       {/* Header section identical to other pages */}
       <div
-        className="section-header-bg flex flex-col items-center justify-end"
-        style={{ minHeight: '190px', paddingBottom: '30px' }}
+        className="section-header-bg flex flex-col items-center justify-center"
+        style={{ minHeight: '160px', paddingTop: '60px', paddingBottom: '20px' }}
       >
-        <h2 className="text-white text-[28px] md:text-[34px] tracking-[5px] md:tracking-[10px] font-light uppercase text-center mb-6 pl-[5px] md:pl-[10px]">
+        <h2 className="text-white text-[28px] md:text-[34px] tracking-[5px] md:tracking-[10px] font-light text-center pl-[5px] md:pl-[10px] mb-2">
           {t.title}
         </h2>
         <img

@@ -32,10 +32,10 @@ export default function EnVideosPage() {
   return (
     <section className="bg-white">
       <div
-        className="section-header-bg flex flex-col items-center justify-end"
-        style={{ minHeight: '190px', paddingBottom: '30px' }}
+        className="section-header-bg flex flex-col items-center justify-center"
+        style={{ minHeight: '160px', paddingTop: '60px', paddingBottom: '20px' }}
       >
-        <h1 className="text-white text-[28px] md:text-[34px] tracking-[5px] md:tracking-[10px] font-light uppercase text-center mb-6 pl-[5px] md:pl-[10px]">
+        <h1 className="text-white text-[28px] md:text-[34px] tracking-[5px] md:tracking-[10px] font-light text-center pl-[5px] md:pl-[10px]">
           Videos
         </h1>
       </div>
