@@ -4,6 +4,7 @@ import { useState, useRef } from 'react'
 import { UploadCloud, User as UserIcon } from 'lucide-react'
 import ImageCropperModal from '@/components/ImageCropperModal'
 import { useRouter } from 'next/navigation'
+import { useSession } from 'next-auth/react'
 
 export default function UserProfileForm({ user }) {
   const [formData, setFormData] = useState({
@@ -20,6 +21,7 @@ export default function UserProfileForm({ user }) {
   const [message, setMessage] = useState(null)
   
   const router = useRouter()
+  const { update } = useSession()
   const editFileInputRef = useRef(null)
   const [editImagePreview, setEditImagePreview] = useState(user.image || null)
   const [cropModalImage, setCropModalImage] = useState(null)
@@ -71,10 +73,12 @@ export default function UserProfileForm({ user }) {
 
       setMessage({ type: 'success', text: 'Perfil actualizado exitosamente.' })
       
-      // Update session by refreshing
-      if (croppedImageBlob || removeImage) {
-        router.refresh()
-      }
+      // Update session to reflect new image/name in the Navbar immediately
+      await update()
+      router.refresh()
+      
+      // Scroll up to see the success message
+      window.scrollTo({ top: 0, behavior: 'smooth' })
     } catch (error) {
       console.error(error)
       setMessage({ type: 'error', text: 'Hubo un error al guardar los cambios.' })
