@@ -17,7 +17,15 @@ export default async function DashboardPerfilPage() {
   }
 
   const user = await prisma.user.findUnique({
-    where: { id: session.user.id }
+    where: { id: session.user.id },
+    include: {
+      unlockedCourses: {
+        include: { course: true }
+      },
+      unlockedInstances: {
+        include: { courseInstance: { include: { course: true } } }
+      }
+    }
   })
 
   if (!user) {
@@ -47,7 +55,13 @@ export default async function DashboardPerfilPage() {
 
         {/* Contenido */}
         <div className="animate-in fade-in slide-in-from-bottom-2 duration-500">
-          <UserProfileForm user={user} />
+          <UserProfileForm 
+            user={user} 
+            hasInitiatoryRetreat={
+              user.unlockedCourses.some(uc => uc.course.title.includes('Retiro Iniciático')) ||
+              user.unlockedInstances.some(ui => ui.courseInstance.course.title.includes('Retiro Iniciático'))
+            }
+          />
         </div>
 
       </div>

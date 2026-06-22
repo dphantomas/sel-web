@@ -6,7 +6,7 @@ import ImageCropperModal from '@/components/ImageCropperModal'
 import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 
-export default function UserProfileForm({ user }) {
+export default function UserProfileForm({ user, hasInitiatoryRetreat }) {
   const [formData, setFormData] = useState({
     firstName: user.firstName,
     lastName: user.lastName,
@@ -179,15 +179,17 @@ export default function UserProfileForm({ user }) {
             className="w-full px-4 py-2 rounded-xl border focus:border-[#9187BA] focus:ring-1 focus:ring-[#9187BA] outline-none"
           />
         </div>
-        <div>
-          <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Nombre de Chispa (Opcional)</label>
-          <input
-            type="text"
-            value={formData.sparkName}
-            onChange={(e) => setFormData({ ...formData, sparkName: e.target.value })}
-            className="w-full px-4 py-2 rounded-xl border focus:border-[#9187BA] focus:ring-1 focus:ring-[#9187BA] outline-none"
-          />
-        </div>
+        {(hasInitiatoryRetreat || user.sparkName) && (
+          <div>
+            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Nombre de Chispa (Opcional)</label>
+            <input
+              type="text"
+              value={formData.sparkName}
+              onChange={(e) => setFormData({ ...formData, sparkName: e.target.value })}
+              className="w-full px-4 py-2 rounded-xl border focus:border-[#9187BA] focus:ring-1 focus:ring-[#9187BA] outline-none"
+            />
+          </div>
+        )}
         <div>
           <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Email (No editable)</label>
           <input
