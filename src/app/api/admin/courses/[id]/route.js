@@ -18,7 +18,10 @@ export async function PUT(req, { params }) {
     }
 
     const body = await req.json()
-    const { title, slug, type, description, published } = body
+    const { title, slug, type, modality, description, shortDescription, image, published } = body
+
+    const DEFAULT_COURSE_IMAGE = '/assets/default-course.jpg'
+    const finalImage = (image === '' || !image) && image !== undefined ? DEFAULT_COURSE_IMAGE : image
 
     const updatedCourse = await prisma.course.update({
       where: { id },
@@ -26,7 +29,10 @@ export async function PUT(req, { params }) {
         ...(title && { title }),
         ...(slug && { slug }),
         ...(type && { type }),
+        ...(modality && { modality }),
         description: description !== undefined ? description : undefined, // Permite null/vacío
+        shortDescription: shortDescription !== undefined ? shortDescription : undefined,
+        image: finalImage !== undefined ? finalImage : undefined,
         ...(published !== undefined && { published }),
       },
       include: {

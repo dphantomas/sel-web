@@ -13,7 +13,7 @@ export async function POST(req) {
     }
 
     const body = await req.json()
-    const { title, slug, description, type, published } = body
+    const { title, slug, description, shortDescription, image, type, modality, published } = body
 
     if (!title || !slug || !type) {
       return NextResponse.json({ error: 'Faltan campos obligatorios (title, slug, type)' }, { status: 400 })
@@ -25,12 +25,18 @@ export async function POST(req) {
       return NextResponse.json({ error: 'Ya existe un curso con ese slug.' }, { status: 400 })
     }
 
+    const DEFAULT_COURSE_IMAGE = '/assets/default-course.jpg'
+    const finalImage = image || DEFAULT_COURSE_IMAGE
+
     const newCourse = await prisma.course.create({
       data: {
         title,
         slug,
         description: description || null,
+        shortDescription: shortDescription || null,
+        image: finalImage,
         type,
+        modality: modality || 'Virtual',
         published: published || false
       },
       include: {

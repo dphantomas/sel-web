@@ -1,6 +1,7 @@
 import Link from 'next/link'
+import CoursesGrid from '@/components/CoursesGrid'
 
-export default function Workshops({ lang = 'es' }) {
+export default function Workshops({ initialCourses, lang = 'es' }) {
   const isEn = lang === 'en';
 
   const t = {
@@ -124,9 +125,9 @@ export default function Workshops({ lang = 'es' }) {
         {/* Semi-transparent overlay to ensure readability if needed, original was fairly dark though, but let's keep it close to original */}
         <div className="absolute inset-0 bg-white/10"></div> 
 
-        <div className="relative max-w-5xl mx-auto px-4 md:px-6">
+        <div className="relative w-full">
           {/* Arrow ornament */}
-          <div className="text-center mb-16">
+          <div className="text-center mb-16 relative z-10">
             <img
               src="/assets/flecha2.png"
               alt=""
@@ -134,44 +135,8 @@ export default function Workshops({ lang = 'es' }) {
             />
           </div>
 
-          <div className="space-y-20 md:space-y-24">
-            {t.items.map((item) => (
-              <div key={item.id} className="flex flex-col md:flex-row items-center md:items-start gap-8 md:gap-16">
-                
-                {/* Left Side: Image and Button */}
-                <div className="w-full md:w-2/5 flex flex-col items-center">
-                  <div className="shadow-[4px_4px_12px_rgba(0,0,0,0.3)] overflow-hidden w-full max-w-[350px]">
-                    <img 
-                      src={item.image} 
-                      alt={item.title} 
-                      className="w-full h-auto object-cover hover:scale-95 transition-transform duration-500 ease-in-out cursor-pointer"
-                    />
-                  </div>
-                  <Link
-                    href={lang === 'en' ? "/en/contact" : "/contacto"}
-                    className="mt-6 inline-block bg-[#9187BA] hover:bg-[#B681AE] text-white text-[14px] font-bold py-2 px-6 rounded-[10px] transition-colors"
-                  >
-                    {t.moreInfo}
-                  </Link>
-                </div>
-
-                {/* Right Side: Title and Text */}
-                <div className="w-full md:w-3/5 text-center md:text-left">
-                  <h2 className="text-[24px] md:text-[30px] leading-[1.2] text-[#33275f] font-bold mb-6">
-                    {item.title}
-                  </h2>
-                  <div className="mb-6 flex justify-center md:justify-start">
-                    <img src="/assets/flecha-blanca.png" alt="" className="w-[40px] opacity-80" />
-                  </div>
-                  {item.text && (
-                    <div className="text-[#666] text-[15px] leading-[1.7em] text-left">
-                      {item.text}
-                    </div>
-                  )}
-                </div>
-
-              </div>
-            ))}
+          <div className="w-full relative z-10">
+            <CoursesGrid initialCourses={initialCourses || []} lang={lang} hideHero={true} />
           </div>
         </div>
       </div>

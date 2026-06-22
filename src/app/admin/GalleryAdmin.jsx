@@ -57,7 +57,7 @@ export default function GalleryAdmin() {
           apiKey: apiKey, 
           folder: folder,
           multiple: true,
-          sources: ['local', 'url', 'camera', 'dropbox', 'onedrive'],
+          sources: ['local', 'url', 'camera', 'dropbox', 'onedrive', 'google_drive'],
           language: 'es',
           text: {
             es: {

@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/db'
 import Link from 'next/link'
 import AdminPanel from './AdminPanel'
+import { sortCoursesByAdminPriority } from '@/lib/courseSorting'
 
 export const metadata = {
   title: 'Administración LMS | Sanación en Luz',
@@ -49,28 +50,7 @@ export default async function AdminPage() {
     }
   })
 
-  const categoryOrder = {
-    'Curso': 1,
-    'Taller': 2,
-    'Retiro': 3,
-    'Iniciacion': 4,
-    'Activacion': 5
-  }
-
-  const getFirstInstanceDate = (course) => {
-    if (!course.instances || course.instances.length === 0) return Infinity
-    // instances are sorted by startDate desc, so the last one is the oldest (first instance)
-    const oldest = course.instances[course.instances.length - 1]
-    return new Date(oldest.startDate).getTime()
-  }
-
-  courses.sort((a, b) => {
-    const orderA = categoryOrder[a.type] || 99
-    const orderB = categoryOrder[b.type] || 99
-    if (orderA !== orderB) return orderA - orderB
-
-    return getFirstInstanceDate(a) - getFirstInstanceDate(b)
-  })
+  const sortedCourses = sortCoursesByAdminPriority(courses)
 
   return (
     <div className="min-h-screen bg-gray-50 pt-28 pb-16 px-4 md:px-6">
@@ -99,8 +79,8 @@ export default async function AdminPage() {
           </p>
         </div>
 
-        {/* Panel Interactivo */}
-        <AdminPanel initialUsers={users} courses={courses} />
+        {/* Panel Administrativo (Pestañas) */}
+        <AdminPanel initialUsers={users} courses={sortedCourses} />
 
       </div>
     </div>

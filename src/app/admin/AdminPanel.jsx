@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { UploadCloud, User as UserIcon, X, Check, Search, Eye, EyeOff, FileText, CheckCircle, Edit2, Shield, Layout, Trash2, Calendar, Link2, DollarSign, Image as ImageIcon, ChevronDown, ChevronRight } from 'lucide-react'
+import Script from 'next/script'
 import Link from 'next/link'
 import ImageCropperModal from '@/components/ImageCropperModal'
 import GalleryAdmin from './GalleryAdmin'
@@ -29,10 +30,101 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
 
   const [isCreatingCourse, setIsCreatingCourse] = useState(false)
   const [editingCourse, setEditingCourse] = useState(null)
-  const [newCourseData, setNewCourseData] = useState({ title: '', slug: '', description: '', type: 'Curso', published: false })
+  const [newCourseData, setNewCourseData] = useState({ title: '', slug: '', description: '', shortDescription: '', image: '', type: 'Curso', published: false })
   const [isSaving, setIsSaving] = useState(false)
 
-  // =================== LOGICA RECURSOS (R2) ===================
+  // =================== LOGICA LIMPIEZA CLOUDINARY ===================
+  const pendingUploadRef = useRef(null)
+
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      if (pendingUploadRef.current) {
+        navigator.sendBeacon(`/api/admin/cloudinary?public_id=${pendingUploadRef.current}`)
+      }
+    }
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload)
+  }, [])
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        if (isCreatingCourse || editingCourse) {
+          handleCancelCourseEdit()
+        }
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [isCreatingCourse, editingCourse])
+
+  const handleCancelCourseEdit = () => {
+    if (pendingUploadRef.current) {
+      fetch(`/api/admin/cloudinary?public_id=${pendingUploadRef.current}`, { method: 'DELETE' })
+        .catch(err => console.error('Error limpiando cloudinary:', err))
+      pendingUploadRef.current = null
+    }
+    setIsCreatingCourse(false)
+    setEditingCourse(null)
+    setNewCourseData({ title: '', slug: '', description: '', shortDescription: '', image: '', type: 'Curso', published: false })
+  }
+
+  // =================== LOGICA CLOUDINARY CURSO ===================
+  const openCloudinaryCourseWidget = async (isNewCourse) => {
+    try {
+      setIsUploading(true)
+      
+      // Pedimos la carpeta autorizada y la API Key al servidor para no tener secretos (ni nombres) hardcodeados en el frontend.
+      const configRes = await fetch('/api/admin/cloudinary-sign?type=course')
+      const { folder, apiKey, error: configError } = await configRes.json()
+      if (configError) throw new Error(configError)
+
+      window.cloudinary.createUploadWidget(
+        {
+          cloudName: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
+          apiKey: apiKey, 
+          folder: folder,
+          multiple: false,
+          sources: ['local', 'url', 'camera', 'dropbox', 'onedrive', 'google_drive'],
+          clientAllowedFormats: ['jpg', 'png', 'jpeg', 'webp'],
+          maxFileSize: 5000000,
+          uploadSignature: async (callback, params_to_sign) => {
+            try {
+              const signRes = await fetch('/api/admin/cloudinary-sign', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ paramsToSign: params_to_sign })
+              })
+              const { signature } = await signRes.json()
+              callback(signature)
+            } catch (err) {
+              console.error('Error al firmar:', err)
+            }
+          }
+        },
+        (error, result) => {
+          if (!error && result && result.event === 'success') {
+            const uploadedUrl = result.info.secure_url
+            pendingUploadRef.current = result.info.public_id // Guardamos public_id por si cancela
+            if (isNewCourse) {
+              setNewCourseData({ ...newCourseData, image: uploadedUrl })
+            } else {
+              setEditingCourse({ ...editingCourse, image: uploadedUrl })
+            }
+          }
+          if (result && (result.event === 'success' || result.event === 'close')) {
+            setIsUploading(false)
+          }
+        }
+      ).open()
+    } catch (err) {
+      console.error(err)
+      setIsUploading(false)
+      alert(`Error abriendo Cloudinary: ${err.message || err}`)
+    }
+  }
+
+  // =================== LOGICA RECURSOS ========================
   const [isUploading, setIsUploading] = useState(false)
   const [overrideResourceId, setOverrideResourceId] = useState('')
   const [selectedFile, setSelectedFile] = useState(null)
@@ -429,6 +521,9 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
           slug: editingCourse.slug,
           type: editingCourse.type,
           description: editingCourse.description,
+          shortDescription: editingCourse.shortDescription,
+          image: editingCourse.image,
+          modality: editingCourse.modality,
           published: editingCourse.published
         })
       })
@@ -437,6 +532,7 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
       const data = await res.json()
       
       setCourses(courses.map(c => c.id === editingCourse.id ? data.course : c))
+      pendingUploadRef.current = null // Todo correcto, limpiamos pendingUpload
       setEditingCourse(null)
     } catch (error) {
       console.error(error)
@@ -465,8 +561,9 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
       
       const data = await res.json()
       setCourses([...courses, data.course])
+      pendingUploadRef.current = null // Todo correcto, limpiamos pendingUpload
       setIsCreatingCourse(false)
-      setNewCourseData({ title: '', slug: '', description: '', type: 'Curso', published: false })
+      setNewCourseData({ title: '', slug: '', description: '', shortDescription: '', image: '', type: 'Curso', modality: 'Virtual', published: false })
     } catch (error) {
       console.error(error)
       alert(error.message || 'Hubo un error al crear el curso.')
@@ -505,7 +602,7 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
 
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-      
+      <Script src="https://upload-widget.cloudinary.com/global/all.js" strategy="lazyOnload" />
       {/* Pestañas */}
       <div className="flex border-b border-gray-200 bg-gray-50/50">
         <button
@@ -648,10 +745,17 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
           </div>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {courses.map(course => (
-              <div key={course.id} className="border rounded-2xl p-5 shadow-sm bg-white hover:border-[#9187BA] transition relative">
-                <div className="absolute top-4 right-4 flex items-center gap-2">
+              <div key={course.id} className="border rounded-2xl p-5 shadow-sm bg-white hover:border-[#9187BA] transition relative flex flex-col">
+                <div className="absolute top-4 right-4 flex items-center gap-2 z-10">
                   <span className={`w-3 h-3 rounded-full ${course.published ? 'bg-green-500' : 'bg-gray-300'}`} title={course.published ? 'Publicado' : 'Oculto'}></span>
                 </div>
+                
+                {course.image && (
+                  <div className="w-full h-32 mb-4 rounded-xl overflow-hidden bg-gray-100 flex-shrink-0 relative">
+                    <img src={course.image} alt={course.title} className="w-full h-full object-cover" />
+                  </div>
+                )}
+                
                 <h3 className="font-bold text-[#33275f] text-lg mb-1 pr-6">{course.title}</h3>
                 <p className="text-xs text-gray-400 mb-3 font-mono">{course.slug}</p>
                 <p className="text-sm text-gray-600 line-clamp-3 mb-4">{course.description || 'Sin descripción'}</p>
@@ -994,7 +1098,7 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
                 <h2 className="text-2xl font-bold text-[#33275f]">Gestionar Curso</h2>
                 <p className="text-sm text-gray-500">{editingCourse.title}</p>
               </div>
-              <button onClick={() => setEditingCourse(null)} className="text-gray-400 hover:text-gray-700 bg-gray-100 hover:bg-gray-200 p-2 rounded-full transition">
+              <button onClick={handleCancelCourseEdit} className="text-gray-400 hover:text-gray-700 bg-gray-100 hover:bg-gray-200 p-2 rounded-full transition">
                 <X className="w-6 h-6" />
               </button>
             </div>
@@ -1051,10 +1155,31 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
                             <option value="Retiro">Retiro</option>
                           </select>
                         </div>
+                        <div>
+                          <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Modalidad</label>
+                          <select value={editingCourse.modality || 'Virtual'} onChange={(e) => setEditingCourse({...editingCourse, modality: e.target.value})} className="w-full px-4 py-2 rounded-xl border focus:border-[#9187BA] focus:ring-1 focus:ring-[#9187BA] outline-none bg-white">
+                            <option value="Virtual">Virtual</option>
+                            <option value="Presencial">Presencial</option>
+                          </select>
+                        </div>
                       </div>
                       <div>
                         <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Descripción</label>
                         <textarea rows="4" value={editingCourse.description || ''} onChange={(e) => setEditingCourse({...editingCourse, description: e.target.value})} className="w-full px-4 py-2 rounded-xl border focus:border-[#9187BA] focus:ring-1 focus:ring-[#9187BA] outline-none resize-none"></textarea>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Descripción Corta (Catálogo)</label>
+                        <textarea rows="2" value={editingCourse.shortDescription || ''} onChange={(e) => setEditingCourse({...editingCourse, shortDescription: e.target.value})} className="w-full px-4 py-2 rounded-xl border focus:border-[#9187BA] focus:ring-1 focus:ring-[#9187BA] outline-none resize-none" placeholder="Resumen breve para la grilla..."></textarea>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Imagen de Portada</label>
+                        <div className="flex gap-2">
+                          <input type="text" value={editingCourse.image || ''} onChange={(e) => setEditingCourse({...editingCourse, image: e.target.value})} className="flex-1 px-4 py-2 rounded-xl border focus:border-[#9187BA] focus:ring-1 focus:ring-[#9187BA] outline-none" placeholder="/assets/foto.jpg o URL" />
+                          <button type="button" disabled={isUploading} onClick={() => openCloudinaryCourseWidget(false)} className="bg-[#B681AE] text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-[#9187BA] transition flex items-center gap-2 disabled:opacity-50">
+                            <UploadCloud className="w-4 h-4" />
+                            {isUploading ? '...' : 'Subir'}
+                          </button>
+                        </div>
                       </div>
                       <div className="flex items-center gap-2 mt-4 p-4 bg-gray-50 rounded-xl border border-gray-100">
                         <input type="checkbox" id="published" checked={editingCourse.published} onChange={(e) => setEditingCourse({...editingCourse, published: e.target.checked})} className="w-5 h-5 rounded text-[#33275f] focus:ring-[#9187BA] border-gray-300 transition" />
@@ -1335,8 +1460,8 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
                 )}
               </div>
               <div className="flex gap-3">
-                <button type="button" onClick={() => setEditingCourse(null)} className="px-5 py-2.5 rounded-xl text-gray-600 font-bold hover:bg-gray-200 transition">
-                  Cerrar
+                <button type="button" onClick={handleCancelCourseEdit} className="px-5 py-2.5 rounded-xl text-gray-600 font-bold hover:bg-gray-200 transition">
+                  Cancelar
                 </button>
                 {courseTab === 'data' && (
                   <button 
@@ -1381,8 +1506,29 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
                   </select>
                 </div>
                 <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Modalidad</label>
+                  <select value={newCourseData.modality || 'Virtual'} onChange={(e) => setNewCourseData({...newCourseData, modality: e.target.value})} className="w-full px-4 py-2 rounded-xl border focus:border-[#9187BA] focus:ring-1 focus:ring-[#9187BA] outline-none bg-white">
+                    <option value="Virtual">Virtual</option>
+                    <option value="Presencial">Presencial</option>
+                  </select>
+                </div>
+                <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Descripción</label>
-                  <textarea rows="3" value={newCourseData.description} onChange={(e) => setNewCourseData({...newCourseData, description: e.target.value})} className="w-full px-4 py-2 rounded-xl border focus:border-[#9187BA] focus:ring-1 focus:ring-[#9187BA] outline-none resize-none" placeholder="Breve descripción del curso..."></textarea>
+                  <textarea rows="3" value={newCourseData.description || ''} onChange={(e) => setNewCourseData({...newCourseData, description: e.target.value})} className="w-full px-4 py-2 rounded-xl border focus:border-[#9187BA] focus:ring-1 focus:ring-[#9187BA] outline-none resize-none" placeholder="Breve descripción del curso..."></textarea>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Descripción Corta (Catálogo)</label>
+                  <textarea rows="2" value={newCourseData.shortDescription || ''} onChange={(e) => setNewCourseData({...newCourseData, shortDescription: e.target.value})} className="w-full px-4 py-2 rounded-xl border focus:border-[#9187BA] focus:ring-1 focus:ring-[#9187BA] outline-none resize-none" placeholder="Resumen breve para la grilla..."></textarea>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Imagen de Portada</label>
+                  <div className="flex gap-2">
+                    <input type="text" value={newCourseData.image || ''} onChange={(e) => setNewCourseData({...newCourseData, image: e.target.value})} className="flex-1 px-4 py-2 rounded-xl border focus:border-[#9187BA] focus:ring-1 focus:ring-[#9187BA] outline-none" placeholder="/assets/foto.jpg o URL" />
+                    <button type="button" disabled={isUploading} onClick={() => openCloudinaryCourseWidget(true)} className="bg-[#B681AE] text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-[#9187BA] transition flex items-center gap-2 disabled:opacity-50">
+                      <UploadCloud className="w-4 h-4" />
+                      {isUploading ? '...' : 'Subir'}
+                    </button>
+                  </div>
                 </div>
                 <div className="flex items-center gap-2 mt-2">
                   <input type="checkbox" id="publishedNew" checked={newCourseData.published} onChange={(e) => setNewCourseData({...newCourseData, published: e.target.checked})} className="w-5 h-5 rounded text-[#33275f] focus:ring-[#9187BA] border-gray-300 transition" />
@@ -1390,7 +1536,7 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
                 </div>
               </div>
               <div className="mt-6 flex justify-end gap-3">
-                <button type="button" onClick={() => setIsCreatingCourse(false)} className="px-4 py-2 rounded-xl text-gray-500 font-bold hover:bg-gray-100 transition">Cancelar</button>
+                <button type="button" onClick={handleCancelCourseEdit} className="px-4 py-2 rounded-xl text-gray-500 font-bold hover:bg-gray-100 transition">Cancelar</button>
                 <button type="submit" disabled={isSaving} className="px-6 py-2 rounded-xl bg-[#B681AE] text-white font-bold hover:bg-[#9187BA] transition disabled:opacity-50">
                   {isSaving ? 'Creando...' : 'Crear Curso'}
                 </button>

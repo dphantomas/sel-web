@@ -15,10 +15,20 @@ export async function GET(req) {
     if (!session || session.user.role !== 'Admin') {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
     }
+    const url = new URL(req.url)
+    const type = url.searchParams.get('type')
+    
     const rootFolder = process.env.CLOUDINARY_ROOT_FOLDER
-    const galleryFolder = process.env.CLOUDINARY_GALLERY_FOLDER
+    let subFolder = process.env.CLOUDINARY_GALLERY_FOLDER
+    
+    if (type === 'course') {
+      subFolder = process.env.CLOUDINARY_COURSE_FOLDER
+    } else if (type === 'profile') {
+      subFolder = process.env.CLOUDINARY_PROFILE_FOLDER || process.env.CLOUDINARY_PROFIL_FOLDER
+    }
+
     return NextResponse.json({ 
-      folder: `${rootFolder}/${galleryFolder}`,
+      folder: `${rootFolder}/${subFolder}`,
       apiKey: process.env.CLOUDINARY_API_KEY
     })
   } catch (error) {
@@ -40,18 +50,25 @@ export async function POST(req) {
       return NextResponse.json({ error: 'Faltan parámetros' }, { status: 400 })
     }
 
-    // Asegurar que el folder siempre sea el de la galería
+    // Validar folders permitidos
     const rootFolder = process.env.CLOUDINARY_ROOT_FOLDER
     const galleryFolder = process.env.CLOUDINARY_GALLERY_FOLDER
-    const secureFolder = `${rootFolder}/${galleryFolder}`
+    const courseFolder = process.env.CLOUDINARY_COURSE_FOLDER
+    const validFolders = [
+      `${rootFolder}/${galleryFolder}`,
+      `${rootFolder}/${courseFolder}`
+    ]
 
-    if (paramsToSign.folder && paramsToSign.folder !== secureFolder) {
+    if (paramsToSign.folder && !validFolders.includes(paramsToSign.folder)) {
       return NextResponse.json({ error: 'Folder no permitido' }, { status: 400 })
     }
 
     const signature = cloudinary.utils.api_sign_request(paramsToSign, process.env.CLOUDINARY_API_SECRET)
 
-    return NextResponse.json({ signature })
+    return NextResponse.json({ 
+      signature,
+      apiKey: process.env.CLOUDINARY_API_KEY
+    })
   } catch (error) {
     console.error('Error al generar firma de Cloudinary:', error)
     return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 })
