@@ -120,7 +120,49 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
     } catch (err) {
       console.error(err)
       setIsUploading(false)
-      alert(`Error abriendo Cloudinary: ${err.message || err}`)
+      alert('Error abriendo el uploader')
+    }
+  }
+
+  const handleDeleteCourseImage = async (isNewCourse) => {
+    const currentImage = isNewCourse ? newCourseData.image : editingCourse.image;
+    if (!currentImage) return;
+
+    if (!currentImage.includes('cloudinary.com')) {
+      if (isNewCourse) setNewCourseData({ ...newCourseData, image: '' });
+      else setEditingCourse({ ...editingCourse, image: '' });
+      return;
+    }
+
+    if (!window.confirm('¿Seguro que deseas eliminar esta imagen de Cloudinary de forma permanente?')) return;
+
+    try {
+      setIsUploading(true);
+      const url = currentImage;
+      const uploadIndex = url.indexOf('/upload/');
+      if (uploadIndex === -1) throw new Error('URL de Cloudinary no válida');
+      
+      let path = url.substring(uploadIndex + 8);
+      if (path.match(/^v\d+\//)) {
+        path = path.replace(/^v\d+\//, '');
+      }
+      const publicId = path.split('.').slice(0, -1).join('.') || path;
+
+      const res = await fetch(`/api/admin/cloudinary?public_id=${encodeURIComponent(publicId)}`, {
+        method: 'DELETE',
+      });
+
+      if (!res.ok) throw new Error('Error al borrar la imagen en Cloudinary');
+
+      if (isNewCourse) setNewCourseData({ ...newCourseData, image: '' });
+      else setEditingCourse({ ...editingCourse, image: '' });
+      
+      alert('Imagen eliminada de Cloudinary con éxito. Recuerda guardar el curso para actualizar la base de datos.');
+    } catch (error) {
+      console.error(error);
+      alert(error.message || 'Error al eliminar la imagen');
+    } finally {
+      setIsUploading(false);
     }
   }
 
@@ -1175,6 +1217,13 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
                         <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Imagen de Portada</label>
                         <div className="flex gap-2">
                           <input type="text" value={editingCourse.image || ''} onChange={(e) => setEditingCourse({...editingCourse, image: e.target.value})} className="flex-1 px-4 py-2 rounded-xl border focus:border-[#9187BA] focus:ring-1 focus:ring-[#9187BA] outline-none" placeholder="/assets/foto.jpg o URL" />
+                          
+                          {editingCourse.image && (
+                            <button type="button" disabled={isUploading} onClick={() => handleDeleteCourseImage(false)} className="bg-red-500 text-white px-3 py-2 rounded-xl text-sm font-bold hover:bg-red-600 transition flex items-center justify-center disabled:opacity-50" title="Borrar imagen de Cloudinary">
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          )}
+
                           <button type="button" disabled={isUploading} onClick={() => openCloudinaryCourseWidget(false)} className="bg-[#B681AE] text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-[#9187BA] transition flex items-center gap-2 disabled:opacity-50">
                             <UploadCloud className="w-4 h-4" />
                             {isUploading ? '...' : 'Subir'}
@@ -1524,6 +1573,13 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
                   <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Imagen de Portada</label>
                   <div className="flex gap-2">
                     <input type="text" value={newCourseData.image || ''} onChange={(e) => setNewCourseData({...newCourseData, image: e.target.value})} className="flex-1 px-4 py-2 rounded-xl border focus:border-[#9187BA] focus:ring-1 focus:ring-[#9187BA] outline-none" placeholder="/assets/foto.jpg o URL" />
+                    
+                    {newCourseData.image && (
+                      <button type="button" disabled={isUploading} onClick={() => handleDeleteCourseImage(true)} className="bg-red-500 text-white px-3 py-2 rounded-xl text-sm font-bold hover:bg-red-600 transition flex items-center justify-center disabled:opacity-50" title="Borrar imagen de Cloudinary">
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
+
                     <button type="button" disabled={isUploading} onClick={() => openCloudinaryCourseWidget(true)} className="bg-[#B681AE] text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-[#9187BA] transition flex items-center gap-2 disabled:opacity-50">
                       <UploadCloud className="w-4 h-4" />
                       {isUploading ? '...' : 'Subir'}
