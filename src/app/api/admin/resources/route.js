@@ -12,7 +12,7 @@ export async function POST(request) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
     }
 
-    const { name, type, cloudflareKey, isDownloadable, courseId, lessonId, instanceId, overridesResourceId } = await request.json()
+    const { name, description, type, cloudflareKey, isDownloadable, courseId, lessonId, instanceId, overridesResourceId } = await request.json()
 
     if (!name || !type || !cloudflareKey) {
       return NextResponse.json({ error: 'Faltan parámetros' }, { status: 400 })
@@ -22,6 +22,7 @@ export async function POST(request) {
     const resource = await prisma.resource.create({
       data: {
         name,
+        description: description || null,
         type,
         cloudflareKey,
         isDownloadable: isDownloadable || false,
@@ -46,7 +47,7 @@ export async function PUT(request) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
     }
 
-    const { id, name, overridesResourceId } = await request.json()
+    const { id, name, description, overridesResourceId } = await request.json()
 
     if (!id || !name) {
       return NextResponse.json({ error: 'Faltan parámetros' }, { status: 400 })
@@ -56,6 +57,7 @@ export async function PUT(request) {
       where: { id },
       data: {
         name,
+        description: description || null,
         overridesResourceId: overridesResourceId || null
       }
     })

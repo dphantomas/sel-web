@@ -150,6 +150,7 @@ model Lesson {
 model Resource {
   id             String  @id @default(cuid())
   name           String
+  description    String? @db.Text
   type           String // AUDIO, PDF, etc.
   cloudflareKey  String
   isDownloadable Boolean @default(false)

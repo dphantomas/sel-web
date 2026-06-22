@@ -47,18 +47,28 @@ export default function UserResourcesList({ resources }) {
           key={resource.id}
           onClick={() => handleOpenResource(resource)}
           disabled={loadingId === resource.id}
-          className="bg-white/80 backdrop-blur-md rounded-[24px] p-6 text-left shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-white/40 hover:shadow-[0_12px_30px_rgba(0,0,0,0.12)] hover:-translate-y-1 transition-all duration-300 group disabled:opacity-50 flex flex-col justify-between"
+          className="bg-white/80 backdrop-blur-md rounded-[24px] p-6 text-left shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-white/40 hover:shadow-[0_12px_30px_rgba(0,0,0,0.12)] hover:-translate-y-1 transition-all duration-300 group disabled:opacity-50 flex flex-col justify-between h-full relative overflow-hidden"
         >
-          <div className="flex items-start gap-4 mb-4">
-            <div className="p-3 bg-[#B681AE]/10 rounded-xl group-hover:bg-[#B681AE]/20 transition-colors">
+          {resource.courseInstanceId && (
+            <div className="absolute top-0 right-0 bg-blue-500 text-white text-[10px] font-bold px-3 py-1 rounded-bl-xl tracking-wider uppercase z-10 shadow-sm">
+              Exclusivo Instancia
+            </div>
+          )}
+          <div className="flex items-start gap-4 mb-4 mt-2">
+            <div className="p-3 bg-[#B681AE]/10 rounded-xl group-hover:bg-[#B681AE]/20 transition-colors shrink-0">
               {getIcon(resource.type)}
             </div>
-            <div className="flex-1">
-              <h3 className="text-[#33275f] font-bold text-lg leading-tight line-clamp-2">
+            <div className="flex-1 min-w-0">
+              <h3 className="text-[#33275f] font-bold text-lg leading-tight line-clamp-2 pr-2">
                 {resource.name}
               </h3>
-              <p className="text-xs font-bold text-[#B681AE] mt-2 tracking-wide uppercase">
-                {resource.course?.title}
+              {resource.description && (
+                <p className="text-sm text-gray-600 mt-2 line-clamp-3 leading-snug">
+                  {resource.description}
+                </p>
+              )}
+              <p className="text-xs font-bold text-[#B681AE] mt-3 tracking-wide uppercase truncate pr-2">
+                {resource.courseTitle}
               </p>
             </div>
           </div>

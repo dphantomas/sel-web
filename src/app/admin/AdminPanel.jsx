@@ -171,6 +171,8 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
   const [overrideResourceId, setOverrideResourceId] = useState('')
   const [selectedFile, setSelectedFile] = useState(null)
   const [newResourceName, setNewResourceName] = useState('')
+  const [newResourceDescription, setNewResourceDescription] = useState('')
+  const [newResourceInstanceId, setNewResourceInstanceId] = useState('')
   const [previewingId, setPreviewingId] = useState(null)
   const resourceInputRef = useRef(null)
 
@@ -186,6 +188,8 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
   const handleCancelFileSelect = () => {
     setSelectedFile(null)
     setNewResourceName('')
+    setNewResourceDescription('')
+    setNewResourceInstanceId('')
     setOverrideResourceId('')
     if (resourceInputRef.current) resourceInputRef.current.value = ''
   }
@@ -228,10 +232,12 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: newResourceName.trim() || selectedFile.name,
+          description: newResourceDescription.trim() || null,
           type: selectedFile.type,
           cloudflareKey,
           isDownloadable,
           courseId: editingCourse.id,
+          instanceId: newResourceInstanceId || null,
           overridesResourceId: overrideResourceId || null
         })
       })
@@ -374,6 +380,7 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
     setEditingResourceId(res.id)
     setEditResourceData({
       name: res.name,
+      description: res.description || '',
       overridesResourceId: res.overridesResourceId || ''
     })
   }
@@ -388,6 +395,7 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
         body: JSON.stringify({
           id: editingResourceId,
           name: editResourceData.name,
+          description: editResourceData.description || null,
           overridesResourceId: editResourceData.overridesResourceId || null
         })
       })
@@ -1370,6 +1378,39 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
                           </div>
 
                           <div>
+                            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Descripción (Opcional)</label>
+                            <textarea 
+                              value={newResourceDescription} 
+                              onChange={(e) => setNewResourceDescription(e.target.value)}
+                              placeholder="Breve descripción del archivo (de qué trata, qué incluye, etc.)"
+                              className="w-full px-4 py-2 rounded-xl border outline-none focus:ring-2 focus:ring-[#B681AE]"
+                              disabled={isUploading}
+                              rows={2}
+                            />
+                          </div>
+
+                          {editingCourse.instances && editingCourse.instances.length > 0 && (
+                            <div>
+                              <label className="block text-sm font-bold text-[#33275f] mb-1">
+                                ¿Asignar a una instancia específica? (Opcional)
+                              </label>
+                              <select 
+                                value={newResourceInstanceId} 
+                                onChange={e => setNewResourceInstanceId(e.target.value)}
+                                className="w-full px-3 py-2 rounded-xl border outline-none text-sm text-gray-700 bg-white focus:ring-2 focus:ring-[#B681AE]"
+                                disabled={isUploading}
+                              >
+                                <option value="">-- Curso Base (Lo ven todas las instancias) --</option>
+                                {editingCourse.instances.map(inst => (
+                                  <option key={inst.id} value={inst.id}>
+                                    Instancia: {new Date(inst.startDate).toLocaleDateString('es-AR', { month: 'long', year: 'numeric' })} ({inst.location})
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+                          )}
+
+                          <div>
                             <label className="block text-sm font-bold text-[#33275f] mb-1">
                               ¿Reemplaza a un archivo anterior? (Opcional)
                             </label>
@@ -1431,6 +1472,15 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
                                     />
                                   </div>
                                   <div>
+                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Descripción</label>
+                                    <textarea 
+                                      value={editResourceData.description} 
+                                      onChange={(e) => setEditResourceData({...editResourceData, description: e.target.value})}
+                                      className="w-full px-3 py-2 rounded-lg border outline-none text-sm"
+                                      rows={2}
+                                    />
+                                  </div>
+                                  <div>
                                     <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Reemplaza a un archivo anterior</label>
                                     <select 
                                       value={editResourceData.overridesResourceId} 
@@ -1459,10 +1509,16 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
                             <div key={res.id} className="border border-gray-100 rounded-xl p-4 flex justify-between items-center bg-white shadow-sm hover:border-[#9187BA] transition group">
                               <div className="flex-1 min-w-0 pr-4">
                                 <p className="font-bold text-[#33275f] truncate">{res.name}</p>
-                                <div className="flex gap-4 text-xs text-gray-500 mt-1">
+                                {res.description && <p className="text-xs text-gray-600 line-clamp-1 mt-0.5">{res.description}</p>}
+                                <div className="flex gap-4 text-xs text-gray-500 mt-1 flex-wrap">
                                   <span>📄 {res.type}</span>
                                   {res.isDownloadable && <span className="text-green-600 font-bold">Descargable</span>}
                                   {res.overridesResourceId && <span className="text-[#B681AE] font-bold">Reemplaza un archivo</span>}
+                                  {res.courseInstanceId && (
+                                    <span className="text-blue-600 font-bold">
+                                      Exclusivo Instancia
+                                    </span>
+                                  )}
                                 </div>
                               </div>
                               <div className="flex items-center gap-2">

@@ -49,16 +49,30 @@ export default async function DashboardTalleresPage() {
     ...user.unlockedInstances.map(ui => ui.courseInstance.courseId)
   ])
 
-  // Obtener los recursos de todos esos cursos
-  const coursesWithResources = await prisma.course.findMany({
-    where: { id: { in: Array.from(courseIds) } },
-    include: { resources: true }
+  // Juntar todos los IDs de instancias a los que tiene acceso
+  const instanceIds = new Set(user.unlockedInstances.map(ui => ui.courseInstanceId))
+
+  // Obtener los recursos de todos esos cursos Y validar instancias
+  const allResourcesRaw = await prisma.resource.findMany({
+    where: {
+      OR: [
+        { courseId: { in: Array.from(courseIds) }, courseInstanceId: null },
+        { courseInstanceId: { in: Array.from(instanceIds) } }
+      ]
+    },
+    include: {
+      course: { select: { title: true } },
+      courseInstance: {
+        include: { course: { select: { title: true } } }
+      }
+    }
   })
 
-  // Aplanar todos los recursos y aplicar lógica de overrides (reemplazos)
-  const allResources = coursesWithResources.flatMap(c => 
-    c.resources.map(r => ({ ...r, course: { title: c.title } }))
-  )
+  // Aplanar recursos agregando title manual
+  const allResources = allResourcesRaw.map(r => ({
+    ...r,
+    courseTitle: r.courseInstance?.course?.title || r.course?.title || 'Recurso'
+  }))
   
   // Encontrar IDs de recursos que han sido reemplazados por uno más nuevo
   const overriddenIds = new Set(allResources.map(r => r.overridesResourceId).filter(Boolean))
