@@ -10,7 +10,6 @@ import UserDropdown from './UserDropdown'
 const NAV_ES = [
   { href: '/',               label: 'Inicio' },
   { href: '/talleres/',      label: 'Talleres' },
-  { href: '/cursos/', label: 'Cursos Dinámicos' },
   { href: '/blog/',          label: 'Blog' },
   { href: '/videos/',        label: 'Videos' },
   { href: '/quienes-somos/', label: 'Quiénes Somos' },
@@ -22,7 +21,6 @@ const NAV_ES = [
 const NAV_EN = [
   { href: '/en/home/',         label: 'Home' },
   { href: '/en/workshops/',    label: 'Workshops' },
-  { href: '/en/dynamic-courses/', label: 'Dynamic Courses' },
   { href: '/en/blog/',         label: 'Blog' },
   { href: '/en/videos/',       label: 'Videos' },
   { href: '/en/about-us/',     label: 'About Us' },
