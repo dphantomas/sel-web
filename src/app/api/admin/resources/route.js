@@ -47,7 +47,7 @@ export async function PUT(request) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
     }
 
-    const { id, name, description, overridesResourceId } = await request.json()
+    const { id, name, description, overridesResourceId, instanceId } = await request.json()
 
     if (!id || !name) {
       return NextResponse.json({ error: 'Faltan parámetros' }, { status: 400 })
@@ -58,6 +58,7 @@ export async function PUT(request) {
       data: {
         name,
         description: description || null,
+        courseInstanceId: instanceId || null,
         overridesResourceId: overridesResourceId || null
       }
     })

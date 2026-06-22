@@ -381,6 +381,7 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
     setEditResourceData({
       name: res.name,
       description: res.description || '',
+      courseInstanceId: res.courseInstanceId || '',
       overridesResourceId: res.overridesResourceId || ''
     })
   }
@@ -396,6 +397,7 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
           id: editingResourceId,
           name: editResourceData.name,
           description: editResourceData.description || null,
+          instanceId: editResourceData.courseInstanceId || null,
           overridesResourceId: editResourceData.overridesResourceId || null
         })
       })
@@ -1480,6 +1482,25 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
                                       rows={2}
                                     />
                                   </div>
+                                  {editingCourse.instances && editingCourse.instances.length > 0 && (
+                                    <div>
+                                      <label className="block text-xs font-bold text-gray-500 uppercase mb-1">
+                                        Asignar a una instancia específica
+                                      </label>
+                                      <select 
+                                        value={editResourceData.courseInstanceId || ''} 
+                                        onChange={e => setEditResourceData({...editResourceData, courseInstanceId: e.target.value})}
+                                        className="w-full px-3 py-2 rounded-lg border outline-none text-sm bg-white focus:ring-2 focus:ring-[#B681AE]"
+                                      >
+                                        <option value="">-- Curso Base (Lo ven todas las instancias) --</option>
+                                        {editingCourse.instances.map(inst => (
+                                          <option key={inst.id} value={inst.id}>
+                                            Instancia: {new Date(inst.startDate).toLocaleDateString('es-AR', { month: 'long', year: 'numeric' })} ({inst.location})
+                                          </option>
+                                        ))}
+                                      </select>
+                                    </div>
+                                  )}
                                   <div>
                                     <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Reemplaza a un archivo anterior</label>
                                     <select 
