@@ -24,7 +24,7 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
   
   // Estados para modales de edición/creación
   const [editingUser, setEditingUser] = useState(null)
-  const [userTab, setUserTab] = useState('data') // 'data' | 'access'
+  const [userTab, setUserTab] = useState('data') // 'data' | 'access' | 'resources'
   const [editImagePreview, setEditImagePreview] = useState(null)
   const editFileInputRef = useRef(null)
 
@@ -156,14 +156,45 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
 
       if (isNewCourse) setNewCourseData({ ...newCourseData, image: '' });
       else setEditingCourse({ ...editingCourse, image: '' });
+  }
+
+  const getUserResources = () => {
+    if (!editingUser) return []
+    const courseIds = new Set(editingUser.unlockedCourses?.map(uc => uc.courseId) || [])
+    const instanceIds = new Set(editingUser.unlockedInstances?.map(ui => ui.courseInstanceId) || [])
+    
+    // Si tiene instancia, implícitamente tiene acceso al curso base
+    editingUser.unlockedInstances?.forEach(ui => {
+      const course = courses.find(c => c.instances?.some(inst => inst.id === ui.courseInstanceId))
+      if (course) courseIds.add(course.id)
+    })
+    
+    const accessibleResourcesRaw = []
+    
+    courses.forEach(course => {
+      const hasCourse = courseIds.has(course.id)
       
-      alert('Imagen eliminada de Cloudinary con éxito. Recuerda guardar el curso para actualizar la base de datos.');
-    } catch (error) {
-      console.error(error);
-      alert(error.message || 'Error al eliminar la imagen');
-    } finally {
-      setIsUploading(false);
-    }
+      if (hasCourse && course.resources) {
+        course.resources.forEach(r => {
+          if (!r.courseInstanceId) {
+            accessibleResourcesRaw.push({ ...r, courseTitle: course.title })
+          }
+        })
+      }
+      
+      if (course.instances) {
+        course.instances.forEach(inst => {
+          if (instanceIds.has(inst.id) && inst.resources) {
+            inst.resources.forEach(r => {
+              accessibleResourcesRaw.push({ ...r, courseTitle: course.title, isInstanceExclusive: true })
+            })
+          }
+        })
+      }
+    })
+    
+    const overriddenIds = new Set(accessibleResourcesRaw.map(r => r.overridesResourceId).filter(Boolean))
+    return accessibleResourcesRaw.filter(r => !overriddenIds.has(r.id))
   }
 
   // =================== LOGICA RECURSOS ========================
@@ -897,6 +928,12 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
                   >
                     Talleres y Accesos
                   </button>
+                  <button 
+                    onClick={() => setUserTab('resources')} 
+                    className={`pb-2 text-sm font-bold border-b-2 transition ${userTab === 'resources' ? 'border-[#33275f] text-[#33275f]' : 'border-transparent text-gray-400 hover:text-gray-600'}`}
+                  >
+                    Recursos
+                  </button>
                 </div>
               </div>
               <button onClick={() => setEditingUser(null)} className="text-gray-400 hover:text-gray-700 bg-gray-100 hover:bg-gray-200 p-2 rounded-full transition">
@@ -1107,6 +1144,34 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
                   })}
                 </div>
               </div>
+              )}
+
+              {userTab === 'resources' && (
+                <div className="max-w-3xl mx-auto bg-gray-50/50 rounded-2xl border border-gray-100 p-6 flex flex-col h-full">
+                  <h3 className="text-[#33275f] font-bold text-lg mb-2">Recursos Disponibles</h3>
+                  <p className="text-sm text-gray-500 mb-6">Esta es la lista final de archivos (PDFs, Audios, etc.) que el usuario puede ver en su plataforma basándose en sus accesos.</p>
+                  
+                  <div className="space-y-4 flex-1 overflow-y-auto pr-2">
+                    {(() => {
+                      const userResources = getUserResources()
+                      if (userResources.length === 0) {
+                        return <p className="text-sm text-gray-500 text-center py-8">El usuario no tiene acceso a ningún recurso aún.</p>
+                      }
+                      return userResources.map(res => (
+                        <div key={res.id} className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
+                          <div className="min-w-0 flex-1">
+                            <p className="font-bold text-[#33275f] truncate">{res.name}</p>
+                            <div className="flex gap-4 text-xs text-gray-500 mt-1 flex-wrap">
+                              <span>📄 {res.type}</span>
+                              <span className="text-[#B681AE] font-bold uppercase">{res.courseTitle}</span>
+                              {res.isInstanceExclusive && <span className="text-blue-600 font-bold">Instancia</span>}
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    })()}
+                  </div>
+                </div>
               )}
 
             </div>
