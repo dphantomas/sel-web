@@ -69,8 +69,11 @@ export default function VisorPage({ params }) {
   }
 
   // Si el recurso es explícitamente descargable, o es de otro tipo (ej. Word, Excel) que no soportamos ver online
-  const isPDF = resource?.type?.toLowerCase().includes('pdf')
-  const isAudio = resource?.type?.toLowerCase().includes('audio')
+  const typeStr = resource?.type?.toLowerCase() || ''
+  const nameStr = resource?.name?.toLowerCase() || ''
+  
+  const isPDF = typeStr.includes('pdf') || nameStr.endsWith('.pdf')
+  const isAudio = typeStr.includes('audio') || nameStr.endsWith('.mp3') || nameStr.endsWith('.wav') || nameStr.endsWith('.ogg')
 
   if (!isPDF && !isAudio) {
     // Si no es un formato protegido en visor, lo descargamos/abrimos directamente

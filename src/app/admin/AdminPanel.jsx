@@ -265,7 +265,7 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
       }
 
       // 3. Guardar en BD
-      const isDownloadable = selectedFile.type.includes('pdf') || selectedFile.type.includes('zip')
+      const isDownloadable = selectedFile.type.includes('zip') || selectedFile.type.includes('rar')
       const dbRes = await fetch('/api/admin/resources', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
