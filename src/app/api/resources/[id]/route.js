@@ -63,7 +63,12 @@ export async function GET(request, { params }) {
     // El link de lectura expira en 2 horas (por si es un video o audio largo)
     const signedUrl = await getSignedUrl(s3Client, command, { expiresIn: 7200 })
 
-    return NextResponse.json({ url: signedUrl, isDownloadable: resource.isDownloadable })
+    return NextResponse.json({ 
+      url: signedUrl, 
+      isDownloadable: resource.isDownloadable,
+      type: resource.type,
+      name: resource.name
+    })
 
   } catch (error) {
     console.error('Error generando link de recurso:', error)

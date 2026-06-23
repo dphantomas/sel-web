@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { DownloadCloud, FileText, Headphones, PlayCircle, Folder } from 'lucide-react'
 
 export default function UserResourcesList({ resources }) {
@@ -21,23 +22,12 @@ export default function UserResourcesList({ resources }) {
     return <Folder className="w-6 h-6 text-gray-400" />
   }
 
-  const handleOpenResource = async (resource) => {
-    setLoadingId(resource.id)
-    try {
-      const res = await fetch(`/api/resources/${resource.id}`)
-      if (!res.ok) {
-        const data = await res.json()
-        throw new Error(data.error || 'No se pudo cargar el recurso')
-      }
-      const { url } = await res.json()
-      
-      // Abrir en nueva pestaña
-      window.open(url, '_blank')
-    } catch (error) {
-      alert(error.message)
-    } finally {
-      setLoadingId(null)
-    }
+  const router = useRouter()
+
+  const handleOpenResource = (resource) => {
+    // Si el recurso no es descargable y es PDF o Audio, vamos al visor seguro
+    // Opcionalmente podemos enviar todo al visor y que el visor decida, lo cual es más simple y limpio:
+    router.push(`/visor/${resource.id}`)
   }
 
   return (
