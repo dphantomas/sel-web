@@ -343,6 +343,7 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
   
   const [editingResourceId, setEditingResourceId] = useState(null)
   const [editResourceData, setEditResourceData] = useState({ name: '', overridesResourceId: '' })
+  const [editSelectedFile, setEditSelectedFile] = useState(null)
 
   const handleCreateInstance = async (e) => {
     e.preventDefault()
@@ -423,12 +424,47 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
       courseInstanceId: res.courseInstanceId || '',
       overridesResourceId: res.overridesResourceId || ''
     })
+    setEditSelectedFile(null)
   }
 
   const handleEditResourceSubmit = async (e) => {
     e.preventDefault()
     setIsSaving(true)
     try {
+      let cloudflareKey = null
+      let newType = null
+
+      if (editSelectedFile) {
+        // 1. Pedir URL firmada
+        const urlRes = await fetch('/api/admin/upload-url', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            fileName: editSelectedFile.name, 
+            fileType: editSelectedFile.type,
+            folder: editingCourse?.slug || 'varios'
+          })
+        })
+
+        if (!urlRes.ok) throw new Error('Error al obtener link de subida')
+        const { uploadUrl, cloudflareKey: newKey } = await urlRes.json()
+
+        // 2. Subir archivo a R2 (S3) directamente
+        const uploadRes = await fetch(uploadUrl, {
+          method: 'PUT',
+          headers: { 'Content-Type': editSelectedFile.type },
+          body: editSelectedFile
+        })
+
+        if (!uploadRes.ok) {
+          const errorText = await uploadRes.text()
+          throw new Error(`Error de la nube (${uploadRes.status}): ${errorText.substring(0, 100)}`)
+        }
+
+        cloudflareKey = newKey
+        newType = editSelectedFile.type
+      }
+
       const res = await fetch(`/api/admin/resources`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -437,7 +473,9 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
           name: editResourceData.name,
           description: editResourceData.description || null,
           instanceId: editResourceData.courseInstanceId || null,
-          overridesResourceId: editResourceData.overridesResourceId || null
+          overridesResourceId: editResourceData.overridesResourceId || null,
+          cloudflareKey,
+          type: newType
         })
       })
 
@@ -1554,6 +1592,17 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
                                       className="w-full px-3 py-2 rounded-lg border outline-none text-sm"
                                       rows={2}
                                     />
+                                  </div>
+                                  <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                      Reemplazar Archivo (Opcional)
+                                    </label>
+                                    <input 
+                                      type="file" 
+                                      onChange={(e) => setEditSelectedFile(e.target.files[0])}
+                                      className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-[#33275f]/5 file:text-[#33275f] hover:file:bg-[#33275f]/10"
+                                    />
+                                    <p className="text-xs text-gray-400 mt-1">Si seleccionas un archivo, el anterior será eliminado permanentemente.</p>
                                   </div>
                                   {editingCourse.instances && editingCourse.instances.length > 0 && (
                                     <div>

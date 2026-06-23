@@ -47,20 +47,46 @@ export async function PUT(request) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
     }
 
-    const { id, name, description, overridesResourceId, instanceId } = await request.json()
+    const { id, name, description, overridesResourceId, instanceId, cloudflareKey, type } = await request.json()
 
     if (!id || !name) {
       return NextResponse.json({ error: 'Faltan parámetros' }, { status: 400 })
     }
 
+    // Si se sube un nuevo archivo, borramos el viejo
+    if (cloudflareKey) {
+      const oldResource = await prisma.resource.findUnique({ where: { id } })
+      if (oldResource && oldResource.cloudflareKey) {
+        const bucketName = process.env.R2_BUCKET_NAME
+        if (bucketName) {
+          try {
+            const command = new DeleteObjectCommand({
+              Bucket: bucketName,
+              Key: oldResource.cloudflareKey,
+            })
+            await s3Client.send(command)
+          } catch (e) {
+            console.error('Error borrando archivo viejo de R2:', e)
+          }
+        }
+      }
+    }
+
+    const dataToUpdate = {
+      name,
+      description: description || null,
+      courseInstanceId: instanceId || null,
+      overridesResourceId: overridesResourceId || null
+    }
+
+    if (cloudflareKey) {
+      dataToUpdate.cloudflareKey = cloudflareKey
+      dataToUpdate.type = type
+    }
+
     const updatedResource = await prisma.resource.update({
       where: { id },
-      data: {
-        name,
-        description: description || null,
-        courseInstanceId: instanceId || null,
-        overridesResourceId: overridesResourceId || null
-      }
+      data: dataToUpdate
     })
 
     return NextResponse.json(updatedResource)
