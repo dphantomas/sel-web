@@ -1475,8 +1475,22 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
 
                     {selectedFile && (
                       <div className="mb-6 p-5 bg-blue-50/50 rounded-xl border border-blue-100">
-                        <h4 className="font-bold text-[#33275f] text-sm mb-3">Preparar Subida</h4>
+                        <div className="flex justify-between items-center mb-3">
+                          <h4 className="font-bold text-[#33275f] text-sm">Preparar Subida</h4>
+                          <span className="text-xs bg-[#B681AE]/20 text-[#B681AE] font-bold px-2 py-1 rounded">
+                            {selectedFile.name}
+                          </span>
+                        </div>
                         <div className="space-y-4">
+                          <div>
+                            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Cambiar archivo seleccionado</label>
+                            <input 
+                              type="file" 
+                              onChange={handleFileSelect}
+                              disabled={isUploading}
+                              className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-[#33275f]/5 file:text-[#33275f] hover:file:bg-[#33275f]/10"
+                            />
+                          </div>
                           <div>
                             <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Nombre Público del Archivo</label>
                             <input 
@@ -1564,8 +1578,8 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
 
                     <div className="space-y-3">
                       {!editingCourse.resources || editingCourse.resources.length === 0 ? (
-                        <p className="text-gray-500 text-sm text-center py-8 bg-gray-50 rounded-xl border border-dashed border-gray-200">
-                          No hay archivos subidos. Los audios y PDFs que subas aparecerán aquí y estarán protegidos en la bóveda.
+                        <p className="text-gray-500 text-sm text-center py-4 italic">
+                          No hay archivos en este curso.
                         </p>
                       ) : (
                         editingCourse.resources.map(res => {
