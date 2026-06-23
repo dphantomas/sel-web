@@ -1475,21 +1475,32 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
 
                     {selectedFile && (
                       <div className="mb-6 p-5 bg-blue-50/50 rounded-xl border border-blue-100">
-                        <div className="flex justify-between items-center mb-3">
-                          <h4 className="font-bold text-[#33275f] text-sm">Preparar Subida</h4>
-                          <span className="text-xs bg-[#B681AE]/20 text-[#B681AE] font-bold px-2 py-1 rounded">
-                            {selectedFile.name}
-                          </span>
-                        </div>
+                        <h4 className="font-bold text-[#33275f] text-sm mb-4">Preparar Subida</h4>
                         <div className="space-y-4">
-                          <div>
-                            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Cambiar archivo seleccionado</label>
-                            <input 
-                              type="file" 
-                              onChange={handleFileSelect}
-                              disabled={isUploading}
-                              className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-[#33275f]/5 file:text-[#33275f] hover:file:bg-[#33275f]/10"
-                            />
+                          <div className="bg-white p-3 rounded-xl border border-gray-100 shadow-sm flex items-center justify-between">
+                            <div className="flex flex-col">
+                              <span className="text-xs font-bold text-gray-500 uppercase">Archivo actual</span>
+                              <span className="text-sm font-bold text-[#33275f] truncate max-wxs mt-0.5">
+                                {selectedFile.name}
+                              </span>
+                            </div>
+                            <div>
+                              <button 
+                                type="button" 
+                                onClick={() => document.getElementById('changeFileInput').click()}
+                                disabled={isUploading}
+                                className="text-xs bg-[#B681AE]/10 hover:bg-[#B681AE]/20 text-[#B681AE] px-3 py-2 rounded-lg font-bold transition disabled:opacity-50"
+                              >
+                                Cambiar
+                              </button>
+                              <input 
+                                id="changeFileInput"
+                                type="file" 
+                                className="hidden" 
+                                onChange={handleFileSelect}
+                                disabled={isUploading}
+                              />
+                            </div>
                           </div>
                           <div>
                             <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Nombre Público del Archivo</label>
