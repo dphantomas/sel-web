@@ -156,6 +156,14 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
 
       if (isNewCourse) setNewCourseData({ ...newCourseData, image: '' });
       else setEditingCourse({ ...editingCourse, image: '' });
+      
+      alert('Imagen eliminada de Cloudinary con éxito. Recuerda guardar el curso para actualizar la base de datos.');
+    } catch (error) {
+      console.error(error);
+      alert(error.message || 'Error al eliminar la imagen');
+    } finally {
+      setIsUploading(false);
+    }
   }
 
   const getUserResources = () => {
