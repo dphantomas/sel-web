@@ -532,12 +532,11 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
       })
 
       if (res.ok) {
-        // Refrescar el usuario para obtener sus nuevos accesos completos
-        const userRes = await fetch(`/api/admin/users/${userId}`)
-        if (userRes.ok) {
-          const { user: updatedUser } = await userRes.json()
-          
-          setUsers(users.map(u => u.id === userId ? updatedUser : u))
+        const data = await res.json()
+        const updatedUser = data.user
+        
+        if (updatedUser) {
+          setUsers(prev => prev.map(u => u.id === userId ? updatedUser : u))
           if (editingUser?.id === userId) {
             setEditingUser(updatedUser)
           }

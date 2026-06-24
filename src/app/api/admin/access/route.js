@@ -83,7 +83,15 @@ export async function POST(request) {
       }
     }
 
-    return NextResponse.json({ success: true })
+    const updatedUser = await prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+        unlockedCourses: true,
+        unlockedInstances: true
+      }
+    })
+
+    return NextResponse.json({ success: true, user: updatedUser })
   } catch (error) {
     console.error('Error al actualizar acceso de taller:', error)
     return NextResponse.json({ error: 'Error interno del servidor.' }, { status: 500 })
