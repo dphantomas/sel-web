@@ -769,16 +769,21 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
       {activeTab === 'users' && (
         <>
           <div className="p-6 border-b border-gray-100 bg-white flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div className="relative w-full max-w-md">
-              <input
-                type="text"
-                placeholder="Buscar por nombre, email, teléfono o chispa..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#9187BA] text-gray-800 transition"
-              />
-              <div className="absolute left-3 top-3 text-gray-400">
-                <Search className="w-5 h-5" />
+            <div className="flex items-center gap-4 w-full max-w-2xl">
+              <div className="relative w-full max-w-md">
+                <input
+                  type="text"
+                  placeholder="Buscar por nombre, email, teléfono o chispa..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#9187BA] text-gray-800 transition"
+                />
+                <div className="absolute left-3 top-3 text-gray-400">
+                  <Search className="w-5 h-5" />
+                </div>
+              </div>
+              <div className="text-sm text-gray-500 font-bold whitespace-nowrap bg-gray-100 px-3 py-1.5 rounded-lg border border-gray-200">
+                {filteredUsers.length} {filteredUsers.length === 1 ? 'usuario' : 'usuarios'}
               </div>
             </div>
             <Link
