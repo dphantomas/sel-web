@@ -9,23 +9,10 @@ export default function UserCourseHistory({ instances }) {
     )
   }
 
-  const categoryOrder = {
-    'Curso': 1,
-    'Taller': 2,
-    'Retiro': 3,
-    'Iniciacion': 4,
-    'Activacion': 5
-  }
-
   const sortedInstances = [...instances].sort((a, b) => {
-    const orderA = categoryOrder[a.courseInstance.course?.type] || 99
-    const orderB = categoryOrder[b.courseInstance.course?.type] || 99
-    
-    if (orderA !== orderB) return orderA - orderB
-    
     const dateA = new Date(a.courseInstance.startDate).getTime()
     const dateB = new Date(b.courseInstance.startDate).getTime()
-    return dateA - dateB // más antiguos primero dentro de la misma categoría
+    return dateB - dateA // más recientes primero
   })
 
   return (
