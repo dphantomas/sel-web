@@ -106,7 +106,7 @@ export default async function DashboardTalleresPage() {
           {/* Material de Estudio (Recursos) */}
           <div>
             <div className="flex items-center gap-3 mb-6">
-              <h2 className="text-[#33275f] text-xl font-bold tracking-wide">MATERIAL DE ESTUDIO</h2>
+              <h2 className="text-[#33275f] text-xl font-bold tracking-wide">RECURSOS</h2>
               <span className="bg-[#B681AE]/10 text-[#33275f] text-xs font-bold px-3 py-1 rounded-full">
                 {finalResources.length} Archivos
               </span>
