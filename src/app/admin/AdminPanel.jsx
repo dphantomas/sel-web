@@ -1851,7 +1851,7 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
                 </div>
               </div>
               <div className="mt-6 flex justify-end gap-3">
-                <button type="button" onClick={handleCancelCourseEdit} className="px-4 py-2 rounded-xl text-gray-500 font-bold hover:bg-gray-100 transition">Cancelar</button>
+                <button type="button" onClick={handleCancelCourseEdit} className="px-4 py-2 rounded-xl text-gray-500 font-bold hover:bg-gray-100 transition">Cerrar</button>
                 <button type="submit" disabled={isSaving} className="px-6 py-2 rounded-xl bg-[#B681AE] text-white font-bold hover:bg-[#9187BA] transition disabled:opacity-50">
                   {isSaving ? 'Creando...' : 'Crear Curso'}
                 </button>
