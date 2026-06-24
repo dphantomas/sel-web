@@ -67,7 +67,8 @@ export async function GET(request, { params }) {
       url: signedUrl, 
       isDownloadable: resource.isDownloadable,
       type: resource.type,
-      name: resource.name
+      name: resource.name,
+      cloudflareKey: resource.cloudflareKey
     })
 
   } catch (error) {

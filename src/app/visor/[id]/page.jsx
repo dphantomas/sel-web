@@ -71,9 +71,10 @@ export default function VisorPage({ params }) {
   // Si el recurso es explícitamente descargable, o es de otro tipo (ej. Word, Excel) que no soportamos ver online
   const typeStr = resource?.type?.toLowerCase() || ''
   const nameStr = resource?.name?.toLowerCase() || ''
+  const keyStr = resource?.cloudflareKey?.toLowerCase() || ''
   
-  const isPDF = typeStr.includes('pdf') || nameStr.endsWith('.pdf')
-  const isAudio = typeStr.includes('audio') || nameStr.endsWith('.mp3') || nameStr.endsWith('.wav') || nameStr.endsWith('.ogg')
+  const isPDF = typeStr.includes('pdf') || nameStr.endsWith('.pdf') || keyStr.endsWith('.pdf')
+  const isAudio = typeStr.includes('audio') || nameStr.endsWith('.mp3') || nameStr.endsWith('.wav') || nameStr.endsWith('.ogg') || keyStr.endsWith('.mp3') || keyStr.endsWith('.wav') || keyStr.endsWith('.ogg')
 
   if (!isPDF && !isAudio) {
     // Si no es un formato protegido en visor, lo descargamos/abrimos directamente
