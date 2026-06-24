@@ -57,11 +57,16 @@ export default function Footer() {
         </div>
 
         {/* Copyright */}
-        <p className="text-center" style={{ color: '#33275f', fontSize: '11px' }}>
-          {lang === 'en'
-            ? 'Sanación en Luz® 2023 | All rights reserved.'
-            : 'Sanación en Luz® 2023 | Todos los derechos reservados.'}
-        </p>
+        <div className="flex flex-col items-center gap-2">
+          <p className="text-center" style={{ color: '#33275f', fontSize: '11px' }}>
+            {lang === 'en'
+              ? 'Sanación en Luz® 2023 | All rights reserved.'
+              : 'Sanación en Luz® 2023 | Todos los derechos reservados.'}
+          </p>
+          <a href="/politica-privacidad" className="text-[11px] text-[#33275f]/70 hover:text-[#33275f] underline transition-colors">
+            {lang === 'en' ? 'Privacy Policy & Cookies' : 'Política de Privacidad y Cookies'}
+          </a>
+        </div>
       </div>
     </footer>
   )
