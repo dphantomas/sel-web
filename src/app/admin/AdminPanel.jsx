@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { UploadCloud, User as UserIcon, X, Check, Search, Eye, EyeOff, FileText, CheckCircle, Edit2, Shield, Layout, Trash2, Calendar, Link2, DollarSign, Image as ImageIcon, ChevronDown, ChevronRight } from 'lucide-react'
+import { UploadCloud, User as UserIcon, Users, X, Check, Search, Eye, EyeOff, FileText, CheckCircle, Edit2, Shield, Layout, Trash2, Calendar, Link2, DollarSign, Image as ImageIcon, ChevronDown, ChevronRight } from 'lucide-react'
 import Script from 'next/script'
 import Link from 'next/link'
 import ImageCropperModal from '@/components/ImageCropperModal'
@@ -32,6 +32,9 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
   const [editingCourse, setEditingCourse] = useState(null)
   const [newCourseData, setNewCourseData] = useState({ title: '', slug: '', description: '', shortDescription: '', image: '', type: 'Curso', published: false })
   const [isSaving, setIsSaving] = useState(false)
+
+  const [managingInstanceUsers, setManagingInstanceUsers] = useState(null)
+  const [instanceSearchTerm, setInstanceSearchTerm] = useState('')
 
   // =================== LOGICA LIMPIEZA CLOUDINARY ===================
   const pendingUploadRef = useRef(null)
@@ -1436,6 +1439,9 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
                                 {inst.location && <span className="text-xs text-gray-500">📍 {inst.location}</span>}
                               </div>
                               <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition">
+                                <button onClick={() => setManagingInstanceUsers({ courseId: editingCourse.id, instanceId: inst.id, courseTitle: editingCourse.title, dateStr: new Date(inst.startDate).toLocaleDateString('es-AR', { timeZone: 'UTC' }) })} className="text-[#33275f] hover:bg-[#33275f]/10 p-1.5 rounded-lg transition" title="Gestionar Alumnos">
+                                  <Users className="w-4 h-4" />
+                                </button>
                                 <button onClick={() => startEditInstance(inst)} className="text-[#9187BA] hover:bg-[#9187BA]/10 p-1.5 rounded-lg transition" title="Editar Instancia">
                                   <Edit2 className="w-4 h-4" />
                                 </button>
@@ -1822,6 +1828,100 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL GESTIONAR ALUMNOS DE INSTANCIA */}
+      {managingInstanceUsers && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col">
+            {/* Encabezado */}
+            <div className="p-6 border-b border-gray-100 flex justify-between items-start">
+              <div>
+                <h2 className="text-xl font-bold text-[#33275f]">Alumnos de {managingInstanceUsers.courseTitle}</h2>
+                <p className="text-sm text-gray-500 mt-1">Instancia: {managingInstanceUsers.dateStr}</p>
+              </div>
+              <button 
+                onClick={() => {
+                  setManagingInstanceUsers(null)
+                  setInstanceSearchTerm('')
+                }}
+                className="text-gray-400 hover:text-gray-600 transition"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            {/* Buscador */}
+            <div className="p-4 border-b border-gray-100 bg-gray-50">
+              <div className="relative">
+                <Search className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Buscar alumno por nombre o email..."
+                  value={instanceSearchTerm}
+                  onChange={(e) => setInstanceSearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:border-[#9187BA] focus:ring-1 focus:ring-[#9187BA] transition bg-white"
+                />
+              </div>
+            </div>
+
+            {/* Lista de Alumnos */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-2">
+              {users
+                .filter(u => 
+                  u.firstName?.toLowerCase().includes(instanceSearchTerm.toLowerCase()) ||
+                  u.lastName?.toLowerCase().includes(instanceSearchTerm.toLowerCase()) ||
+                  u.email?.toLowerCase().includes(instanceSearchTerm.toLowerCase())
+                )
+                .sort((a, b) => {
+                  // Sort by enrolled first, then alphabetically
+                  const aUnlocked = a.unlockedInstances?.some(ui => ui.courseInstanceId === managingInstanceUsers.instanceId)
+                  const bUnlocked = b.unlockedInstances?.some(ui => ui.courseInstanceId === managingInstanceUsers.instanceId)
+                  if (aUnlocked && !bUnlocked) return -1
+                  if (!aUnlocked && bUnlocked) return 1
+                  return (a.firstName || '').localeCompare(b.firstName || '')
+                })
+                .map(user => {
+                  const isUnlocked = user.unlockedInstances?.some(ui => ui.courseInstanceId === managingInstanceUsers.instanceId)
+                  const isLoading = updatingId === `${user.id}-${managingInstanceUsers.instanceId}`
+                  
+                  return (
+                    <div key={user.id} className="flex items-center justify-between p-3 border border-gray-100 rounded-xl hover:bg-gray-50 transition">
+                      <div className="flex items-center gap-3">
+                        {user.image ? (
+                          <img src={user.image} alt={user.firstName} className="w-10 h-10 rounded-full object-cover" />
+                        ) : (
+                          <div className="w-10 h-10 rounded-full bg-[#B681AE]/20 flex items-center justify-center text-[#B681AE] font-bold">
+                            {user.firstName?.charAt(0) || ''}{user.lastName?.charAt(0) || ''}
+                          </div>
+                        )}
+                        <div>
+                          <p className="font-bold text-sm text-[#33275f]">{user.firstName} {user.lastName}</p>
+                          <p className="text-xs text-gray-500">{user.email}</p>
+                        </div>
+                      </div>
+                      
+                      <label className="relative inline-flex items-center cursor-pointer shrink-0">
+                        <input 
+                          type="checkbox" 
+                          className="sr-only peer"
+                          checked={isUnlocked || false}
+                          disabled={isLoading}
+                          onChange={() => handleToggleAccess(user.id, managingInstanceUsers.courseId, managingInstanceUsers.instanceId, isUnlocked)}
+                        />
+                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#B681AE]"></div>
+                        {isLoading && (
+                          <span className="absolute inset-0 flex items-center justify-center bg-white/50 rounded-full">
+                            <span className="w-4 h-4 border-2 border-[#33275f] border-t-transparent rounded-full animate-spin"></span>
+                          </span>
+                        )}
+                      </label>
+                    </div>
+                  )
+                })}
+            </div>
           </div>
         </div>
       )}
