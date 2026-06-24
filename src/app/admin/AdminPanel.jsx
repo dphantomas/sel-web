@@ -518,6 +518,20 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
 
   // =================== LOGICA DE ACCESOS ===================
   const handleToggleAccess = async (userId, courseId, instanceId, isCurrentlyUnlocked) => {
+    // 1. Optimistic Update (se refleja en la UI instantáneamente)
+    setUsers(prev => prev.map(u => {
+      if (u.id === userId) {
+        const newU = { ...u }
+        if (!isCurrentlyUnlocked) {
+          newU.unlockedInstances = [...(newU.unlockedInstances || []), { courseInstanceId: instanceId }]
+        } else {
+          newU.unlockedInstances = (newU.unlockedInstances || []).filter(ui => ui.courseInstanceId !== instanceId)
+        }
+        return newU
+      }
+      return u
+    }))
+
     setUpdatingId(`${userId}-${instanceId}`)
     try {
       const res = await fetch('/api/admin/access', {
@@ -544,6 +558,8 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
       } else {
         const errorData = await res.json()
         alert(errorData.error || 'Error al actualizar acceso')
+        // Si falla, recargamos la página o devolvemos al estado original
+        window.location.reload()
       }
     } catch (error) {
       console.error(error)
@@ -731,7 +747,14 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
         (user.sparkName || '').toLowerCase().includes(term)
       )
     })
-    .sort((a, b) => (a.firstName || '').localeCompare(b.firstName || ''))
+    .sort((a, b) => {
+      const nameA = (a.firstName || '').toLowerCase()
+      const nameB = (b.firstName || '').toLowerCase()
+      if (nameA === nameB) {
+        return (a.lastName || '').toLowerCase().localeCompare((b.lastName || '').toLowerCase())
+      }
+      return nameA.localeCompare(nameB)
+    })
 
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
@@ -1881,8 +1904,12 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
                   u.email?.toLowerCase().includes(instanceSearchTerm.toLowerCase())
                 )
                 .sort((a, b) => {
-                  // Orden estricto alfabético
-                  return (a.firstName || '').localeCompare(b.firstName || '')
+                  const nameA = (a.firstName || '').toLowerCase()
+                  const nameB = (b.firstName || '').toLowerCase()
+                  if (nameA === nameB) {
+                    return (a.lastName || '').toLowerCase().localeCompare((b.lastName || '').toLowerCase())
+                  }
+                  return nameA.localeCompare(nameB)
                 })
                 .map(user => {
                   const isUnlocked = user.unlockedInstances?.some(ui => ui.courseInstanceId === managingInstanceUsers.instanceId)
