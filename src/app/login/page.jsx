@@ -97,6 +97,12 @@ function LoginContent() {
             </svg>
             Continuar con Google
           </button>
+          <p className="text-[10px] text-center text-[#666] mt-3">
+            Al iniciar sesión o registrarte, aceptas nuestra{' '}
+            <a href="/politica-privacidad" target="_blank" className="text-[#33275f] font-bold hover:underline">
+              Política de Privacidad
+            </a>.
+          </p>
         </div>
 
         <div className="relative mb-6">

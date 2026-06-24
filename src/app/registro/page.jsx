@@ -21,6 +21,7 @@ export default function RegistroPage() {
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [acceptTerms, setAcceptTerms] = useState(false)
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value })
@@ -32,6 +33,11 @@ export default function RegistroPage() {
 
     if (formData.password !== formData.confirmPassword) {
       setError('Las contraseñas no coinciden.')
+      return
+    }
+
+    if (!acceptTerms) {
+      setError('Debes aceptar la Política de Privacidad para registrarte.')
       return
     }
 
@@ -208,6 +214,27 @@ export default function RegistroPage() {
                 </button>
               </div>
             </div>
+          </div>
+
+          <div className="flex items-start gap-3 mt-4">
+            <div className="flex items-center h-5">
+              <input
+                id="terms"
+                name="terms"
+                type="checkbox"
+                required
+                checked={acceptTerms}
+                onChange={(e) => setAcceptTerms(e.target.checked)}
+                className="w-4 h-4 text-[#9187BA] bg-white border-gray-300 rounded focus:ring-[#9187BA] focus:ring-2"
+              />
+            </div>
+            <label htmlFor="terms" className="text-[11px] text-[#666] leading-tight">
+              Al registrarme, acepto la{' '}
+              <a href="/politica-privacidad" target="_blank" className="text-[#33275f] font-bold hover:underline">
+                Política de Privacidad
+              </a>{' '}
+              y el uso de cookies esenciales para el funcionamiento de la plataforma.
+            </label>
           </div>
 
           <button
