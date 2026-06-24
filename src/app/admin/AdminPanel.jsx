@@ -302,7 +302,20 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
   }
 
   const handlePreviewResource = async (resource) => {
-    window.open(`/visor/${resource.id}`, '_blank')
+    setPreviewingId(resource.id)
+    try {
+      const res = await fetch(`/api/resources/${resource.id}`)
+      if (!res.ok) {
+        const data = await res.json()
+        throw new Error(data.error || 'No se pudo generar la preview')
+      }
+      const { url } = await res.json()
+      window.open(url, '_blank')
+    } catch (error) {
+      alert(error.message)
+    } finally {
+      setPreviewingId(null)
+    }
   }
 
   const handleDeleteResource = async (resourceId) => {
