@@ -1769,7 +1769,7 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
               </div>
               <div className="flex gap-3">
                 <button type="button" onClick={handleCancelCourseEdit} className="px-5 py-2.5 rounded-xl text-gray-600 font-bold hover:bg-gray-200 transition">
-                  Cancelar
+                  Cerrar
                 </button>
                 {courseTab === 'data' && (
                   <button 
