@@ -722,15 +722,17 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
 
 
   // =================== RENDERIZADO ===================
-  const filteredUsers = users.filter((user) => {
-    const term = searchTerm.toLowerCase()
-    return (
-      `${user.firstName} ${user.lastName}`.toLowerCase().includes(term) ||
-      user.email.toLowerCase().includes(term) ||
-      (user.phone || '').toLowerCase().includes(term) ||
-      (user.sparkName || '').toLowerCase().includes(term)
-    )
-  })
+  const filteredUsers = users
+    .filter((user) => {
+      const term = searchTerm.toLowerCase()
+      return (
+        `${user.firstName} ${user.lastName}`.toLowerCase().includes(term) ||
+        user.email.toLowerCase().includes(term) ||
+        (user.phone || '').toLowerCase().includes(term) ||
+        (user.sparkName || '').toLowerCase().includes(term)
+      )
+    })
+    .sort((a, b) => (a.firstName || '').localeCompare(b.firstName || ''))
 
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
@@ -1876,11 +1878,7 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
                   u.email?.toLowerCase().includes(instanceSearchTerm.toLowerCase())
                 )
                 .sort((a, b) => {
-                  // Sort by enrolled first, then alphabetically
-                  const aUnlocked = a.unlockedInstances?.some(ui => ui.courseInstanceId === managingInstanceUsers.instanceId)
-                  const bUnlocked = b.unlockedInstances?.some(ui => ui.courseInstanceId === managingInstanceUsers.instanceId)
-                  if (aUnlocked && !bUnlocked) return -1
-                  if (!aUnlocked && bUnlocked) return 1
+                  // Orden estricto alfabético
                   return (a.firstName || '').localeCompare(b.firstName || '')
                 })
                 .map(user => {
