@@ -748,12 +748,13 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
       )
     })
     .sort((a, b) => {
-      const nameA = (a.firstName || '').toLowerCase()
-      const nameB = (b.firstName || '').toLowerCase()
-      if (nameA === nameB) {
-        return (a.lastName || '').toLowerCase().localeCompare((b.lastName || '').toLowerCase())
+      const nameA = (a.firstName || '').trim()
+      const nameB = (b.firstName || '').trim()
+      const cmp = nameA.localeCompare(nameB, 'es', { sensitivity: 'base' })
+      if (cmp === 0) {
+        return (a.lastName || '').trim().localeCompare((b.lastName || '').trim(), 'es', { sensitivity: 'base' })
       }
-      return nameA.localeCompare(nameB)
+      return cmp
     })
 
   return (
@@ -1904,12 +1905,13 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
                   u.email?.toLowerCase().includes(instanceSearchTerm.toLowerCase())
                 )
                 .sort((a, b) => {
-                  const nameA = (a.firstName || '').toLowerCase()
-                  const nameB = (b.firstName || '').toLowerCase()
-                  if (nameA === nameB) {
-                    return (a.lastName || '').toLowerCase().localeCompare((b.lastName || '').toLowerCase())
+                  const nameA = (a.firstName || '').trim()
+                  const nameB = (b.firstName || '').trim()
+                  const cmp = nameA.localeCompare(nameB, 'es', { sensitivity: 'base' })
+                  if (cmp === 0) {
+                    return (a.lastName || '').trim().localeCompare((b.lastName || '').trim(), 'es', { sensitivity: 'base' })
                   }
-                  return nameA.localeCompare(nameB)
+                  return cmp
                 })
                 .map(user => {
                   const isUnlocked = user.unlockedInstances?.some(ui => ui.courseInstanceId === managingInstanceUsers.instanceId)
