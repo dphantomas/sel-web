@@ -83,7 +83,7 @@ export default function VisorPage({ params }) {
   }
 
   return (
-    <div className="min-h-screen bg-[#F8F7FA] py-8 px-4 sm:px-6 lg:px-8 flex flex-col">
+    <div className="min-h-screen bg-[#F8F7FA] pt-28 pb-8 px-4 sm:px-6 lg:px-8 flex flex-col">
       <div className="max-w-5xl mx-auto w-full mb-8 flex items-center justify-between">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold text-[#33275f]">{resource?.name}</h1>
