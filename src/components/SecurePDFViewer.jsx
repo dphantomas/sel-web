@@ -45,10 +45,7 @@ export default function SecurePDFViewer({ url }) {
     <div className="flex flex-col items-center bg-gray-50 p-4 md:p-8 rounded-2xl border border-gray-200 w-full max-w-4xl mx-auto select-none">
       
       {/* Controles superiores */}
-      <div className="flex items-center justify-between w-full mb-6 bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-        <p className="text-sm font-semibold text-gray-600">
-          Visor Seguro
-        </p>
+      <div className="flex items-center justify-end w-full mb-6 bg-white p-4 rounded-xl shadow-sm border border-gray-100">
         {numPages && (
           <div className="flex items-center gap-4">
             <button
