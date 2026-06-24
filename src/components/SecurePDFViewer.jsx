@@ -44,32 +44,6 @@ export default function SecurePDFViewer({ url }) {
   return (
     <div className="flex flex-col items-center bg-gray-50 p-4 md:p-8 rounded-2xl border border-gray-200 w-full max-w-4xl mx-auto select-none">
       
-      {/* Controles superiores */}
-      <div className="flex items-center justify-end w-full mb-6 bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-        {numPages && (
-          <div className="flex items-center gap-4">
-            <button
-              type="button"
-              disabled={pageNumber <= 1}
-              onClick={previousPage}
-              className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-50 font-medium transition-colors"
-            >
-              Anterior
-            </button>
-            <p className="text-sm text-gray-600 font-medium">
-              Página {pageNumber || (numPages ? 1 : '--')} de {numPages || '--'}
-            </p>
-            <button
-              type="button"
-              disabled={pageNumber >= numPages}
-              onClick={nextPage}
-              className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-50 font-medium transition-colors"
-            >
-              Siguiente
-            </button>
-          </div>
-        )}
-      </div>
 
       {/* Renderizador de PDF */}
       <div 
