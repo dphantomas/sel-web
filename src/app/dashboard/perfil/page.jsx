@@ -43,7 +43,6 @@ export default async function DashboardPerfilPage() {
         {/* Header del Panel */}
         <div className="bg-white/80 backdrop-blur-md rounded-[24px] p-6 md:p-8 shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-white/40 mb-8 flex flex-col md:flex-row items-center justify-between gap-6">
           <div>
-            <span className="text-xs font-bold text-[#9187BA] tracking-widest uppercase">Plataforma LMS</span>
             <h1 className="text-[#33275f] text-2xl md:text-3xl font-bold mt-1">
               Hola, {user.firstName} {user.lastName}
             </h1>

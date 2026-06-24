@@ -7,7 +7,7 @@ import AdminPanel from './AdminPanel'
 import { sortCoursesByAdminPriority } from '@/lib/courseSorting'
 
 export const metadata = {
-  title: 'Administración LMS | Sanación en Luz',
+  title: 'Administración | Sanación en Luz',
   description: 'Panel de control para habilitar cursos y notificar usuarios.'
 }
 

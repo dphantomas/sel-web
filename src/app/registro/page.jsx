@@ -74,7 +74,7 @@ export default function RegistroPage() {
             CREAR CUENTA
           </h2>
           <p className="text-[#666] text-sm mt-2 text-center">
-            Únete a la plataforma LMS de Sanación en Luz
+            Únete a la plataforma de Sanación en Luz
           </p>
           <div className="w-16 h-[2px] bg-[#9187BA] mt-4"></div>
         </div>
