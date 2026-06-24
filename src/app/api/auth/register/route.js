@@ -52,10 +52,10 @@ export async function POST(request) {
     // Crear el usuario
     const newUser = await prisma.user.create({
       data: {
-        firstName,
-        lastName,
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
         email: emailLower,
-        phone: phone || null,
+        phone: phone ? phone.trim() : null,
         passwordHash,
         role: 'Guest' // Rol por defecto
       }

@@ -153,15 +153,15 @@ export async function PUT(req, { params }) {
     const updatedUser = await prisma.user.update({
       where: { id },
       data: {
-        ...(firstName && { firstName }),
-        ...(lastName && { lastName }),
-        phone: phone !== null ? phone : undefined,
+        ...(firstName && { firstName: firstName.trim() }),
+        ...(lastName && { lastName: lastName.trim() }),
+        phone: phone !== null ? phone.trim() : undefined,
         ...(role && { role }),
-        addressLine1: addressLine1 !== null ? addressLine1 : undefined,
-        addressLine2: addressLine2 !== null ? addressLine2 : undefined,
-        zipCode: zipCode !== null ? zipCode : undefined,
-        country: country !== null ? country : undefined,
-        sparkName: sparkName !== null ? sparkName : undefined,
+        addressLine1: addressLine1 !== null ? addressLine1.trim() : undefined,
+        addressLine2: addressLine2 !== null ? addressLine2.trim() : undefined,
+        zipCode: zipCode !== null ? zipCode.trim() : undefined,
+        country: country !== null ? country.trim() : undefined,
+        sparkName: sparkName !== null ? sparkName.trim() : undefined,
         ...(imageUrl !== undefined && { image: imageUrl }),
         ...(forceVerify && { emailVerified: new Date() })
       },

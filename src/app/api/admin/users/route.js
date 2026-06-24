@@ -40,10 +40,10 @@ export async function POST(req) {
     // Crear el usuario
     const newUser = await prisma.user.create({
       data: {
-        firstName,
-        lastName,
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
         email: emailLower,
-        phone: phone || null,
+        phone: phone ? phone.trim() : null,
         passwordHash,
         role: role || 'Participante',
         emailVerified: new Date() // Se da por validado porque lo crea el administrador
