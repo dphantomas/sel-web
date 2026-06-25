@@ -32,8 +32,22 @@ export default function PasskeyManager({ initialAuthenticators }) {
       .then(setIsSupported)
       .catch(() => setIsSupported(false))
 
-    setIsDeviceRegisteredLocally(localStorage.getItem('device_registered') === 'true')
-  }, [])
+    const localId = localStorage.getItem('local_passkey_id')
+    if (localId) {
+      // Verificar si la passkey local sigue existiendo en la DB
+      const exists = initialAuthenticators.some(a => a.credentialID === localId)
+      if (exists) {
+        setIsDeviceRegisteredLocally(true)
+      } else {
+        localStorage.removeItem('local_passkey_id')
+        localStorage.removeItem('device_registered')
+        setIsDeviceRegisteredLocally(false)
+      }
+    } else {
+      // Fallback si no tiene el ID guardado
+      setIsDeviceRegisteredLocally(localStorage.getItem('device_registered') === 'true')
+    }
+  }, [initialAuthenticators])
 
   const showMessage = (type, text) => {
     setMessage({ type, text })
@@ -84,8 +98,9 @@ export default function PasskeyManager({ initialAuthenticators }) {
       }
 
       if (verification.verified) {
-        // Marcar en localStorage para que el login detecte el dispositivo
-        localStorage.setItem('device_registered', 'true')
+        // Marcar en localStorage con el ID exacto
+        localStorage.setItem('local_passkey_id', attResp.id)
+        localStorage.setItem('device_registered', 'true') // legacy para el login general
         setIsDeviceRegisteredLocally(true)
         
         const emailResp = await fetch('/api/auth/webauthn/list-authenticators')
@@ -125,8 +140,10 @@ export default function PasskeyManager({ initialAuthenticators }) {
       const updated = authenticators.filter(a => a.credentialID !== credentialID)
       setAuthenticators(updated)
 
-      // Si no quedan dispositivos, limpiar localStorage
-      if (updated.length === 0) {
+      // Si se borró la passkey vinculada a este navegador, limpiamos el localStorage
+      const localId = localStorage.getItem('local_passkey_id')
+      if (localId === credentialID || updated.length === 0) {
+        localStorage.removeItem('local_passkey_id')
         localStorage.removeItem('device_registered')
         localStorage.removeItem('registered_email')
         setIsDeviceRegisteredLocally(false)
@@ -216,28 +233,37 @@ export default function PasskeyManager({ initialAuthenticators }) {
 
       {/* Botón para agregar dispositivo */}
       <div className="mt-auto pt-4 border-t border-gray-100">
-        {isSupported !== false && !isDeviceRegisteredLocally && (
+        
+        {isDeviceRegisteredLocally && (
+          <div className="w-full flex justify-center items-center gap-2 text-xs font-semibold text-green-700 bg-green-50 py-3 rounded-xl border border-green-200 mb-3">
+            <CheckCircle className="w-4 h-4" />
+            Este dispositivo ya está vinculado
+          </div>
+        )}
+
+        {isSupported !== false && (
           <button
             id="add-biometric-device-btn"
             type="button"
             onClick={handleRegisterDevice}
             disabled={isRegistering}
-            className="w-full flex justify-center items-center gap-2 text-sm font-semibold text-white bg-[#B681AE] hover:bg-[#9187BA] py-3 rounded-xl transition duration-300 shadow-md disabled:opacity-50"
+            className={`w-full flex justify-center items-center gap-2 text-sm font-semibold transition duration-300 rounded-xl py-3 disabled:opacity-50 shadow-md ${
+              isDeviceRegisteredLocally
+                ? 'text-[#33275f] bg-white border border-[#33275f]/20 hover:bg-gray-50'
+                : 'text-white bg-[#B681AE] hover:bg-[#9187BA]'
+            }`}
           >
             {isRegistering ? (
               <Loader2 className="w-4 h-4 animate-spin" />
             ) : (
               <Plus className="w-4 h-4" />
             )}
-            {isRegistering ? 'Configurando Passkey...' : 'Agregar este dispositivo'}
+            {isRegistering 
+              ? 'Configurando Passkey...' 
+              : isDeviceRegisteredLocally 
+                ? 'Vincular otra Passkey en este dispositivo' 
+                : 'Agregar este dispositivo'}
           </button>
-        )}
-
-        {isDeviceRegisteredLocally && (
-          <div className="w-full flex justify-center items-center gap-2 text-xs font-semibold text-green-700 bg-green-50 py-3 rounded-xl border border-green-200">
-            <CheckCircle className="w-4 h-4" />
-            Este dispositivo ya está registrado
-          </div>
         )}
 
         {isSupported === false && (

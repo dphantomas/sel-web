@@ -246,6 +246,14 @@ export default function Navbar() {
                 >
                   Mis talleres
                 </Link>
+                <Link
+                  href="/dashboard/seguridad"
+                  onClick={() => setIsOpen(false)}
+                  className="text-left px-6 py-3 text-sm font-bold transition-colors hover:bg-purple-50 block"
+                  style={{ color: '#33275f', textDecoration: 'none' }}
+                >
+                  Seguridad y Passkeys
+                </Link>
                 {(session?.user?.role === 'Admin' || session?.user?.role === 'Transmisor') && (
                   <Link
                     href="/admin"
