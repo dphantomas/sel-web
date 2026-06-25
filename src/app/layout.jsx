@@ -3,6 +3,7 @@ import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import WhatsAppFloat from '@/components/WhatsAppFloat'
 import AuthProvider from '@/components/AuthProvider'
+import PasskeyPrompt from '@/components/PasskeyPrompt'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 
@@ -51,6 +52,7 @@ export default async function RootLayout({ children }) {
           <main>{children}</main>
           <Footer />
           <WhatsAppFloat />
+          <PasskeyPrompt />
         </AuthProvider>
       </body>
     </html>
