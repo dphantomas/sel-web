@@ -2,7 +2,6 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/db'
-import UserResourcesList from '../UserResourcesList'
 import UserCourseHistory from '../UserCourseHistory'
 
 export const metadata = {
@@ -43,42 +42,7 @@ export default async function DashboardTalleresPage() {
     redirect('/login')
   }
 
-  // Juntar todos los IDs de cursos a los que tiene acceso
-  const courseIds = new Set([
-    ...user.unlockedCourses.map(uc => uc.courseId),
-    ...user.unlockedInstances.map(ui => ui.courseInstance.courseId)
-  ])
 
-  // Juntar todos los IDs de instancias a los que tiene acceso
-  const instanceIds = new Set(user.unlockedInstances.map(ui => ui.courseInstanceId))
-
-  // Obtener los recursos de todos esos cursos Y validar instancias
-  const allResourcesRaw = await prisma.resource.findMany({
-    where: {
-      OR: [
-        { courseId: { in: Array.from(courseIds) }, courseInstanceId: null },
-        { courseInstanceId: { in: Array.from(instanceIds) } }
-      ]
-    },
-    include: {
-      course: { select: { title: true } },
-      courseInstance: {
-        include: { course: { select: { title: true } } }
-      }
-    }
-  })
-
-  // Aplanar recursos agregando title manual
-  const allResources = allResourcesRaw.map(r => ({
-    ...r,
-    courseTitle: r.courseInstance?.course?.title || r.course?.title || 'Recurso'
-  }))
-  
-  // Encontrar IDs de recursos que han sido reemplazados por uno más nuevo
-  const overriddenIds = new Set(allResources.map(r => r.overridesResourceId).filter(Boolean))
-  
-  // Filtrar los recursos que NO están en la lista de reemplazados
-  const finalResources = allResources.filter(r => !overriddenIds.has(r.id))
 
   return (
     <div 
@@ -102,17 +66,6 @@ export default async function DashboardTalleresPage() {
 
         {/* Contenido */}
         <div className="animate-in fade-in slide-in-from-bottom-2 duration-500 space-y-12">
-          {/* Material de Estudio (Recursos) */}
-          <div>
-            <div className="flex items-center gap-3 mb-6">
-              <h2 className="text-[#33275f] text-xl font-bold tracking-wide">RECURSOS</h2>
-              <span className="bg-[#B681AE]/10 text-[#33275f] text-xs font-bold px-3 py-1 rounded-full">
-                {finalResources.length} Archivos
-              </span>
-            </div>
-            <UserResourcesList resources={finalResources} />
-          </div>
-
           {/* Historial de Encuentros (Instancias) */}
           <div>
             <h2 className="text-[#33275f] text-xl font-bold mb-6 tracking-wide">HISTORIAL DE ENCUENTROS</h2>

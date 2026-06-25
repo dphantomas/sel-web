@@ -247,6 +247,14 @@ export default function Navbar() {
                   Mis talleres
                 </Link>
                 <Link
+                  href="/dashboard/recursos"
+                  onClick={() => setIsOpen(false)}
+                  className="text-left px-6 py-3 text-sm font-bold transition-colors hover:bg-purple-50 block"
+                  style={{ color: '#33275f', textDecoration: 'none' }}
+                >
+                  Mis materiales
+                </Link>
+                <Link
                   href="/dashboard/seguridad"
                   onClick={() => setIsOpen(false)}
                   className="text-left px-6 py-3 text-sm font-bold transition-colors hover:bg-purple-50 block"
