@@ -44,7 +44,8 @@ export default function PasskeyManager({ initialAuthenticators }) {
         setIsDeviceRegisteredLocally(false)
       }
     } else {
-      setIsDeviceRegisteredLocally(false)
+      // Si no hay localId, revisamos si tiene la marca genérica (legacy o recuperada)
+      setIsDeviceRegisteredLocally(localStorage.getItem('device_registered') === 'true')
     }
   }, [initialAuthenticators])
 
@@ -79,7 +80,10 @@ export default function PasskeyManager({ initialAuthenticators }) {
           throw new Error('El dispositivo no pudo crear la passkey. Verificá que tenga biometría configurada.')
         }
         if (err.name === 'InvalidStateError') {
-          throw new Error('Este dispositivo ya tiene una passkey registrada.')
+          // Autorecuperación: Si el SO dice que ya existe, lo marcamos localmente
+          localStorage.setItem('device_registered', 'true')
+          setIsDeviceRegisteredLocally(true)
+          throw new Error('Este dispositivo ya estaba vinculado. Interfaz actualizada.')
         }
         throw new Error(err.message || 'No se pudo crear la passkey en este dispositivo.')
       }
@@ -141,7 +145,7 @@ export default function PasskeyManager({ initialAuthenticators }) {
 
       // Si se borró la passkey vinculada a este navegador, limpiamos el localStorage
       const localId = localStorage.getItem('local_passkey_id')
-      if (localId === credentialID || updated.length === 0) {
+      if (localId === credentialID || updated.length === 0 || !localId) {
         localStorage.removeItem('local_passkey_id')
         localStorage.removeItem('device_registered')
         localStorage.removeItem('registered_email')
