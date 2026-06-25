@@ -44,8 +44,7 @@ export default function PasskeyManager({ initialAuthenticators }) {
         setIsDeviceRegisteredLocally(false)
       }
     } else {
-      // Fallback si no tiene el ID guardado
-      setIsDeviceRegisteredLocally(localStorage.getItem('device_registered') === 'true')
+      setIsDeviceRegisteredLocally(false)
     }
   }, [initialAuthenticators])
 
