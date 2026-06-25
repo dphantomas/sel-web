@@ -3,7 +3,6 @@ import { authOptions } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/db'
 import UserProfileForm from '../UserProfileForm'
-import PasskeyManager from '@/components/PasskeyManager'
 
 export const metadata = {
   title: 'Mis Datos | Sanación en Luz',
@@ -26,17 +25,6 @@ export default async function DashboardPerfilPage() {
       unlockedInstances: {
         include: { courseInstance: { include: { course: true } } }
       },
-      authenticators: {
-        select: {
-          credentialID: true,
-          credentialDeviceType: true,
-          credentialBackedUp: true,
-          transports: true,
-          deviceName: true,
-          createdAt: true,
-        },
-        orderBy: { createdAt: 'desc' }
-      }
     }
   })
 
@@ -66,24 +54,14 @@ export default async function DashboardPerfilPage() {
         </div>
 
         {/* Contenido principal */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          
-          {/* Columna Izquierda: Formulario de Perfil (Ocupa más espacio) */}
-          <div className="lg:col-span-2 animate-in fade-in slide-in-from-bottom-2 duration-500">
-            <UserProfileForm 
-              user={user} 
-              hasInitiatoryRetreat={
-                user.unlockedCourses.some(uc => uc.course.title.includes('Retiro Iniciático')) ||
-                user.unlockedInstances.some(ui => ui.courseInstance.course.title.includes('Retiro Iniciático'))
-              }
-            />
-          </div>
-
-          {/* Columna Derecha: Seguridad y Métodos de Ingreso */}
-          <div className="lg:col-span-1 animate-in fade-in slide-in-from-bottom-3 duration-500 delay-100">
-            <PasskeyManager initialAuthenticators={user.authenticators} />
-          </div>
-
+        <div className="animate-in fade-in slide-in-from-bottom-2 duration-500">
+          <UserProfileForm 
+            user={user} 
+            hasInitiatoryRetreat={
+              user.unlockedCourses.some(uc => uc.course.title.includes('Retiro Iniciático')) ||
+              user.unlockedInstances.some(ui => ui.courseInstance.course.title.includes('Retiro Iniciático'))
+            }
+          />
         </div>
 
       </div>

@@ -17,6 +17,8 @@ export function parseDeviceName(userAgent) {
   else if (ua.includes('windows')) os = 'Windows'
   else if (ua.includes('linux')) os = 'Linux'
 
+  if (os === 'Desconocido' && browser === 'Navegador') return userAgent
   if (os === 'Desconocido') return browser
+
   return `${browser} en ${os}`
 }

@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import { signOut } from 'next-auth/react'
-import { User, BookOpen, Settings, LogOut } from 'lucide-react'
+import { User, BookOpen, Settings, LogOut, Shield } from 'lucide-react'
 
 export default function UserDropdown({ session, isScrolled, hasDarkHeader }) {
   const [isOpen, setIsOpen] = useState(false)
@@ -75,6 +75,15 @@ export default function UserDropdown({ session, isScrolled, hasDarkHeader }) {
             >
               <BookOpen className="w-4 h-4" />
               Mis talleres
+            </Link>
+
+            <Link 
+              href="/dashboard/seguridad" 
+              onClick={() => setIsOpen(false)}
+              className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-[#B681AE]/10 hover:text-[#33275f] transition-colors"
+            >
+              <Shield className="w-4 h-4" />
+              Seguridad y Passkeys
             </Link>
 
             {(user.role === 'Admin' || user.role === 'Transmisor') && (
