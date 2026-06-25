@@ -62,10 +62,11 @@ export const authOptions = {
             throw new Error('Dispositivo no reconocido para este usuario.')
           }
 
-          // En producción NEXTAUTH_URL es confiable; en localhost también funciona.
-          const appUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000'
-          const expectedOrigin = appUrl.replace(/\/$/, '') // sin trailing slash
-          const expectedRPID = new URL(appUrl).hostname
+          // Obtener el origin dinámicamente para soportar Vercel Preview Deployments
+          const host = req.headers?.host || 'localhost:3000'
+          const protocol = req.headers?.['x-forwarded-proto'] || (host.includes('localhost') ? 'http' : 'https')
+          const expectedOrigin = req.headers?.origin || `${protocol}://${host}`
+          const expectedRPID = host.split(':')[0]
 
           let verification;
           try {
