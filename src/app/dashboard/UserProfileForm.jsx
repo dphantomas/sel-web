@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { UploadCloud, User as UserIcon, Fingerprint, Shield, Trash2, Plus, CheckCircle, Loader2 } from 'lucide-react'
 import ImageCropperModal from '@/components/ImageCropperModal'
 import { useRouter } from 'next/navigation'
@@ -34,13 +34,16 @@ function BiometricSection({ initialAuthenticators }) {
   const [deletingId, setDeletingId] = useState(null)
   const [message, setMessage] = useState(null)
   const [isSupported, setIsSupported] = useState(null) // null = sin detectar aún
+  const [isDeviceRegisteredLocally, setIsDeviceRegisteredLocally] = useState(false)
 
   // Detectar soporte biométrico al montar
-  useState(() => {
+  useEffect(() => {
     platformAuthenticatorIsAvailable()
       .then(setIsSupported)
       .catch(() => setIsSupported(false))
-  })
+
+    setIsDeviceRegisteredLocally(localStorage.getItem('device_registered') === 'true')
+  }, [])
 
   const showMessage = (type, text) => {
     setMessage({ type, text })
@@ -93,6 +96,8 @@ function BiometricSection({ initialAuthenticators }) {
       if (verification.verified) {
         // Marcar en localStorage para que el login detecte el dispositivo
         localStorage.setItem('device_registered', 'true')
+        setIsDeviceRegisteredLocally(true)
+        
         const emailResp = await fetch('/api/auth/webauthn/list-authenticators')
         if (emailResp.ok) {
           const data = await emailResp.json()
@@ -134,6 +139,7 @@ function BiometricSection({ initialAuthenticators }) {
       if (updated.length === 0) {
         localStorage.removeItem('device_registered')
         localStorage.removeItem('registered_email')
+        setIsDeviceRegisteredLocally(false)
       }
 
       showMessage('success', 'Dispositivo eliminado correctamente.')
@@ -214,7 +220,7 @@ function BiometricSection({ initialAuthenticators }) {
       )}
 
       {/* Botón para agregar dispositivo */}
-      {isSupported !== false && (
+      {isSupported !== false && !isDeviceRegisteredLocally && (
         <button
           id="add-biometric-device-btn"
           type="button"
@@ -229,6 +235,13 @@ function BiometricSection({ initialAuthenticators }) {
           )}
           {isRegistering ? 'Configurando dispositivo...' : 'Agregar este dispositivo'}
         </button>
+      )}
+
+      {isDeviceRegisteredLocally && (
+        <div className="flex items-center gap-2 mt-4 text-xs font-semibold text-green-600 bg-green-50 px-3 py-2 rounded-lg border border-green-200 inline-flex">
+          <CheckCircle className="w-4 h-4" />
+          Este dispositivo ya está registrado
+        </div>
       )}
 
       {isSupported === false && (
