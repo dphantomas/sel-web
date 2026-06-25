@@ -244,17 +244,13 @@ export default function PasskeyManager({ initialAuthenticators }) {
           </div>
         )}
 
-        {isSupported !== false && (
+        {isSupported !== false && !isDeviceRegisteredLocally && (
           <button
             id="add-biometric-device-btn"
             type="button"
             onClick={handleRegisterDevice}
             disabled={isRegistering}
-            className={`w-full flex justify-center items-center gap-2 text-sm font-semibold transition duration-300 rounded-xl py-3 disabled:opacity-50 shadow-md ${
-              isDeviceRegisteredLocally
-                ? 'text-[#33275f] bg-white border border-[#33275f]/20 hover:bg-gray-50'
-                : 'text-white bg-[#B681AE] hover:bg-[#9187BA]'
-            }`}
+            className="w-full flex justify-center items-center gap-2 text-sm font-semibold text-white bg-[#B681AE] hover:bg-[#9187BA] transition duration-300 rounded-xl py-3 disabled:opacity-50 shadow-md"
           >
             {isRegistering ? (
               <Loader2 className="w-4 h-4 animate-spin" />
@@ -263,9 +259,7 @@ export default function PasskeyManager({ initialAuthenticators }) {
             )}
             {isRegistering 
               ? 'Configurando Passkey...' 
-              : isDeviceRegisteredLocally 
-                ? 'Vincular otra Passkey en este dispositivo' 
-                : 'Agregar este dispositivo'}
+              : 'Agregar este dispositivo'}
           </button>
         )}
 
