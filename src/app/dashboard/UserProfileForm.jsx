@@ -64,10 +64,18 @@ function BiometricSection({ initialAuthenticators }) {
         attResp = await startRegistration({ optionsJSON: options })
       } catch (err) {
         if (err.name === 'NotAllowedError') {
-          setIsRegistering(false)
-          return
+          const isCancel = err.message?.toLowerCase().includes('cancel') ||
+                           err.message?.toLowerCase().includes('user')
+          if (isCancel) {
+            setIsRegistering(false)
+            return
+          }
+          throw new Error('El dispositivo no pudo crear la passkey. Verificá que tenga biometría configurada.')
         }
-        throw err
+        if (err.name === 'InvalidStateError') {
+          throw new Error('Este dispositivo ya tiene una passkey registrada.')
+        }
+        throw new Error(err.message || 'No se pudo crear la passkey en este dispositivo.')
       }
 
       const verificationResp = await fetch('/api/auth/webauthn/verify-registration', {

@@ -65,17 +65,25 @@ export default function FastLoginPrompt({ userEmail }) {
       }
       const options = await resp.json()
 
-      // 2. Ejecutar el registro biométrico en el dispositivo
+      // 2. Ejecutar el registro de passkey en el dispositivo
       let attResp
       try {
         attResp = await startRegistration({ optionsJSON: options })
       } catch (err) {
         if (err.name === 'NotAllowedError') {
-          // El usuario canceló el diálogo del SO — no es un error
-          setIsRegistering(false)
-          return
+          // Solo descartar si el usuario explícitamente canceló
+          const isCancel = err.message?.toLowerCase().includes('cancel') ||
+                           err.message?.toLowerCase().includes('user')
+          if (isCancel) {
+            setIsRegistering(false)
+            return
+          }
+          throw new Error('El dispositivo no pudo crear la passkey. Verificá que tenga biometría configurada.')
         }
-        throw err
+        if (err.name === 'InvalidStateError') {
+          throw new Error('Este dispositivo ya tiene una passkey registrada.')
+        }
+        throw new Error(err.message || 'No se pudo crear la passkey en este dispositivo.')
       }
 
       // 3. Verificar el registro en el servidor
@@ -134,8 +142,8 @@ export default function FastLoginPrompt({ userEmail }) {
           <div className="flex items-center gap-3 py-2">
             <CheckCircle className="w-7 h-7 text-green-400 shrink-0" />
             <div>
-              <p className="font-bold text-green-300">¡Dispositivo configurado!</p>
-              <p className="text-sm text-gray-300 mt-0.5">La próxima vez podés entrar al instante con tu huella o Face ID.</p>
+              <p className="font-bold text-green-300">¡Passkey creada!</p>
+              <p className="text-sm text-gray-300 mt-0.5">La próxima vez podés entrar al instante sin contraseña.</p>
             </div>
           </div>
         ) : (
@@ -147,10 +155,10 @@ export default function FastLoginPrompt({ userEmail }) {
                 </div>
                 <div>
                   <h3 className="font-bold text-base leading-tight">
-                    Activá el ingreso con huella o Face ID
+                    Activá tu passkey en este dispositivo
                   </h3>
                   <p className="text-gray-300 text-xs mt-0.5">
-                    Como los bancos — sin recordar contraseñas.
+                    Ingresá sin contraseña, como los bancos.
                   </p>
                 </div>
               </div>
@@ -185,7 +193,7 @@ export default function FastLoginPrompt({ userEmail }) {
                 ) : (
                   <>
                     <Fingerprint size={16} />
-                    Sí, configurar ahora
+                    Sí, crear passkey
                   </>
                 )}
               </button>

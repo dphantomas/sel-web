@@ -37,8 +37,9 @@ export async function GET(request) {
         transports: auth.transports ? auth.transports.split(',') : undefined,
       })),
       authenticatorSelection: {
-        residentKey: 'preferred',
-        userVerification: 'preferred',
+        residentKey: 'required',
+        userVerification: 'required',
+        authenticatorAttachment: 'platform', // Solo autenticadores del dispositivo (Face ID, Touch ID, Windows Hello)
       },
     })
 

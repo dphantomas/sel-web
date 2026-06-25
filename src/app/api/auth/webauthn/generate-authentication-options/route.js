@@ -34,7 +34,7 @@ export async function POST(request) {
         type: 'public-key',
         transports: auth.transports ? auth.transports.split(',') : undefined,
       })),
-      userVerification: 'preferred',
+      userVerification: 'required',
     })
 
     // Guardar challenge temporalmente

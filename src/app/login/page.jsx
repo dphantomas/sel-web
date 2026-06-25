@@ -67,17 +67,28 @@ function LoginContent() {
 
       const options = await optionsResp.json()
 
-      // 2. Solicitar autenticación biométrica al dispositivo
+      // 2. Solicitar autenticación con passkey al dispositivo
       let assertion
       try {
         assertion = await startAuthentication({ optionsJSON: options })
       } catch (err) {
         if (err.name === 'NotAllowedError') {
-          // El usuario canceló — no es un error, simplemente no hacemos nada
-          setBiometricLoading(false)
-          return
+          // Puede ser cancelación del usuario O que el dispositivo no tenga la passkey
+          const isCancel = err.message?.toLowerCase().includes('cancel') ||
+                           err.message?.toLowerCase().includes('user')
+          if (isCancel) {
+            setBiometricLoading(false)
+            return
+          }
+          throw new Error('Este dispositivo no tiene la passkey registrada. Registralo desde tu Perfil.')
         }
-        throw err
+        if (err.name === 'NotSupportedError') {
+          throw new Error('Tu navegador no soporta passkeys. Intentá con Chrome o Safari.')
+        }
+        if (err.name === 'SecurityError') {
+          throw new Error('Error de seguridad. Verificá que estés usando HTTPS.')
+        }
+        throw new Error(err.message || 'Error al leer la passkey del dispositivo.')
       }
 
       // 3. Hacer signIn con la aserción biométrica
@@ -177,11 +188,11 @@ function LoginContent() {
               ) : (
                 <Fingerprint className="w-5 h-5" />
               )}
-              {biometricLoading ? 'Verificando...' : 'Ingresar con Face ID / Huella'}
+              {biometricLoading ? 'Verificando...' : 'Ingresar con passkey'}
             </button>
 
             <p className="text-[11px] text-center text-[#888] mt-2">
-              Usando la cuenta de{' '}
+              Passkey de{' '}
               <span className="font-semibold text-[#33275f]">{savedEmail}</span>
             </p>
 
