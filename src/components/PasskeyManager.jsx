@@ -1,0 +1,252 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import { Shield, Fingerprint, Trash2, Plus, CheckCircle, Loader2, KeyRound } from 'lucide-react'
+import { startRegistration, platformAuthenticatorIsAvailable } from '@simplewebauthn/browser'
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+/** Formatea fecha a DD/MM/YYYY */
+function formatDate(dateStr) {
+  if (!dateStr) return '—'
+  return new Date(dateStr).toLocaleDateString('es-AR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  })
+}
+
+// ─── Componente ──────────────────────────────────────────────────────────────
+
+export default function PasskeyManager({ initialAuthenticators }) {
+  const [authenticators, setAuthenticators] = useState(initialAuthenticators || [])
+  const [isRegistering, setIsRegistering] = useState(false)
+  const [deletingId, setDeletingId] = useState(null)
+  const [message, setMessage] = useState(null)
+  const [isSupported, setIsSupported] = useState(null)
+  const [isDeviceRegisteredLocally, setIsDeviceRegisteredLocally] = useState(false)
+
+  // Detectar soporte biométrico al montar
+  useEffect(() => {
+    platformAuthenticatorIsAvailable()
+      .then(setIsSupported)
+      .catch(() => setIsSupported(false))
+
+    setIsDeviceRegisteredLocally(localStorage.getItem('device_registered') === 'true')
+  }, [])
+
+  const showMessage = (type, text) => {
+    setMessage({ type, text })
+    setTimeout(() => setMessage(null), 5000)
+  }
+
+  const handleRegisterDevice = async () => {
+    setIsRegistering(true)
+    setMessage(null)
+
+    try {
+      const resp = await fetch('/api/auth/webauthn/generate-registration-options')
+      if (!resp.ok) {
+        const data = await resp.json()
+        throw new Error(data.error || 'No se pudo iniciar el registro')
+      }
+      const options = await resp.json()
+
+      let attResp
+      try {
+        attResp = await startRegistration({ optionsJSON: options })
+      } catch (err) {
+        if (err.name === 'NotAllowedError') {
+          const isCancel = err.message?.toLowerCase().includes('cancel') ||
+                           err.message?.toLowerCase().includes('user')
+          if (isCancel) {
+            setIsRegistering(false)
+            return
+          }
+          throw new Error('El dispositivo no pudo crear la passkey. Verificá que tenga biometría configurada.')
+        }
+        if (err.name === 'InvalidStateError') {
+          throw new Error('Este dispositivo ya tiene una passkey registrada.')
+        }
+        throw new Error(err.message || 'No se pudo crear la passkey en este dispositivo.')
+      }
+
+      const verificationResp = await fetch('/api/auth/webauthn/verify-registration', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(attResp),
+      })
+
+      const verification = await verificationResp.json()
+
+      if (!verificationResp.ok) {
+        throw new Error(verification.error || 'Error al verificar el dispositivo.')
+      }
+
+      if (verification.verified) {
+        // Marcar en localStorage para que el login detecte el dispositivo
+        localStorage.setItem('device_registered', 'true')
+        setIsDeviceRegisteredLocally(true)
+        
+        const emailResp = await fetch('/api/auth/webauthn/list-authenticators')
+        if (emailResp.ok) {
+          const data = await emailResp.json()
+          setAuthenticators(data.authenticators)
+        }
+        showMessage('success', '¡Passkey agregada! Ahora podés iniciar sesión desde aquí sin contraseña.')
+      } else {
+        throw new Error('La verificación de la passkey falló.')
+      }
+    } catch (err) {
+      console.error('Error registrando dispositivo:', err)
+      showMessage('error', err.message || 'Error al registrar la passkey.')
+    } finally {
+      setIsRegistering(false)
+    }
+  }
+
+  const handleDeleteDevice = async (credentialID) => {
+    if (!confirm('¿Eliminás esta passkey? Tendrás que volver a configurarla si querés acceder sin contraseña desde ese dispositivo.')) return
+
+    setDeletingId(credentialID)
+
+    try {
+      const resp = await fetch('/api/auth/webauthn/delete-authenticator', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ credentialID }),
+      })
+
+      if (!resp.ok) {
+        const data = await resp.json()
+        throw new Error(data.error || 'Error al eliminar la passkey.')
+      }
+
+      const updated = authenticators.filter(a => a.credentialID !== credentialID)
+      setAuthenticators(updated)
+
+      // Si no quedan dispositivos, limpiar localStorage
+      if (updated.length === 0) {
+        localStorage.removeItem('device_registered')
+        localStorage.removeItem('registered_email')
+        setIsDeviceRegisteredLocally(false)
+      }
+
+      showMessage('success', 'Passkey eliminada correctamente.')
+    } catch (err) {
+      console.error('Error eliminando dispositivo:', err)
+      showMessage('error', err.message || 'Error al eliminar la passkey.')
+    } finally {
+      setDeletingId(null)
+    }
+  }
+
+  return (
+    <div className="bg-white/80 backdrop-blur-md rounded-[24px] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-white/40 h-full flex flex-col">
+      
+      <div className="flex items-center gap-2 mb-2">
+        <Shield className="w-5 h-5 text-[#33275f]" />
+        <h2 className="text-[#33275f] text-xl font-bold tracking-wide">SEGURIDAD</h2>
+      </div>
+      <p className="text-sm text-gray-500 mb-6">Gestioná tus métodos de ingreso rápido (Passkeys).</p>
+
+      {/* Mensaje de feedback */}
+      {message && (
+        <div
+          className={`flex items-center gap-2 p-3 rounded-xl mb-6 text-sm font-medium ${
+            message.type === 'success'
+              ? 'bg-green-50 text-green-700 border border-green-200'
+              : 'bg-red-50 text-red-700 border border-red-200'
+          }`}
+        >
+          {message.type === 'success' && <CheckCircle className="w-4 h-4 shrink-0" />}
+          {message.text}
+        </div>
+      )}
+
+      {/* Lista de dispositivos registrados */}
+      <div className="flex-1">
+        {authenticators.length > 0 ? (
+          <div className="space-y-3 mb-6">
+            <h3 className="text-xs font-bold text-gray-500 uppercase px-1">Tus Passkeys</h3>
+            {authenticators.map((auth) => (
+              <div
+                key={auth.credentialID}
+                className="flex items-center justify-between gap-3 p-3.5 bg-gray-50/70 rounded-xl border border-gray-100"
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-9 h-9 rounded-xl bg-[#9187BA]/10 flex items-center justify-center shrink-0">
+                    <KeyRound className="w-4 h-4 text-[#9187BA]" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-gray-800 truncate">
+                      {auth.deviceName || 'Dispositivo desconocido'}
+                    </p>
+                    <p className="text-[11px] text-gray-400">
+                      Creada el {formatDate(auth.createdAt)}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleDeleteDevice(auth.credentialID)}
+                  disabled={!!deletingId}
+                  className="shrink-0 w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition disabled:opacity-40"
+                  aria-label="Eliminar passkey"
+                >
+                  {deletingId === auth.credentialID ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Trash2 className="w-4 h-4" />
+                  )}
+                </button>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center text-center p-6 bg-gray-50/50 rounded-xl border border-dashed border-gray-200 mb-6">
+            <KeyRound className="w-8 h-8 text-gray-300 mb-2" />
+            <p className="text-sm font-semibold text-gray-500">Sin Passkeys</p>
+            <p className="text-xs text-gray-400 mt-1 max-w-[200px]">
+              No tenés configurado el ingreso rápido sin contraseña.
+            </p>
+          </div>
+        )}
+      </div>
+
+      {/* Botón para agregar dispositivo */}
+      <div className="mt-auto pt-4 border-t border-gray-100">
+        {isSupported !== false && !isDeviceRegisteredLocally && (
+          <button
+            id="add-biometric-device-btn"
+            type="button"
+            onClick={handleRegisterDevice}
+            disabled={isRegistering}
+            className="w-full flex justify-center items-center gap-2 text-sm font-semibold text-white bg-[#B681AE] hover:bg-[#9187BA] py-3 rounded-xl transition duration-300 shadow-md disabled:opacity-50"
+          >
+            {isRegistering ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Plus className="w-4 h-4" />
+            )}
+            {isRegistering ? 'Configurando Passkey...' : 'Agregar este dispositivo'}
+          </button>
+        )}
+
+        {isDeviceRegisteredLocally && (
+          <div className="w-full flex justify-center items-center gap-2 text-xs font-semibold text-green-700 bg-green-50 py-3 rounded-xl border border-green-200">
+            <CheckCircle className="w-4 h-4" />
+            Este dispositivo ya está registrado
+          </div>
+        )}
+
+        {isSupported === false && (
+          <p className="text-xs text-center text-gray-400 italic">
+            Tu dispositivo o navegador actual no soporta passkeys.
+          </p>
+        )}
+      </div>
+
+    </div>
+  )
+}

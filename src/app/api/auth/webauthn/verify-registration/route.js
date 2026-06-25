@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth/next'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { verifyRegistrationResponse } from '@simplewebauthn/server'
+import { parseDeviceName } from '@/lib/userAgent'
 
 export async function POST(request) {
   try {
@@ -54,11 +55,15 @@ export async function POST(request) {
         // Guardar el nuevo autenticador (o actualizar si ya existía en la BD pero no en el localStorage)
         const credentialIdString = typeof credentialID === 'string' ? credentialID : Buffer.from(credentialID).toString('base64url')
         
+        const userAgent = request.headers.get('user-agent')
+        const deviceName = parseDeviceName(userAgent)
+
         await prisma.authenticator.upsert({
           where: { credentialID: credentialIdString },
           update: {
             counter,
             transports: body.response.transports ? body.response.transports.join(',') : '',
+            deviceName,
           },
           create: {
             credentialID: credentialIdString,
@@ -68,6 +73,7 @@ export async function POST(request) {
             credentialDeviceType,
             credentialBackedUp,
             transports: body.response.transports ? body.response.transports.join(',') : '',
+            deviceName,
           }
         })
 

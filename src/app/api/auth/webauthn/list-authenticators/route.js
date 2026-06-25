@@ -22,6 +22,7 @@ export async function GET() {
         credentialDeviceType: true,
         credentialBackedUp: true,
         transports: true,
+        deviceName: true,
         createdAt: true,
       },
       orderBy: { createdAt: 'desc' },
