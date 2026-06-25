@@ -32,7 +32,7 @@ export async function GET(request) {
       userName: user.email,
       attestationType: 'none',
       excludeCredentials: user.authenticators.map((auth) => ({
-        id: Buffer.from(auth.credentialID, 'base64url'),
+        id: auth.credentialID,
         type: 'public-key',
         transports: auth.transports ? auth.transports.split(',') : undefined,
       })),

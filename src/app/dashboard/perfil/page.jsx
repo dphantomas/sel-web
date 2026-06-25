@@ -24,6 +24,16 @@ export default async function DashboardPerfilPage() {
       },
       unlockedInstances: {
         include: { courseInstance: { include: { course: true } } }
+      },
+      authenticators: {
+        select: {
+          credentialID: true,
+          credentialDeviceType: true,
+          credentialBackedUp: true,
+          transports: true,
+          createdAt: true,
+        },
+        orderBy: { createdAt: 'desc' }
       }
     }
   })
@@ -31,6 +41,7 @@ export default async function DashboardPerfilPage() {
   if (!user) {
     redirect('/login')
   }
+
 
   return (
     <div 
@@ -56,6 +67,7 @@ export default async function DashboardPerfilPage() {
         <div className="animate-in fade-in slide-in-from-bottom-2 duration-500">
           <UserProfileForm 
             user={user} 
+            authenticators={user.authenticators}
             hasInitiatoryRetreat={
               user.unlockedCourses.some(uc => uc.course.title.includes('Retiro Iniciático')) ||
               user.unlockedInstances.some(ui => ui.courseInstance.course.title.includes('Retiro Iniciático'))

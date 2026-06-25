@@ -2,27 +2,44 @@
 
 import { useState, useEffect } from 'react'
 import { startRegistration, platformAuthenticatorIsAvailable } from '@simplewebauthn/browser'
+import { Fingerprint, X, CheckCircle } from 'lucide-react'
 
+/**
+ * FastLoginPrompt
+ * 
+ * Banner que se muestra al usuario autenticado la primera vez que accede
+ * desde un dispositivo que soporta biometría y que aún no tiene una passkey registrada.
+ * 
+ * Estados en localStorage:
+ *  - `device_registered=true`   → ya configuró biometría, no mostrar
+ *  - `biometricDismissed=true`  → eligió "No, gracias", no volver a ofrecer automáticamente
+ *  - ninguno                    → mostrar oferta si el hardware lo soporta
+ */
 export default function FastLoginPrompt({ userEmail }) {
   const [isVisible, setIsVisible] = useState(false)
   const [isRegistering, setIsRegistering] = useState(false)
   const [error, setError] = useState(null)
   const [success, setSuccess] = useState(false)
+  const [animate, setAnimate] = useState(false)
 
   useEffect(() => {
     async function checkAvailability() {
-      // Verificar si el usuario ya decidió ocultar este banner en este dispositivo
-      const dismissed = localStorage.getItem('dismissedFastLoginPrompt')
-      const registered = localStorage.getItem('device_registered')
-      
-      if (dismissed === 'true' || registered === 'true') {
-        return
-      }
+      try {
+        // ¿Ya configuró biometría en este dispositivo?
+        if (localStorage.getItem('device_registered') === 'true') return
 
-      // Verificar si el hardware soporta biometría local (Face ID, Touch ID, etc)
-      const isAvailable = await platformAuthenticatorIsAvailable()
-      if (isAvailable) {
+        // ¿Ya rechazó la oferta?
+        if (localStorage.getItem('biometricDismissed') === 'true') return
+
+        // ¿El hardware soporta autenticadores de plataforma (Face ID, Touch ID, Windows Hello)?
+        const isSupported = await platformAuthenticatorIsAvailable()
+        if (!isSupported) return
+
         setIsVisible(true)
+        // Pequeño delay para que la animación de entrada sea visible
+        setTimeout(() => setAnimate(true), 50)
+      } catch {
+        // No mostrar si hay cualquier error de detección
       }
     }
 
@@ -30,27 +47,31 @@ export default function FastLoginPrompt({ userEmail }) {
   }, [])
 
   const handleDismiss = () => {
-    localStorage.setItem('dismissedFastLoginPrompt', 'true')
-    setIsVisible(false)
+    localStorage.setItem('biometricDismissed', 'true')
+    setAnimate(false)
+    setTimeout(() => setIsVisible(false), 300)
   }
 
   const handleRegister = async () => {
     setIsRegistering(true)
     setError(null)
-    
+
     try {
-      // 1. Pedir opciones de registro
+      // 1. Pedir opciones de registro al servidor
       const resp = await fetch('/api/auth/webauthn/generate-registration-options')
-      if (!resp.ok) throw new Error('No se pudo iniciar el registro')
+      if (!resp.ok) {
+        const data = await resp.json()
+        throw new Error(data.error || 'No se pudo iniciar el registro')
+      }
       const options = await resp.json()
 
-      // 2. Ejecutar registro en el dispositivo
-      let attResp;
+      // 2. Ejecutar el registro biométrico en el dispositivo
+      let attResp
       try {
-        attResp = await startRegistration(options)
+        attResp = await startRegistration({ optionsJSON: options })
       } catch (err) {
         if (err.name === 'NotAllowedError') {
-          // El usuario canceló o el navegador bloqueó, simplemente no hacemos nada
+          // El usuario canceló el diálogo del SO — no es un error
           setIsRegistering(false)
           return
         }
@@ -71,19 +92,22 @@ export default function FastLoginPrompt({ userEmail }) {
       }
 
       if (verification.verified) {
-        // Guardar bandera en este dispositivo para no volver a molestar
         localStorage.setItem('device_registered', 'true')
         if (userEmail) {
           localStorage.setItem('registered_email', userEmail)
         }
         setSuccess(true)
-        setTimeout(() => setIsVisible(false), 3000) // Ocultar después de 3 segs
+        // Ocultar el banner tras 3 segundos
+        setTimeout(() => {
+          setAnimate(false)
+          setTimeout(() => setIsVisible(false), 300)
+        }, 3000)
       } else {
-        throw new Error('La validación del dispositivo falló (verificación incorrecta).')
+        throw new Error('La validación del dispositivo falló.')
       }
     } catch (err) {
-      console.error(err)
-      setError(err.message || 'Ocurrió un error al intentar registrar el dispositivo.')
+      console.error('Error en registro biométrico:', err)
+      setError(err.message || 'Ocurrió un error al registrar el dispositivo.')
     } finally {
       setIsRegistering(false)
     }
@@ -92,49 +116,86 @@ export default function FastLoginPrompt({ userEmail }) {
   if (!isVisible) return null
 
   return (
-    <div className="bg-gradient-to-r from-[#33275f] to-[#4c3c86] rounded-[24px] p-6 shadow-xl border border-white/20 mb-8 text-white relative overflow-hidden">
-      <div className="absolute -right-10 -top-10 opacity-10">
-        <svg className="w-40 h-40" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-          <path d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
-        </svg>
-      </div>
-      
-      <div className="relative z-10">
-        <h3 className="text-xl font-bold mb-2 flex items-center gap-2">
-          <svg className="w-6 h-6 text-[#B681AE]" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4"></path>
-          </svg>
-          Inicia sesión más rápido
-        </h3>
-        
+    <div
+      className={`
+        relative overflow-hidden rounded-2xl mb-8 text-white
+        bg-gradient-to-br from-[#33275f] via-[#3d3070] to-[#4c3c86]
+        border border-white/10 shadow-2xl
+        transition-all duration-300 ease-out
+        ${animate ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'}
+      `}
+    >
+      {/* Decoración de fondo */}
+      <div className="absolute -right-8 -top-8 w-32 h-32 rounded-full bg-white/5 pointer-events-none" />
+      <div className="absolute -left-4 -bottom-4 w-24 h-24 rounded-full bg-[#B681AE]/10 pointer-events-none" />
+
+      <div className="relative z-10 p-5 sm:p-6">
         {success ? (
-          <p className="text-green-300 font-semibold mb-2">¡Dispositivo configurado exitosamente! La próxima vez podrás entrar al instante.</p>
+          <div className="flex items-center gap-3 py-2">
+            <CheckCircle className="w-7 h-7 text-green-400 shrink-0" />
+            <div>
+              <p className="font-bold text-green-300">¡Dispositivo configurado!</p>
+              <p className="text-sm text-gray-300 mt-0.5">La próxima vez podés entrar al instante con tu huella o Face ID.</p>
+            </div>
+          </div>
         ) : (
           <>
-            <p className="text-gray-200 text-sm mb-5 max-w-xl">
-              Hemos detectado que estás usando un nuevo dispositivo. ¿Quieres conectar tu Face ID o Huella Digital para ingresar la próxima vez sin escribir contraseñas?
-            </p>
-            
+            <div className="flex items-start justify-between gap-3 mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-[#B681AE]/30 flex items-center justify-center shrink-0">
+                  <Fingerprint className="w-5 h-5 text-[#d4a8d0]" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-base leading-tight">
+                    Activá el ingreso con huella o Face ID
+                  </h3>
+                  <p className="text-gray-300 text-xs mt-0.5">
+                    Como los bancos — sin recordar contraseñas.
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={handleDismiss}
+                disabled={isRegistering}
+                className="text-white/40 hover:text-white/80 transition shrink-0 mt-0.5"
+                aria-label="Cerrar"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
             {error && (
-              <div className="bg-red-500/20 text-red-200 text-sm p-3 rounded-lg mb-4 border border-red-500/50">
+              <div className="bg-red-500/20 border border-red-500/30 text-red-200 text-xs p-3 rounded-lg mb-4">
                 {error}
               </div>
             )}
 
             <div className="flex flex-wrap items-center gap-3">
               <button
+                id="fast-login-register-btn"
                 onClick={handleRegister}
                 disabled={isRegistering}
-                className="bg-white text-[#33275f] hover:bg-gray-100 font-bold py-2.5 px-6 rounded-xl transition duration-300 shadow-lg disabled:opacity-50"
+                className="bg-white text-[#33275f] hover:bg-gray-100 font-bold text-sm py-2.5 px-5 rounded-xl transition duration-300 shadow-md disabled:opacity-50 flex items-center gap-2"
               >
-                {isRegistering ? 'Conectando...' : 'Sí, conectar ahora'}
+                {isRegistering ? (
+                  <>
+                    <span className="w-4 h-4 border-2 border-[#33275f]/30 border-t-[#33275f] rounded-full animate-spin" />
+                    Configurando...
+                  </>
+                ) : (
+                  <>
+                    <Fingerprint size={16} />
+                    Sí, configurar ahora
+                  </>
+                )}
               </button>
               <button
+                id="fast-login-dismiss-btn"
                 onClick={handleDismiss}
                 disabled={isRegistering}
-                className="bg-transparent border border-white/30 text-white hover:bg-white/10 font-medium py-2.5 px-6 rounded-xl transition duration-300 disabled:opacity-50"
+                className="text-white/70 hover:text-white text-sm font-medium py-2.5 px-4 rounded-xl transition duration-300 hover:bg-white/10 disabled:opacity-50"
               >
-                Quizás más tarde
+                No, gracias
               </button>
             </div>
           </>

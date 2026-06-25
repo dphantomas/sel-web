@@ -1,12 +1,240 @@
 'use client'
 
 import { useState, useRef } from 'react'
-import { UploadCloud, User as UserIcon } from 'lucide-react'
+import { UploadCloud, User as UserIcon, Fingerprint, Shield, Trash2, Plus, CheckCircle, Loader2 } from 'lucide-react'
 import ImageCropperModal from '@/components/ImageCropperModal'
 import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
+import { startRegistration, platformAuthenticatorIsAvailable } from '@simplewebauthn/browser'
 
-export default function UserProfileForm({ user, hasInitiatoryRetreat }) {
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+/** Convierte credentialDeviceType + credentialBackedUp a un label amigable */
+function getDeviceLabel(auth) {
+  if (auth.credentialBackedUp) return 'Passkey sincronizada'
+  if (auth.credentialDeviceType === 'platform') return 'Dispositivo local'
+  return 'Llave de seguridad'
+}
+
+/** Formatea fecha a DD/MM/YYYY */
+function formatDate(dateStr) {
+  if (!dateStr) return '—'
+  return new Date(dateStr).toLocaleDateString('es-AR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  })
+}
+
+// ─── Sub-componente: Gestión Biométrica ───────────────────────────────────────
+
+function BiometricSection({ initialAuthenticators }) {
+  const [authenticators, setAuthenticators] = useState(initialAuthenticators || [])
+  const [isRegistering, setIsRegistering] = useState(false)
+  const [deletingId, setDeletingId] = useState(null)
+  const [message, setMessage] = useState(null)
+  const [isSupported, setIsSupported] = useState(null) // null = sin detectar aún
+
+  // Detectar soporte biométrico al montar
+  useState(() => {
+    platformAuthenticatorIsAvailable()
+      .then(setIsSupported)
+      .catch(() => setIsSupported(false))
+  })
+
+  const showMessage = (type, text) => {
+    setMessage({ type, text })
+    setTimeout(() => setMessage(null), 5000)
+  }
+
+  const handleRegisterDevice = async () => {
+    setIsRegistering(true)
+    setMessage(null)
+
+    try {
+      const resp = await fetch('/api/auth/webauthn/generate-registration-options')
+      if (!resp.ok) {
+        const data = await resp.json()
+        throw new Error(data.error || 'No se pudo iniciar el registro')
+      }
+      const options = await resp.json()
+
+      let attResp
+      try {
+        attResp = await startRegistration({ optionsJSON: options })
+      } catch (err) {
+        if (err.name === 'NotAllowedError') {
+          setIsRegistering(false)
+          return
+        }
+        throw err
+      }
+
+      const verificationResp = await fetch('/api/auth/webauthn/verify-registration', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(attResp),
+      })
+
+      const verification = await verificationResp.json()
+
+      if (!verificationResp.ok) {
+        throw new Error(verification.error || 'Error al verificar el dispositivo.')
+      }
+
+      if (verification.verified) {
+        // Marcar en localStorage para que el login detecte el dispositivo
+        localStorage.setItem('device_registered', 'true')
+        const emailResp = await fetch('/api/auth/webauthn/list-authenticators')
+        if (emailResp.ok) {
+          const data = await emailResp.json()
+          setAuthenticators(data.authenticators)
+        }
+        showMessage('success', '¡Dispositivo registrado! Ahora podés iniciar sesión con biometría.')
+      } else {
+        throw new Error('La verificación del dispositivo falló.')
+      }
+    } catch (err) {
+      console.error('Error registrando dispositivo:', err)
+      showMessage('error', err.message || 'Error al registrar el dispositivo.')
+    } finally {
+      setIsRegistering(false)
+    }
+  }
+
+  const handleDeleteDevice = async (credentialID) => {
+    if (!confirm('¿Eliminás este dispositivo biométrico? Tendrás que volver a configurarlo si querés usarlo de nuevo.')) return
+
+    setDeletingId(credentialID)
+
+    try {
+      const resp = await fetch('/api/auth/webauthn/delete-authenticator', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ credentialID }),
+      })
+
+      if (!resp.ok) {
+        const data = await resp.json()
+        throw new Error(data.error || 'Error al eliminar el dispositivo.')
+      }
+
+      const updated = authenticators.filter(a => a.credentialID !== credentialID)
+      setAuthenticators(updated)
+
+      // Si no quedan dispositivos, limpiar localStorage
+      if (updated.length === 0) {
+        localStorage.removeItem('device_registered')
+        localStorage.removeItem('registered_email')
+      }
+
+      showMessage('success', 'Dispositivo eliminado correctamente.')
+    } catch (err) {
+      console.error('Error eliminando dispositivo:', err)
+      showMessage('error', err.message || 'Error al eliminar el dispositivo.')
+    } finally {
+      setDeletingId(null)
+    }
+  }
+
+  return (
+    <div className="md:col-span-2 mt-2">
+      {/* Header de sección */}
+      <div className="flex items-center gap-2 mb-4 border-b border-gray-100 pb-3">
+        <Shield className="w-4 h-4 text-[#9187BA]" />
+        <h3 className="text-sm font-bold text-[#33275f]">Seguridad — Acceso Biométrico</h3>
+      </div>
+
+      {/* Mensaje de feedback */}
+      {message && (
+        <div
+          className={`flex items-center gap-2 p-3 rounded-xl mb-4 text-sm font-medium ${
+            message.type === 'success'
+              ? 'bg-green-50 text-green-700 border border-green-200'
+              : 'bg-red-50 text-red-700 border border-red-200'
+          }`}
+        >
+          {message.type === 'success' && <CheckCircle className="w-4 h-4 shrink-0" />}
+          {message.text}
+        </div>
+      )}
+
+      {/* Lista de dispositivos registrados */}
+      {authenticators.length > 0 ? (
+        <div className="space-y-2 mb-4">
+          {authenticators.map((auth) => (
+            <div
+              key={auth.credentialID}
+              className="flex items-center justify-between gap-3 p-3.5 bg-gray-50/70 rounded-xl border border-gray-100"
+            >
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-8 h-8 rounded-lg bg-[#9187BA]/10 flex items-center justify-center shrink-0">
+                  <Fingerprint className="w-4 h-4 text-[#9187BA]" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-gray-800 truncate">
+                    {getDeviceLabel(auth)}
+                  </p>
+                  <p className="text-xs text-gray-400">
+                    Registrado el {formatDate(auth.createdAt)}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => handleDeleteDevice(auth.credentialID)}
+                disabled={!!deletingId}
+                className="shrink-0 w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition disabled:opacity-40"
+                aria-label="Eliminar dispositivo"
+              >
+                {deletingId === auth.credentialID ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Trash2 className="w-4 h-4" />
+                )}
+              </button>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="flex items-center gap-3 p-4 bg-gray-50/50 rounded-xl border border-dashed border-gray-200 mb-4">
+          <Fingerprint className="w-5 h-5 text-gray-300 shrink-0" />
+          <p className="text-sm text-gray-400">
+            No tenés ningún dispositivo biométrico configurado.
+          </p>
+        </div>
+      )}
+
+      {/* Botón para agregar dispositivo */}
+      {isSupported !== false && (
+        <button
+          id="add-biometric-device-btn"
+          type="button"
+          onClick={handleRegisterDevice}
+          disabled={isRegistering}
+          className="flex items-center gap-2 text-sm font-semibold text-[#9187BA] hover:text-[#33275f] border border-[#9187BA]/30 hover:border-[#33275f]/40 hover:bg-[#9187BA]/5 px-4 py-2.5 rounded-xl transition duration-200 disabled:opacity-50"
+        >
+          {isRegistering ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            <Plus className="w-4 h-4" />
+          )}
+          {isRegistering ? 'Configurando dispositivo...' : 'Agregar este dispositivo'}
+        </button>
+      )}
+
+      {isSupported === false && (
+        <p className="text-xs text-gray-400 italic">
+          Tu dispositivo o navegador actual no soporta autenticación biométrica.
+        </p>
+      )}
+    </div>
+  )
+}
+
+// ─── Componente Principal ─────────────────────────────────────────────────────
+
+export default function UserProfileForm({ user, authenticators, hasInitiatoryRetreat }) {
   const [formData, setFormData] = useState({
     firstName: user.firstName,
     lastName: user.lastName,
@@ -73,11 +301,10 @@ export default function UserProfileForm({ user, hasInitiatoryRetreat }) {
 
       setMessage({ type: 'success', text: 'Perfil actualizado exitosamente.' })
       
-      // Update session to reflect new image/name in the Navbar immediately
+      // Actualizar sesión para reflejar el nuevo nombre/imagen en la Navbar
       await update()
       router.refresh()
       
-      // Scroll up to see the success message
       window.scrollTo({ top: 0, behavior: 'smooth' })
     } catch (error) {
       console.error(error)
@@ -86,8 +313,6 @@ export default function UserProfileForm({ user, hasInitiatoryRetreat }) {
       setIsSaving(false)
     }
   }
-
-
 
   return (
     <div className="bg-white/80 backdrop-blur-md rounded-[24px] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-white/40 mb-8">
@@ -141,7 +366,7 @@ export default function UserProfileForm({ user, hasInitiatoryRetreat }) {
           </div>
           <div className="text-center sm:text-left">
             <span className="text-lg font-bold text-[#33275f] block mb-1">Foto de Perfil</span>
-            <p className="text-sm text-gray-500 mb-2">Haz clic en la imagen para cambiar tu foto.</p>
+            <p className="text-sm text-gray-500 mb-2">Hacé clic en la imagen para cambiar tu foto.</p>
             {editImagePreview && (
               <button
                 type="button"
@@ -248,6 +473,10 @@ export default function UserProfileForm({ user, hasInitiatoryRetreat }) {
             className="w-full px-4 py-2 rounded-xl border focus:border-[#9187BA] focus:ring-1 focus:ring-[#9187BA] outline-none"
           />
         </div>
+
+        {/* ── Sección Biométrica ── */}
+        <BiometricSection initialAuthenticators={authenticators} />
+
         <div className="md:col-span-2 flex justify-end mt-4">
           <button
             type="submit"

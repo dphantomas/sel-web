@@ -62,9 +62,9 @@ export const authOptions = {
             throw new Error('Dispositivo no reconocido para este usuario.')
           }
 
-          const originHeader = req.headers?.origin || (req.headers?.referer ? new URL(req.headers.referer).origin : null);
-          const appUrl = process.env.NEXTAUTH_URL
-          const expectedOrigin = appUrl
+          // En producción NEXTAUTH_URL es confiable; en localhost también funciona.
+          const appUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000'
+          const expectedOrigin = appUrl.replace(/\/$/, '') // sin trailing slash
           const expectedRPID = new URL(appUrl).hostname
 
           let verification;
@@ -74,9 +74,9 @@ export const authOptions = {
               expectedChallenge: user.currentChallenge,
               expectedOrigin,
               expectedRPID,
-              authenticator: {
-                credentialID: Buffer.from(authenticator.credentialID, 'base64url'),
-                credentialPublicKey: Buffer.from(authenticator.credentialPublicKey, 'base64url'),
+              credential: {
+                id: authenticator.credentialID,
+                publicKey: Buffer.from(authenticator.credentialPublicKey, 'base64url'),
                 counter: authenticator.counter,
               },
             })
@@ -86,8 +86,6 @@ export const authOptions = {
 
           if (verification.verified) {
             const { authenticationInfo } = verification
-            // Avoid prisma update if `userId_credentialID` unique constraint is complex, we can find first.
-            // But we didn't add @@unique([userId, credentialID]), wait, I think I did add `@@unique([userId, credentialID])` or `credentialID` is `@id`. Yes, credentialID is `@id`.
             await prisma.authenticator.update({
               where: { credentialID: authenticator.credentialID },
               data: { counter: authenticationInfo.newCounter }
