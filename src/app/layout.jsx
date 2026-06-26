@@ -8,6 +8,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 
 export const metadata = {
+  metadataBase: new URL('https://www.sanacionenluz.com'),
   title: 'Sanación en Luz | Nada de lo que has hecho hasta ahora define quién Eres',
   description: 'Sanación en Luz es un proceso diseñado para la evolución hacia el Nuevo Humano y el retorno hacia tu Pureza original. Guía y acompañamiento espiritual.',
   keywords: 'sanacion en luz,sanacion,ascension,luz,divinidad,evolucion,crecimiento personal,sananda,monica garcia,dario geier,dario gabriel geier,iluminacion,nuevo humano,nueva tierra,tierra en luz,nuevo tiempo,era de la luz,nueva era,quinta dimension,iniciacion,retiro',
