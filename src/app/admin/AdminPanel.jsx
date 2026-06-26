@@ -1245,6 +1245,16 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
                               {res.isInstanceExclusive && <span className="text-blue-600 font-bold">Instancia</span>}
                             </div>
                           </div>
+                          {res.url && (
+                            <a 
+                              href={res.url} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="shrink-0 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-[#33275f] text-sm font-bold rounded-lg transition-colors"
+                            >
+                              Abrir
+                            </a>
+                          )}
                         </div>
                       ))
                     })()}
