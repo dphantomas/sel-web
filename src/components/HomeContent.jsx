@@ -238,12 +238,14 @@ export default function HomeContent({ lang = 'es', enPosts = null }) {
             <div className="absolute top-1/2 -translate-y-1/2 left-0 right-0 flex justify-between px-2 md:-mx-4 pointer-events-none">
               <button 
                 onClick={handlePrevTestimonial}
+                aria-label={isEn ? "Previous testimonial" : "Testimonio anterior"}
                 className="pointer-events-auto p-2 rounded-full bg-white shadow-md text-[#33275f] hover:bg-[#f9f7fc] transition-colors"
               >
                 <ChevronLeft className="w-5 h-5" />
               </button>
               <button 
                 onClick={handleNextTestimonial}
+                aria-label={isEn ? "Next testimonial" : "Siguiente testimonio"}
                 className="pointer-events-auto p-2 rounded-full bg-white shadow-md text-[#33275f] hover:bg-[#f9f7fc] transition-colors"
               >
                 <ChevronRight className="w-5 h-5" />
@@ -256,6 +258,7 @@ export default function HomeContent({ lang = 'es', enPosts = null }) {
             {t.testimonials.items.map((_, i) => (
               <button
                 key={i}
+                aria-label={(isEn ? "Go to testimonial " : "Ir al testimonio ") + (i + 1)}
                 onClick={() => setActiveTestimonial(i)}
                 className="rounded-full transition-all duration-300"
                 style={{

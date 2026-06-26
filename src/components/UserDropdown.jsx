@@ -35,6 +35,8 @@ export default function UserDropdown({ session, isScrolled, hasDarkHeader }) {
       {/* Botón (Foto o Iniciales) */}
       <button 
         onClick={() => setIsOpen(!isOpen)}
+        aria-label="Abrir menú de usuario"
+        aria-expanded={isOpen}
         className="flex items-center justify-center w-10 h-10 rounded-full border-2 transition-transform hover:scale-105 overflow-hidden bg-[#B681AE]/10 focus:outline-none"
         style={{ borderColor }}
       >
