@@ -1,6 +1,7 @@
 'use client'
 
 import { usePathname } from 'next/navigation'
+import Image from 'next/image'
 
 const BASE = '/assets'
 
@@ -13,9 +14,11 @@ export default function Footer() {
       <div className="max-w-6xl mx-auto px-6">
         {/* Footer Logo */}
         <div className="text-center mb-6">
-          <img
+          <Image
             src={`${BASE}/logo-sel-footer-1.png`}
             alt="Sanación en Luz"
+            width={245}
+            height={80}
             className="mx-auto h-auto"
             style={{ maxWidth: '245px' }}
           />

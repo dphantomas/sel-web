@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Menu, X } from 'lucide-react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { useSession, signOut } from 'next-auth/react'
 import UserDropdown from './UserDropdown'
@@ -140,9 +141,12 @@ export default function Navbar() {
 
         {/* Logo */}
         <Link href={lang === 'en' ? '/en/home/' : '/'} className="shrink-0" title="Home">
-          <img
+          <Image
             src="/assets/logo-sel.png"
             alt="Sanación en Luz"
+            width={180}
+            height={48}
+            priority
             className="h-10 md:h-12 w-auto object-contain transition-all duration-300"
             style={(!isScrolled && hasDarkHeader) ? { filter: 'brightness(0) invert(1)' } : {}}
           />

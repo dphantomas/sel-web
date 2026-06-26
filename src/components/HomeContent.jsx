@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
+import Image from 'next/image'
 import BlogGrid from '@/components/BlogGrid'
 import { ChevronLeft, ChevronRight, Play } from 'lucide-react'
 
@@ -95,11 +96,14 @@ export default function HomeContent({ lang = 'es', enPosts = null }) {
         <div className="absolute inset-0 bg-black/40" />
         <div className="relative z-10 flex flex-col items-center text-center px-4 py-20 animate-fade-in-up mt-4">
           <div className="mb-8 transform transition-transform duration-1000 hover:scale-105">
-            <img
+            <Image
               src={`${BASE}/logo-principal-1.png`}
               alt="Sanación en Luz"
+              width={650}
+              height={300}
+              priority
               className="mx-auto w-auto drop-shadow-2xl"
-              style={{ maxWidth: '650px', width: '80vw' }}
+              style={{ maxWidth: '650px', width: '80vw', height: 'auto' }}
             />
           </div>
           <p
@@ -141,7 +145,7 @@ export default function HomeContent({ lang = 'es', enPosts = null }) {
           
           {/* Scroll down indicator */}
           <div className="absolute bottom-6 animate-bounce cursor-pointer opacity-80 hover:opacity-100 transition-opacity" onClick={() => window.scrollTo({ top: window.innerHeight * 0.85, behavior: 'smooth' })}>
-            <img src={`${BASE}/flecha-blanca.png`} alt="Scroll down" className="w-8 rotate-90" />
+            <Image src={`${BASE}/flecha-blanca.png`} alt="Scroll down" width={32} height={32} className="w-8 rotate-90" />
           </div>
         </div>
       </section>

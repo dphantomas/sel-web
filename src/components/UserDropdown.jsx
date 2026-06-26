@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { signOut } from 'next-auth/react'
 import { User, BookOpen, Settings, LogOut, Shield, Folder } from 'lucide-react'
 
@@ -38,7 +39,7 @@ export default function UserDropdown({ session, isScrolled, hasDarkHeader }) {
         style={{ borderColor }}
       >
         {user.image ? (
-          <img src={user.image} alt="Perfil" className="w-full h-full object-cover" />
+          <Image src={user.image} alt="Perfil" width={40} height={40} className="w-full h-full object-cover" />
         ) : (
           <span className="text-sm font-bold" style={{ color: textColor }}>
             {initials || <User className="w-5 h-5" />}
