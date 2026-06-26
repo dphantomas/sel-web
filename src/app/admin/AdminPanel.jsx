@@ -1013,7 +1013,7 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
                     onClick={() => setUserTab('resources')} 
                     className={`pb-2 text-sm font-bold border-b-2 transition ${userTab === 'resources' ? 'border-[#33275f] text-[#33275f]' : 'border-transparent text-gray-400 hover:text-gray-600'}`}
                   >
-                    Recursos
+                    Materiales
                   </button>
                 </div>
               </div>
@@ -1229,14 +1229,14 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
 
               {userTab === 'resources' && (
                 <div className="max-w-3xl mx-auto bg-gray-50/50 rounded-2xl border border-gray-100 p-6 flex flex-col h-full">
-                  <h3 className="text-[#33275f] font-bold text-lg mb-2">Recursos Disponibles</h3>
+                  <h3 className="text-[#33275f] font-bold text-lg mb-2">Materiales Disponibles</h3>
                   <p className="text-sm text-gray-500 mb-6">Esta es la lista final de archivos (PDFs, Audios, etc.) que el usuario puede ver en su plataforma basándose en sus accesos.</p>
                   
                   <div className="space-y-4 flex-1 overflow-y-auto pr-2">
                     {(() => {
                       const userResources = getUserResources()
                       if (userResources.length === 0) {
-                        return <p className="text-sm text-gray-500 text-center py-8">El usuario no tiene acceso a ningún recurso aún.</p>
+                        return <p className="text-sm text-gray-500 text-center py-8">El usuario no tiene acceso a ningún material aún.</p>
                       }
                       return userResources.map(res => (
                         <div key={res.id} className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
@@ -1333,7 +1333,7 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
                   onClick={() => setCourseTab('resources')}
                   className={`px-6 py-4 text-left font-bold text-sm whitespace-nowrap transition-colors border-l-4 ${courseTab === 'resources' ? 'bg-white text-[#33275f] border-[#B681AE]' : 'text-gray-500 border-transparent hover:bg-gray-100'}`}
                 >
-                  Recursos y Archivos
+                  Materiales y Archivos
                 </button>
               </div>
 
