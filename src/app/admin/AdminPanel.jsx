@@ -848,10 +848,13 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
                         </div>
                       </td>
                       <td className="py-4 px-6">
-                        <div className="font-bold text-[#33275f] text-base">
+                        <button 
+                          onClick={() => openEditUser(user)}
+                          className="font-bold text-[#33275f] text-base text-left hover:text-[#B681AE] transition"
+                        >
                           {user.firstName} {user.lastName}
                           {user.sparkName && <span className="text-[#9187BA] font-normal ml-2">✨ {user.sparkName}</span>}
-                        </div>
+                        </button>
                         <div className="text-sm text-gray-500 mt-0.5 flex items-center gap-2">
                           <span>{user.email}</span>
                           {user.emailVerified ? (
