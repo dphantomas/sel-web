@@ -1244,17 +1244,18 @@ export default function AdminPanel({ initialUsers, courses: initialCourses }) {
                               <span className="text-[#B681AE] font-bold uppercase">{res.courseTitle}</span>
                               {res.isInstanceExclusive && <span className="text-blue-600 font-bold">Instancia</span>}
                             </div>
-                            <button 
-                              onClick={() => handlePreviewResource(res)}
-                              disabled={previewingId === res.id}
-                              className="shrink-0 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-[#33275f] text-sm font-bold rounded-lg transition-colors disabled:opacity-50 flex items-center gap-2"
-                            >
-                              {previewingId === res.id ? (
-                                <span className="w-4 h-4 border-2 border-[#33275f] border-t-transparent rounded-full animate-spin"></span>
-                              ) : null}
-                              Abrir
-                            </button>
                           </div>
+                          <button 
+                            onClick={() => handlePreviewResource(res)}
+                            disabled={previewingId === res.id}
+                            className="shrink-0 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-[#33275f] text-sm font-bold rounded-lg transition-colors disabled:opacity-50 flex items-center gap-2"
+                          >
+                            {previewingId === res.id ? (
+                              <span className="w-4 h-4 border-2 border-[#33275f] border-t-transparent rounded-full animate-spin"></span>
+                            ) : null}
+                            Abrir
+                          </button>
+                        </div>
                       ))
                     })()}
                   </div>
