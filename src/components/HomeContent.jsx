@@ -117,7 +117,7 @@ export default function HomeContent({ lang = 'es', enPosts = null }) {
             className="object-cover object-center z-0"
           />
           {/* Overlay applied directly over the moving image */}
-          <div className="absolute inset-0 z-10" style={{ backgroundColor: 'rgba(255,255,255,0.50)' }} />
+          <div className="absolute inset-0 z-10" style={{ backgroundColor: 'rgba(0,0,0,0.25)' }} />
         </div>
         <div className="relative z-10 flex flex-col items-center text-center px-4 py-20 animate-fade-in-up mt-4">
           <div className="mb-8 transform transition-transform duration-1000 hover:scale-105">
@@ -127,18 +127,18 @@ export default function HomeContent({ lang = 'es', enPosts = null }) {
               width={650}
               height={300}
               priority
-              className="mx-auto w-auto"
+              className="mx-auto w-auto drop-shadow-2xl"
               style={{ maxWidth: '650px', width: '80vw', height: 'auto' }}
             />
           </div>
           <p
-            className="text-[#33275f] text-center max-w-3xl mb-10"
+            className="text-white text-center drop-shadow-lg max-w-3xl mb-10"
             style={{
               fontFamily: "'Lato', Helvetica, Arial, Lucida, sans-serif",
               fontStyle: 'italic',
               fontSize: '22px',
               lineHeight: '1.5em',
-              fontWeight: 500,
+              fontWeight: 300,
               letterSpacing: '1px'
             }}
           >
@@ -149,20 +149,20 @@ export default function HomeContent({ lang = 'es', enPosts = null }) {
             {!session && (
               <Link
                 href="/login"
-                className="bg-transparent border-2 border-[#33275f] hover:bg-[#33275f] text-[#33275f] hover:text-white px-8 py-3 rounded-full font-bold tracking-wide transition-all duration-300 shadow-sm"
+                className="bg-transparent border-2 border-white hover:bg-white text-white hover:text-[#33275f] px-8 py-3 rounded-full font-bold tracking-wide transition-all duration-300 shadow-lg"
               >
                 {isEn ? 'Log In' : 'Ingresar a mi cuenta'}
               </Link>
             )}
             <Link
               href={t.process.link}
-              className="bg-[#33275f]/10 hover:bg-[#33275f]/20 backdrop-blur-sm border-2 border-transparent text-[#33275f] px-8 py-3 rounded-full font-bold tracking-wide transition-all duration-300"
+              className="bg-white/10 hover:bg-white/20 backdrop-blur-sm border-2 border-transparent text-white px-8 py-3 rounded-full font-bold tracking-wide transition-all duration-300"
             >
               {isEn ? 'The Process' : 'El Proceso'}
             </Link>
             <Link
               href={isEn ? '/en/workshops' : '/talleres'}
-              className="bg-[#c2a2e8] hover:bg-[#9187BA] text-[#33275f] hover:text-white px-8 py-3 rounded-full font-bold tracking-wide transition-all duration-300 shadow-sm"
+              className="bg-[#c2a2e8] hover:bg-[#9187BA] text-[#33275f] hover:text-white px-8 py-3 rounded-full font-bold tracking-wide transition-all duration-300 shadow-lg"
             >
               {isEn ? 'Workshops' : 'Talleres'}
             </Link>
