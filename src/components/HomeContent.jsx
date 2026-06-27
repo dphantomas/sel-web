@@ -117,7 +117,7 @@ export default function HomeContent({ lang = 'es', enPosts = null }) {
             className="object-cover object-center"
           />
         </div>
-        <div className="absolute inset-0 bg-black/30 backdrop-blur-[8px] z-0" />
+        <div className="absolute inset-0 bg-black/40 z-0" />
         <div className="relative z-10 flex flex-col items-center text-center px-4 py-20 animate-fade-in-up mt-4">
           <div className="mb-8 transform transition-transform duration-1000 hover:scale-105">
             <Image
