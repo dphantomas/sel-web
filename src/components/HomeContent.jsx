@@ -12,8 +12,18 @@ const BASE = '/assets'
 export default function HomeContent({ lang = 'es', enPosts = null }) {
   const { data: session } = useSession()
   const isEn = lang === 'en';
+  const [scrollY, setScrollY] = useState(0)
   const [activeTestimonial, setActiveTestimonial] = useState(0)
   const [latestVideo, setLatestVideo] = useState(null)
+
+  // Listen to scroll for custom parallax effect
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrollY(window.scrollY)
+    }
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
 
   useEffect(() => {
     fetch('/api/videos')
@@ -93,15 +103,20 @@ export default function HomeContent({ lang = 'es', enPosts = null }) {
     <div className="bg-white">
       {/* 1. HERO SECTION */}
       <section className="relative min-h-[75vh] flex flex-col items-center justify-center overflow-hidden">
-        {/* Background Image using Next.js Image for LCP optimization */}
-        <Image 
-          src="/assets/el-hoyo-1.jpeg"
-          alt="Sanación en Luz - Hero Background"
-          fill
-          priority
-          quality={100}
-          className="object-cover object-center blur-[6px] scale-105"
-        />
+        {/* Background Image using Next.js Image for LCP optimization + JS Parallax */}
+        <div 
+          className="absolute inset-x-0 top-[-15%] h-[130%] z-0 pointer-events-none"
+          style={{ transform: `translateY(${scrollY * 0.4}px)` }}
+        >
+          <Image 
+            src="/assets/el-hoyo-1.jpeg"
+            alt="Sanación en Luz - Hero Background"
+            fill
+            priority
+            quality={100}
+            className="object-cover object-center blur-[6px]"
+          />
+        </div>
         <div className="absolute inset-0 bg-black/40 z-0" />
         <div className="relative z-10 flex flex-col items-center text-center px-4 py-20 animate-fade-in-up mt-4">
           <div className="mb-8 transform transition-transform duration-1000 hover:scale-105">
