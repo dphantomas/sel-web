@@ -109,7 +109,7 @@ export default function HomeContent({ lang = 'es', enPosts = null }) {
           style={{ transform: `translateY(${scrollY * 0.4}px)` }}
         >
           <Image 
-            src="/assets/el-hoyo-1.jpeg"
+            src="/assets/el-hoyo-2.jpeg"
             alt="Sanación en Luz - Hero Background"
             fill
             priority
