@@ -109,7 +109,7 @@ export default function HomeContent({ lang = 'es', enPosts = null, cloudinaryUrl
           style={{ transform: `translateY(${scrollY * 0.4}px)` }}
         >
           <Image 
-            src={cloudinaryUrl ? `${cloudinaryUrl}/el-hoyo-2.jpeg` : (process.env.NEXT_PUBLIC_CLOUDINARY_ROOT_URL || "/assets/el-hoyo-2.jpeg")}
+            src={cloudinaryUrl ? `${cloudinaryUrl}/el-hoyo-2.jpg` : (process.env.NEXT_PUBLIC_CLOUDINARY_ROOT_URL || "/assets/el-hoyo-2.jpeg")}
             alt="Sanación en Luz - Hero Background"
             fill
             priority
