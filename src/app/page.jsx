@@ -6,5 +6,5 @@ export const metadata = {
 }
 
 export default function HomePage() {
-  return <HomeContent lang="es" />
+  return <HomeContent lang="es" cloudinaryUrl={process.env.CLOUDINARY_ROOT_URL} />
 }

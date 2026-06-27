@@ -9,7 +9,7 @@ import { ChevronLeft, ChevronRight, Play } from 'lucide-react'
 
 const BASE = '/assets'
 
-export default function HomeContent({ lang = 'es', enPosts = null }) {
+export default function HomeContent({ lang = 'es', enPosts = null, cloudinaryUrl = null }) {
   const { data: session } = useSession()
   const isEn = lang === 'en';
   const [scrollY, setScrollY] = useState(0)
@@ -109,7 +109,7 @@ export default function HomeContent({ lang = 'es', enPosts = null }) {
           style={{ transform: `translateY(${scrollY * 0.4}px)` }}
         >
           <Image 
-            src={process.env.NEXT_PUBLIC_CLOUDINARY_ROOT_URL || "/assets/el-hoyo-2.jpeg"}
+            src={cloudinaryUrl ? `${cloudinaryUrl}/el-hoyo-2.jpeg` : (process.env.NEXT_PUBLIC_CLOUDINARY_ROOT_URL || "/assets/el-hoyo-2.jpeg")}
             alt="Sanación en Luz - Hero Background"
             fill
             priority

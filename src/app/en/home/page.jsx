@@ -49,5 +49,5 @@ export default async function EnHomePage() {
   }
   const displayPosts = posts.length > 0 ? posts : staticEnPosts
 
-  return <HomeContent lang="en" enPosts={displayPosts} />
+  return <HomeContent lang="en" enPosts={displayPosts} cloudinaryUrl={process.env.CLOUDINARY_ROOT_URL} />
 }
