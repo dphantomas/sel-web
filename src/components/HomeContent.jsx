@@ -116,8 +116,6 @@ export default function HomeContent({ lang = 'es', enPosts = null }) {
             quality={100}
             className="object-cover object-center z-0"
           />
-          {/* Overlay applied directly over the moving image */}
-          <div className="absolute inset-0 z-10" style={{ backgroundColor: 'rgba(0,0,0,0.25)' }} />
         </div>
         <div className="relative z-10 flex flex-col items-center text-center px-4 py-20 animate-fade-in-up mt-4">
           <div className="mb-8 transform transition-transform duration-1000 hover:scale-105">
