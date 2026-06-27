@@ -114,7 +114,7 @@ export default function HomeContent({ lang = 'es', enPosts = null }) {
             fill
             priority
             quality={100}
-            className="object-cover object-center"
+            className="object-cover object-center blur-[6px]"
           />
         </div>
         <div className="absolute inset-0 bg-black/40 z-0" />
