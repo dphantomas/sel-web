@@ -41,6 +41,9 @@ export default function PasskeyManager({ initialAuthenticators }) {
       } else {
         localStorage.removeItem('local_passkey_id')
         localStorage.removeItem('device_registered')
+        if (session?.user?.email) {
+          localStorage.removeItem(`passkey_registered_${session.user.email}`)
+        }
         setIsDeviceRegisteredLocally(false)
       }
     } else {
@@ -104,6 +107,9 @@ export default function PasskeyManager({ initialAuthenticators }) {
         // Marcar en localStorage con el ID exacto
         localStorage.setItem('local_passkey_id', attResp.id)
         localStorage.setItem('device_registered', 'true') // legacy para el login general
+        if (session?.user?.email) {
+          localStorage.setItem(`passkey_registered_${session.user.email}`, 'true')
+        }
         setIsDeviceRegisteredLocally(true)
         
         const emailResp = await fetch('/api/auth/webauthn/list-authenticators')

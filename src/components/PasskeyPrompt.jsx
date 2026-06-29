@@ -13,8 +13,9 @@ import { Fingerprint, X, CheckCircle } from 'lucide-react'
  * tiene un dispositivo compatible y todavía no registró su passkey.
  *
  * Lógica de estados (localStorage):
- *   device_registered=true   → ya tiene passkey, no mostrar
- *   biometricDismissed=true  → eligió "No, gracias", no volver a ofrecer automáticamente
+ *   passkey_registered_{email}=true   → ya tiene passkey este usuario en este dispositivo, no mostrar
+ *   biometricDismissed_{email}=true  → eligió "No, gracias", no volver a ofrecer automáticamente
+ *   (ninguno)                        → mostrar banner si el hardware lo soporta
  *   (ninguno)                → mostrar banner si el hardware lo soporta
  */
 export default function PasskeyPrompt() {
@@ -31,8 +32,11 @@ export default function PasskeyPrompt() {
 
     async function check() {
       try {
-        if (localStorage.getItem('device_registered') === 'true') return
-        if (localStorage.getItem('biometricDismissed') === 'true') return
+        const email = session.user.email;
+        if (!email) return;
+
+        if (localStorage.getItem(`passkey_registered_${email}`) === 'true') return
+        if (localStorage.getItem(`biometricDismissed_${email}`) === 'true') return
 
         const isSupported = await platformAuthenticatorIsAvailable()
         if (!isSupported) return
@@ -51,7 +55,9 @@ export default function PasskeyPrompt() {
   }, [status, session])
 
   const handleDismiss = () => {
-    localStorage.setItem('biometricDismissed', 'true')
+    if (session?.user?.email) {
+      localStorage.setItem(`biometricDismissed_${session.user.email}`, 'true')
+    }
     setAnimate(false)
     setTimeout(() => setIsVisible(false), 300)
   }
@@ -89,6 +95,7 @@ export default function PasskeyPrompt() {
           localStorage.setItem('device_registered', 'true')
           if (session?.user?.email) {
             localStorage.setItem('registered_email', session.user.email)
+            localStorage.setItem(`passkey_registered_${session.user.email}`, 'true')
           }
           setSuccess(true)
           setTimeout(() => { setAnimate(false); setTimeout(() => setIsVisible(false), 300) }, 3000)
@@ -114,6 +121,7 @@ export default function PasskeyPrompt() {
         localStorage.setItem('device_registered', 'true')
         if (session?.user?.email) {
           localStorage.setItem('registered_email', session.user.email)
+          localStorage.setItem(`passkey_registered_${session.user.email}`, 'true')
         }
         setSuccess(true)
         setTimeout(() => {
