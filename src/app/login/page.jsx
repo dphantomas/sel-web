@@ -99,8 +99,8 @@ function LoginContent() {
       })
 
       if (result?.error) {
-        // Si el dispositivo ya no está registrado en el servidor, limpiar localStorage
-        if (result.error.includes('Dispositivo no reconocido') || result.error.includes('expirado')) {
+        // Si el dispositivo o el usuario ya no están registrados en el servidor, limpiar localStorage
+        if (result.error.includes('Dispositivo no reconocido') || result.error.includes('expirado') || result.error.includes('no está registrado')) {
           localStorage.removeItem('device_registered')
           localStorage.removeItem('registered_email')
           setBiometricAvailable(false)
