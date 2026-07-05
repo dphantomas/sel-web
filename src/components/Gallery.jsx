@@ -40,7 +40,7 @@ export default function Gallery({ lang = 'es', initialImages = [] }) {
   }, [lightboxIndex, closeLightbox, goPrev, goNext])
 
   return (
-    <section id="galeria" className="bg-white pb-16">
+    <section id="galeria" className="bg-white">
 
       {/* Section header */}
       <div
