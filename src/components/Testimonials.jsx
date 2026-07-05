@@ -8,7 +8,7 @@ export default function Testimonials({ lang = 'es' }) {
   const testimonials = lang === 'en' ? testimonialsData.en : testimonialsData.es
 
   return (
-    <section id="testimonios" className="bg-[#fcfbfe] pb-24">
+    <section id="testimonios" className="bg-[#fcfbfe]">
       {/* Section header */}
       <div
         className="section-header-bg flex flex-col items-center justify-center"
