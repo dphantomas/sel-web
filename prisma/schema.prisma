@@ -7,29 +7,31 @@ generator client {
 }
 
 model User {
-  id            String    @id @default(cuid())
-  firstName     String
-  lastName      String
-  email         String    @unique
-  emailVerified DateTime?
-  passwordHash  String
-  phone         String?
-  addressLine1  String?
-  addressLine2  String?
-  zipCode       String?
-  country       String?
-  sparkName     String?
+  id               String    @id @default(cuid())
+  firstName        String
+  lastName         String
+  email            String    @unique
+  emailVerified    DateTime?
+  passwordHash     String
+  phone            String?
+  addressLine1     String?
+  addressLine2     String?
+  zipCode          String?
+  country          String?
+  sparkName        String?
   image            String?
   hideGooglePhoto  Boolean   @default(false)
   role             Role      @default(Guest)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
   currentChallenge String?
 
-  unlockedCourses UserCourseAccess[]
+  unlockedCourses   UserCourseAccess[]
   unlockedInstances UserInstanceAccess[]
-  progress        Progress[]
-  authenticators  Authenticator[]
+  progress          Progress[]
+  authenticators    Authenticator[]
+  addresses         UserAddress[]
+  posts             Post[]
 }
 
 enum Role {
@@ -222,4 +224,37 @@ model GalleryImage {
   alt       String?
   order     Int      @default(0)
   createdAt DateTime @default(now())
+}
+
+model UserAddress {
+  id        String   @id @default(cuid())
+  userId    String
+  name      String   @default("Principal")
+  street    String
+  number    String
+  apartment String?
+  city      String
+  province  String
+  zipCode   String
+  phone     String?
+  dni       String?
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Post {
+  id                 String   @id @default(cuid())
+  slug               String   @unique
+  language           String   @default("es")
+  title              String
+  excerpt            String?
+  content            String
+  coverImage         String?
+  published          Boolean  @default(false)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  translationGroupId String?
+  authorId           String
+  author             User     @relation(fields: [authorId], references: [id])
 }
