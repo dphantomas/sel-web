@@ -71,6 +71,8 @@ model Course {
   synchronicity    Synchronicity @default(Asincronico)
   published        Boolean       @default(false)
   image            String?
+  language           String        @default("es")
+  translationGroupId String?
 
   modules         Module[]
   instances       CourseInstance[]
