@@ -10,29 +10,17 @@ export default function Hero() {
 
       <div className="relative z-10 flex flex-col items-center text-center px-4 py-20">
 
-        {/* Main Logo — 70% width on desktop, 100% on mobile (matching original CSS) */}
+        {/* Main Logo */}
         <div className="mb-0">
           <img
             src="/assets/logo-principal-1.png"
             alt="Sanación en Luz"
-            className="mx-auto w-auto"
-            style={{ maxWidth: '880px', width: '70vw' }}
+            className="mx-auto w-[70vw] max-w-[880px] h-auto"
           />
         </div>
 
-        {/* Tagline — EXACT text, Lato italic 30px white, line-height 1.2em */}
-        {/* padding-top 15px, padding-bottom 60px (from original inline CSS) */}
-        <p
-          className="text-white text-center"
-          style={{
-            fontFamily: "'Lato', Helvetica, Arial, Lucida, sans-serif",
-            fontStyle: 'italic',
-            fontSize: '30px',
-            lineHeight: '1.2em',
-            paddingTop: '15px',
-            paddingBottom: '60px',
-          }}
-        >
+        {/* Tagline */}
+        <p className="text-white text-center font-lato italic text-[30px] leading-[1.2] pt-[15px] pb-[60px]">
           &ldquo;Nada de lo que has hecho hasta ahora define quién Eres&rdquo;
         </p>
 

@@ -127,20 +127,11 @@ export default function HomeContent({ lang = 'es', enPosts = null, cloudinaryUrl
               width={650}
               height={300}
               priority
-              className="mx-auto w-auto drop-shadow-2xl"
-              style={{ maxWidth: '650px', width: '80vw', height: 'auto' }}
+              className="mx-auto w-[80vw] max-w-[650px] h-auto drop-shadow-2xl"
             />
           </div>
           <p
-            className="text-white text-center drop-shadow-lg max-w-3xl mb-10"
-            style={{
-              fontFamily: "'Lato', Helvetica, Arial, Lucida, sans-serif",
-              fontStyle: 'italic',
-              fontSize: '22px',
-              lineHeight: '1.5em',
-              fontWeight: 300,
-              letterSpacing: '1px'
-            }}
+            className="text-white text-center drop-shadow-lg max-w-3xl mb-10 font-lato italic text-[22px] leading-[1.5em] font-light tracking-[1px]"
           >
             {t.heroTagline}
           </p>
@@ -189,7 +180,7 @@ export default function HomeContent({ lang = 'es', enPosts = null, cloudinaryUrl
             <img src={`${BASE}/flecha2.png`} alt="" className="mx-auto w-[60px]" />
           </div>
 
-          <div className="space-y-6 text-[#33275f] text-[20px] md:text-[24px] font-light leading-relaxed mb-10" style={{ fontFamily: "'Lato', sans-serif" }}>
+          <div className="space-y-6 text-[#33275f] text-[20px] md:text-[24px] font-light leading-relaxed mb-10 font-lato">
             <p className="drop-shadow-sm">{t.process.line1}</p>
             <p className="drop-shadow-sm">{t.process.line2}</p>
             <p className="drop-shadow-sm">{t.process.line3}</p>
@@ -217,11 +208,11 @@ export default function HomeContent({ lang = 'es', enPosts = null, cloudinaryUrl
             />
           </div>
           <div className="w-full md:w-1/2 text-center md:text-left">
-            <h2 className="text-2xl md:text-3xl text-[#33275f] font-bold mb-4" style={{ fontFamily: "'Lato', sans-serif" }}>
+            <h2 className="text-2xl md:text-3xl text-[#33275f] font-bold mb-4 font-lato">
               {t.facilitators.title}
             </h2>
             <div className="w-12 h-1 bg-[#c2a2e8] mx-auto md:mx-0 mb-6"></div>
-            <p className="text-[#666] text-base leading-relaxed mb-8" style={{ fontFamily: "'Open Sans', sans-serif" }}>
+            <p className="text-[#666] text-base leading-relaxed mb-8 font-sans">
               {t.facilitators.text}
             </p>
             <Link
@@ -237,13 +228,13 @@ export default function HomeContent({ lang = 'es', enPosts = null, cloudinaryUrl
       {/* 4. TESTIMONIALS CAROUSEL */}
       <section className="py-16 bg-white overflow-hidden">
         <div className="max-w-3xl mx-auto px-6 text-center relative">
-          <h2 className="text-2xl md:text-3xl text-[#33275f] font-bold mb-10" style={{ fontFamily: "'Lato', sans-serif" }}>
+          <h2 className="text-2xl md:text-3xl text-[#33275f] font-bold mb-10 font-lato">
             {t.testimonials.title}
           </h2>
           
           <div className="relative bg-[#fcfbfe] p-6 md:p-10 rounded-3xl shadow-sm border border-[#e3e1e8] mb-8 min-h-[220px] flex flex-col justify-center">
             <div className="text-5xl text-[#e8daf5] absolute top-4 left-6 md:left-8 font-serif">"</div>
-            <p className="text-[#555] text-base md:text-lg italic relative z-10 mb-6 mt-4" style={{ fontFamily: "'Open Sans', sans-serif", lineHeight: '1.7em' }}>
+            <p className="text-[#555] text-base md:text-lg italic relative z-10 mb-6 mt-4 font-sans leading-[1.7em]">
               {t.testimonials.items[activeTestimonial].text}
             </p>
             <p className="text-[#b085b3] font-bold text-base uppercase tracking-wider">
@@ -298,7 +289,7 @@ export default function HomeContent({ lang = 'es', enPosts = null, cloudinaryUrl
       {/* 5. VIDEOS PREVIEW */}
       <section className="py-16 bg-[#33275f] text-white">
         <div className="max-w-4xl mx-auto px-6 text-center">
-          <h2 className="text-2xl md:text-3xl font-bold mb-4" style={{ fontFamily: "'Lato', sans-serif" }}>
+          <h2 className="text-2xl md:text-3xl font-bold mb-4 font-lato">
             {lang === 'en' ? 'Connecting with the Frequency' : 'Conectando con la Frecuencia'}
           </h2>
           <div className="w-12 h-1 bg-[#c2a2e8] mx-auto mb-10"></div>
@@ -339,7 +330,7 @@ export default function HomeContent({ lang = 'es', enPosts = null, cloudinaryUrl
       {/* 6. BLOG PREVIEW */}
       <section className="py-16 bg-[#f9f9f9]">
         <div className="max-w-5xl mx-auto px-6 mb-10 text-center">
-          <h2 className="text-2xl md:text-3xl text-[#33275f] font-bold mb-4" style={{ fontFamily: "'Lato', sans-serif" }}>
+          <h2 className="text-2xl md:text-3xl text-[#33275f] font-bold mb-4 font-lato">
             {t.blog.title}
           </h2>
           <div className="w-12 h-1 bg-[#c2a2e8] mx-auto"></div>
@@ -362,10 +353,10 @@ export default function HomeContent({ lang = 'es', enPosts = null, cloudinaryUrl
       {/* 7. FINAL CTA */}
       <section className="py-16 bg-[#33275f] text-center">
         <div className="max-w-2xl mx-auto px-6">
-          <h2 className="text-2xl md:text-3xl text-white font-light mb-4" style={{ fontFamily: "'Lato', sans-serif" }}>
+          <h2 className="text-2xl md:text-3xl text-white font-light mb-4 font-lato">
             {t.cta.title}
           </h2>
-          <p className="text-[#e8daf5] text-lg mb-8" style={{ fontFamily: "'Open Sans', sans-serif" }}>
+          <p className="text-[#e8daf5] text-lg mb-8 font-sans">
             {t.cta.text}
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-4">
@@ -387,15 +378,6 @@ export default function HomeContent({ lang = 'es', enPosts = null, cloudinaryUrl
         </div>
       </section>
       
-      <style dangerouslySetInnerHTML={{__html: `
-        @keyframes fadeInUp {
-          from { opacity: 0; transform: translateY(20px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        .animate-fade-in-up {
-          animation: fadeInUp 1s ease-out forwards;
-        }
-      `}} />
     </div>
   )
 }

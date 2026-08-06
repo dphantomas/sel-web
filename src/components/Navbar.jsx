@@ -123,9 +123,6 @@ export default function Navbar() {
 
   const hasDarkHeader = !isLightHeaderPage
 
-  const textColor = (!isScrolled && hasDarkHeader) ? '#ffffff' : '#33275f'
-  const borderColor = (!isScrolled && hasDarkHeader) ? '#ffffff' : '#33275f'
-
   // Language toggle: links to the equivalent page in the other language
   const langToggle = lang === 'en'
     ? { href: getLangEquivalent(pathname, 'en'), label: 'ES' }
@@ -134,7 +131,7 @@ export default function Navbar() {
   return (
     <nav
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        isScrolled ? 'navbar-scrolled py-2' : 'py-3 bg-transparent'
+        isScrolled ? 'bg-white/95 backdrop-blur-md shadow-[0_2px_20px_rgba(51,39,95,0.08)] border-b border-sel-lavender/30 py-2' : 'py-3 bg-transparent'
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 md:px-6 flex justify-between items-center">
@@ -147,8 +144,9 @@ export default function Navbar() {
             width={180}
             height={48}
             priority
-            className="h-10 md:h-12 w-auto object-contain transition-all duration-300"
-            style={(!isScrolled && hasDarkHeader) ? { filter: 'brightness(0) invert(1)' } : {}}
+            className={`h-10 md:h-12 w-auto object-contain transition-all duration-300 ${
+              (!isScrolled && hasDarkHeader) ? 'brightness-0 invert' : ''
+            }`}
           />
         </Link>
 
@@ -158,17 +156,17 @@ export default function Navbar() {
             <Link
               key={item.href}
               href={item.href}
-              className={`text-[15px] xl:text-[16px] transition-all duration-300 whitespace-nowrap ${
+              className={`text-[15px] xl:text-[16px] transition-all duration-300 whitespace-nowrap border-b-2 ${
+                !isScrolled && hasDarkHeader
+                  ? 'text-white'
+                  : 'text-sel-purple'
+              } ${
+                !isScrolled ? 'drop-shadow-md' : ''
+              } ${
                 isActive(item.href) 
-                  ? 'font-bold border-b-2 pb-0.5' 
-                  : 'font-medium hover:opacity-80'
+                  ? 'font-bold pb-0.5 border-current' 
+                  : 'font-medium hover:opacity-80 border-transparent'
               }`}
-              style={{
-                color: textColor,
-                borderColor: isActive(item.href) ? borderColor : 'transparent',
-                textDecoration: 'none',
-                textShadow: !isScrolled ? '0px 2px 4px rgba(0,0,0,0.6)' : 'none',
-              }}
             >
               {item.label}
             </Link>
@@ -182,15 +180,11 @@ export default function Navbar() {
           {/* Language toggle button — visually distinct */}
           <Link
             href={langToggle.href}
-            className="text-xs font-bold px-3 py-1 rounded-full border-2 transition-all duration-200 hover:scale-105 whitespace-nowrap ml-2"
-            style={{
-              color: (hasDarkHeader && !isScrolled) ? '#33275f' : '#fff',
-              backgroundColor: (hasDarkHeader && !isScrolled) ? 'rgba(255,255,255,0.9)' : '#33275f',
-              borderColor: (hasDarkHeader && !isScrolled) ? 'rgba(255,255,255,0.9)' : '#33275f',
-              textDecoration: 'none',
-              letterSpacing: '1px',
-              boxShadow: !isScrolled ? '0px 2px 4px rgba(0,0,0,0.4)' : 'none',
-            }}
+            className={`text-xs font-bold px-3 py-1 rounded-full border-2 transition-all duration-200 hover:scale-105 whitespace-nowrap ml-2 tracking-[1px] ${
+              hasDarkHeader && !isScrolled
+                ? 'text-sel-purple bg-white/90 border-white/90 drop-shadow-md'
+                : 'text-white bg-sel-purple border-sel-purple'
+            }`}
           >
             🌐 {langToggle.label}
           </Link>
@@ -199,11 +193,11 @@ export default function Navbar() {
         {/* Mobile Menu Button */}
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="lg:hidden p-2 rounded-md transition-colors cursor-pointer"
-          style={{ 
-            color: textColor,
-            backgroundColor: !isScrolled ? 'rgba(0,0,0,0.15)' : 'transparent'
-          }}
+          className={`lg:hidden p-2 rounded-md transition-colors cursor-pointer ${
+            !isScrolled && hasDarkHeader ? 'text-white' : 'text-sel-purple'
+          } ${
+            !isScrolled ? 'bg-black/15' : 'bg-transparent'
+          }`}
           aria-label={lang === 'en' ? 'Open menu' : 'Abrir menú'}
         >
           {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -219,13 +213,11 @@ export default function Navbar() {
                 key={item.href}
                 href={item.href}
                 onClick={() => setIsOpen(false)}
-                className="text-left px-6 py-3 text-sm font-medium transition-colors hover:bg-purple-50"
-                style={{
-                  color: isActive(item.href) ? '#33275f' : '#555',
-                  fontWeight: isActive(item.href) ? '700' : '500',
-                  borderLeft: isActive(item.href) ? '3px solid #33275f' : '3px solid transparent',
-                  textDecoration: 'none',
-                }}
+                className={`text-left px-6 py-3 text-sm transition-colors hover:bg-purple-50 border-l-[3px] ${
+                  isActive(item.href) 
+                    ? 'text-sel-purple font-bold border-sel-purple' 
+                    : 'text-gray-600 font-medium border-transparent'
+                }`}
               >
                 {item.label}
               </Link>
@@ -270,8 +262,7 @@ export default function Navbar() {
                   <Link
                     href="/admin"
                     onClick={() => setIsOpen(false)}
-                    className="text-left px-6 py-3 text-sm font-bold transition-colors hover:bg-purple-50 block"
-                    style={{ color: '#B681AE', textDecoration: 'none' }}
+                    className="text-left px-6 py-3 text-sm font-bold transition-colors hover:bg-purple-50 block text-[#B681AE]"
                   >
                     Panel de Admin
                   </Link>
@@ -293,14 +284,7 @@ export default function Navbar() {
               <Link
                 href={langToggle.href}
                 onClick={() => setIsOpen(false)}
-                className="inline-flex items-center gap-2 text-xs font-bold px-4 py-2 rounded-full border-2 transition-all hover:opacity-80"
-                style={{
-                  color: '#fff',
-                  backgroundColor: '#33275f',
-                  borderColor: '#33275f',
-                  textDecoration: 'none',
-                  letterSpacing: '1px',
-                }}
+                className="inline-flex items-center gap-2 text-xs font-bold px-4 py-2 rounded-full border-2 transition-all hover:opacity-80 text-white bg-sel-purple border-sel-purple tracking-[1px]"
               >
                 🌐 {langToggle.label}
               </Link>
